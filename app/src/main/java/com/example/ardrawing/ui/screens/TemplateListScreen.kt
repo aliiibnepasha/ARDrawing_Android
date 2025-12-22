@@ -23,30 +23,39 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.data.repository.TemplateRepository
+import com.example.ardrawing.ui.components.AppTopBar
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TemplateListScreen(
-    onTemplateSelected: (DrawingTemplate) -> Unit
+    onTemplateSelected: (DrawingTemplate) -> Unit,
+    onStartLessonClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val templates = TemplateRepository.getTemplates(context)
     
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "AR Drawing",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Black
-                )
+            AppTopBar(
+                title = "AR Drawing",
+                showBackButton = false
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onStartLessonClick,
+                containerColor = Color(0xFF4CAF50),
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "Start Lesson",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+            }
         }
     ) { paddingValues ->
         LazyVerticalGrid(
@@ -56,8 +65,8 @@ fun TemplateListScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
                 .padding(paddingValues)
+                .background(Color.White)
         ) {
             items(templates) { template ->
                 TemplateItem(

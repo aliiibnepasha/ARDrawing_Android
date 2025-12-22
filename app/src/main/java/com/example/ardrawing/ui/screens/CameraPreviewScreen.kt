@@ -27,12 +27,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.LifecycleOwner
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.ui.res.painterResource
+import com.example.ardrawing.R
 import com.example.ardrawing.data.model.DrawingTemplate
+import com.example.ardrawing.ui.components.AppTopBar
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -78,266 +76,207 @@ fun CameraPreviewScreen(
         }
     }
     
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (cameraPermissionsState.allPermissionsGranted) {
-            // Camera Preview
-            AndroidView(
-                factory = { ctx ->
-                    val previewView = PreviewView(ctx)
-                    scope.launch {
-                        val cameraProvider = cameraProviderFuture.get()
-                        val previewUseCase = Preview.Builder()
-                            .build()
-                            .also {
-                                it.setSurfaceProvider(previewView.surfaceProvider)
-                            }
-
-                        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-                        try {
-                            cameraProvider.unbindAll()
-                            val cameraInstance = cameraProvider.bindToLifecycle(
-                                lifecycleOwner,
-                                cameraSelector,
-                                previewUseCase
-                            )
-                            preview = previewUseCase
-                            camera = cameraInstance
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                    previewView
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .navigationBarsPadding()
-            )
-
-            // Overlay Image
-            Image(
-                painter = rememberAssetImagePainter(template.imageAssetPath),
-                contentDescription = "Overlay",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .navigationBarsPadding()
-                    .alpha(opacity)
-                    .graphicsLayer {
-                        scaleX = if (isHorizontallyFlipped) -imageScale else imageScale
-                        scaleY = if (isVerticallyFlipped) -imageScale else imageScale
-                        translationX = imageOffsetX
-                        translationY = imageOffsetY
-                    }
-                    .pointerInput(isLocked) {
-                        if (!isLocked) {
-                            detectTransformGestures { _, pan, zoom, _ ->
-                                imageScale *= zoom
-                                imageOffsetX += pan.x
-                                imageOffsetY += pan.y
-                            }
-                        }
-                    },
-                contentScale = ContentScale.Fit
-            )
-
-            // Top Back Button (hide in fullscreen)
-            if (!isFullscreen) {
-                IconButton(
-                    onClick = onBackClick,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
-                    )
-                }
+    Scaffold(
+        topBar = {
+            if (!isFullscreen && cameraPermissionsState.allPermissionsGranted) {
+                AppTopBar(
+                    title = "",
+                    showBackButton = true,
+                    onBackClick = onBackClick
+                )
             }
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            if (cameraPermissionsState.allPermissionsGranted) {
+                // Camera Preview
+                AndroidView(
+                    factory = { ctx ->
+                        val previewView = PreviewView(ctx)
+                        scope.launch {
+                            val cameraProvider = cameraProviderFuture.get()
+                            val previewUseCase = Preview.Builder()
+                                .build()
+                                .also {
+                                    it.setSurfaceProvider(previewView.surfaceProvider)
+                                }
 
-            // Bottom Sheet with Lock/Home buttons above (hide in fullscreen)
-            if (!isFullscreen) {
-                Column(
+                            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+                            try {
+                                cameraProvider.unbindAll()
+                                val cameraInstance = cameraProvider.bindToLifecycle(
+                                    lifecycleOwner,
+                                    cameraSelector,
+                                    previewUseCase
+                                )
+                                preview = previewUseCase
+                                camera = cameraInstance
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                        previewView
+                    },
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
+                        .fillMaxSize()
                         .navigationBarsPadding()
-                ) {
-                    // Lock and Home Buttons Row (Above Bottom Sheet - Transparent)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.Transparent)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Lock Button (Left)
-                        IconButton(
-                            onClick = { isLocked = !isLocked },
-                            modifier = Modifier
-                                .size(56.dp)
-                                .border(1.dp, Color.Gray.copy(alpha = 0.5f), CircleShape)
-                                .background(Color.White, CircleShape)
-                        ) {
-                            Icon(
-                                imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
-                                contentDescription = if (isLocked) "Unlock" else "Lock",
-                                tint = Color.Gray,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+                )
 
-                        // Home Button (Right)
-                        IconButton(
-                            onClick = onHomeClick,
-                            modifier = Modifier
-                                .size(56.dp)
-                                .border(1.dp, Color.Gray.copy(alpha = 0.5f), CircleShape)
-                                .background(Color.White, CircleShape)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Home,
-                                contentDescription = "Home",
-                                tint = Color.Gray,
-                                modifier = Modifier.size(24.dp)
-                            )
+                // Overlay Image
+                Image(
+                    painter = rememberAssetImagePainter(template.imageAssetPath),
+                    contentDescription = "Overlay",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .navigationBarsPadding()
+                        .alpha(opacity)
+                        .graphicsLayer {
+                            scaleX = if (isHorizontallyFlipped) -imageScale else imageScale
+                            scaleY = if (isVerticallyFlipped) -imageScale else imageScale
+                            translationX = imageOffsetX
+                            translationY = imageOffsetY
                         }
-                    }
+                        .pointerInput(isLocked) {
+                            if (!isLocked) {
+                                detectTransformGestures { _, pan, zoom, _ ->
+                                    imageScale *= zoom
+                                    imageOffsetX += pan.x
+                                    imageOffsetY += pan.y
+                                }
+                            }
+                        },
+                    contentScale = ContentScale.Fit
+                )
 
-                    // Bottom Sheet Controls
+                // Bottom Sheet Controls (hide in fullscreen)
+                if (!isFullscreen) {
                     Column(
                         modifier = Modifier
+                            .align(Alignment.BottomCenter)
                             .fillMaxWidth()
-                            .background(Color.White)
-                            .padding(vertical = 8.dp, horizontal = 12.dp)
+                            .navigationBarsPadding()
                     ) {
-                        // Slider Row (Full Width)
-                        Row(
+                        // Bottom Sheet Controls
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .background(Color.White)
+                                .padding(vertical = 8.dp, horizontal = 12.dp)
                         ) {
-                            Slider(
-                                value = opacity,
-                                onValueChange = { opacity = it },
-                                modifier = Modifier.weight(1f),
-                                colors = SliderDefaults.colors(
-                                    thumbColor = Color(0xFF4CAF50),
-                                    activeTrackColor = Color(0xFF4CAF50),
-                                    inactiveTrackColor = Color(0xFF4CAF50).copy(alpha = 0.3f)
-                                )
-                            )
-                            Text(
-                                text = "${(opacity * 100).toInt()}%",
-                                color = Color.Gray,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
-                        }
-
-                        // Action Icons Row
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Vertical Flip Icon (Top ↔ Bottom)
-                            IconButton(
-                                onClick = { isVerticallyFlipped = !isVerticallyFlipped },
-                                modifier = Modifier.size(40.dp)
+                            // Slider Row (Full Width)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Tune,
-                                    contentDescription = "Vertical Flip",
-                                    tint = Color.Black,
-                                    modifier = Modifier.size(24.dp)
+                                Slider(
+                                    value = opacity,
+                                    onValueChange = { opacity = it },
+                                    modifier = Modifier.weight(1f),
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = Color(0xFF4CAF50),
+                                        activeTrackColor = Color(0xFF4CAF50),
+                                        inactiveTrackColor = Color(0xFF4CAF50).copy(alpha = 0.3f)
+                                    )
+                                )
+                                Text(
+                                    text = "${(opacity * 100).toInt()}%",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 8.dp)
                                 )
                             }
 
-                            // Horizontal Flip Icon (Left ↔ Right)
-                            IconButton(
-                                onClick = { isHorizontallyFlipped = !isHorizontallyFlipped },
-                                modifier = Modifier.size(40.dp)
+                            // Action Icons Row (4 icons: Flip Vertical, Flip Horizontal, Lock, Fullscreen)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.SwapHoriz,
-                                    contentDescription = "Horizontal Flip",
-                                    tint = Color.Black,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
+                                // Vertical Flip Icon (Top ↔ Bottom)
+                                IconButton(
+                                    onClick = { isVerticallyFlipped = !isVerticallyFlipped },
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.flip_reverse),
+                                        contentDescription = "Vertical Flip",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
 
-                            // Camera/Capture Icon
-                            IconButton(
-                                onClick = { /* TODO: Implement capture */ },
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Camera,
-                                    contentDescription = "Capture",
-                                    tint = Color.Black,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
+                                // Horizontal Flip Icon (Left ↔ Right)
+                                IconButton(
+                                    onClick = { isHorizontallyFlipped = !isHorizontallyFlipped },
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.flip_straight),
+                                        contentDescription = "Horizontal Flip",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
 
-                            // Flashlight Icon
-                            IconButton(
-                                onClick = {
-                                    isFlashlightOn = !isFlashlightOn
-                                    camera?.cameraControl?.enableTorch(isFlashlightOn)
-                                },
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (isFlashlightOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
-                                    contentDescription = if (isFlashlightOn) "Flashlight On" else "Flashlight Off",
-                                    tint = if (isFlashlightOn) Color(0xFFFFD700) else Color.Black,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
+                                // Lock Icon
+                                IconButton(
+                                    onClick = { isLocked = !isLocked },
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.lock),
+                                        contentDescription = if (isLocked) "Unlock" else "Lock",
+                                        tint = if (isLocked) Color.Black else Color.Gray,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
 
-                            // Fullscreen Icon
-                            IconButton(
-                                onClick = { isFullscreen = true },
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Fullscreen,
-                                    contentDescription = "Fullscreen",
-                                    tint = Color.Black,
-                                    modifier = Modifier.size(24.dp)
-                                )
+                                // Fullscreen Icon
+                                IconButton(
+                                    onClick = { isFullscreen = true },
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.full_screen),
+                                        contentDescription = "Fullscreen",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
-            
-            // Fullscreen Exit Button (only visible in fullscreen mode, bottom right)
-            if (isFullscreen) {
-                IconButton(
-                    onClick = { isFullscreen = false },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                        .size(48.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FullscreenExit,
-                        contentDescription = "Exit Fullscreen",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
+
+                // Fullscreen Exit Button (only visible in fullscreen mode, bottom right)
+                if (isFullscreen) {
+                    IconButton(
+                        onClick = { isFullscreen = false },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(16.dp)
+                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                            .size(48.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.full_screen),
+                            contentDescription = "Exit Fullscreen",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
-            }
             } else {
                 // Permission Denied State
                 Column(
@@ -373,6 +312,7 @@ fun CameraPreviewScreen(
                     }
                 }
             }
+        }
     }
 }
 

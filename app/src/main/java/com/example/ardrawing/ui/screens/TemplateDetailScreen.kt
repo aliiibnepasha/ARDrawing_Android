@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ardrawing.data.model.DrawingTemplate
+import com.example.ardrawing.ui.components.AppTopBar
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,19 +39,10 @@ fun TemplateDetailScreen(
     
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+            AppTopBar(
+                title = "",
+                showBackButton = true,
+                onBackClick = onBackClick
             )
         }
     ) { paddingValues ->
