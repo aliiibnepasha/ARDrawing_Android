@@ -4,6 +4,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import coil.decode.SvgDecoder
 import java.io.File
 
 /**
@@ -20,6 +21,11 @@ fun rememberAssetImagePainter(imagePath: String) = rememberAsyncImagePainter(
                 else -> "file:///android_asset/$imagePath" // Asset path
             }
         )
+        .apply {
+            if (imagePath.endsWith(".svg", ignoreCase = true)) {
+                decoderFactory(SvgDecoder.Factory())
+            }
+        }
         .build()
 )
 

@@ -13,8 +13,11 @@ import com.example.ardrawing.data.repository.SavedDrawingRepository
 import com.example.ardrawing.data.repository.LessonRepository
 import com.example.ardrawing.ui.screens.CameraPreviewScreen
 import com.example.ardrawing.ui.screens.CaptureResultScreen
+import com.example.ardrawing.ui.screens.ColoringImageSelectionScreen
+import com.example.ardrawing.ui.screens.ColoringScreen
 import com.example.ardrawing.ui.screens.CreateLessonFromImageScreen
 import com.example.ardrawing.ui.screens.LessonDrawingScreen
+import com.example.ardrawing.ui.screens.LessonListScreen
 import com.example.ardrawing.ui.screens.LessonPreviewScreen
 import com.example.ardrawing.ui.screens.MyCreativeScreen
 import com.example.ardrawing.ui.screens.PaperTraceScreen
@@ -37,6 +40,7 @@ sealed class Screen(val route: String) {
         fun createRoute(templateId: String, sourceType: String) = "capture_result/$templateId/$sourceType"
     }
     object MyCreative : Screen("my_creative")
+    object LessonList : Screen("lesson_list")
     object LessonPreview : Screen("lesson_preview/{lessonId}") {
         fun createRoute(lessonId: String) = "lesson_preview/$lessonId"
     }
@@ -44,6 +48,10 @@ sealed class Screen(val route: String) {
         fun createRoute(lessonId: String) = "lesson_drawing/$lessonId"
     }
     object CreateLessonFromImage : Screen("create_lesson_from_image")
+    object ColoringImageSelection : Screen("coloring_image_selection")
+    object Coloring : Screen("coloring/{templateId}") {
+        fun createRoute(templateId: String) = "coloring/$templateId"
+    }
 }
 
 @Composable
@@ -64,7 +72,10 @@ fun NavGraph(
                     navController.navigate(Screen.TemplateDetail.createRoute(template.id))
                 },
                 onStartLessonClick = {
-                    navController.navigate(Screen.CreateLessonFromImage.route)
+                    navController.navigate(Screen.LessonList.route)
+                },
+                onColoringClick = {
+                    navController.navigate(Screen.ColoringImageSelection.route)
                 }
             )
         }
@@ -172,6 +183,16 @@ fun NavGraph(
             )
         }
         
+        composable(Screen.LessonList.route) {
+            val context = LocalContext.current
+            LessonListScreen(
+                onLessonSelected = { lesson ->
+                    navController.navigate(Screen.LessonDrawing.createRoute(lesson.id))
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
         composable(Screen.LessonPreview.route) { backStackEntry ->
             val context = LocalContext.current
             val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""
@@ -231,6 +252,34 @@ fun NavGraph(
                     }
                 }
             )
+        }
+        
+        composable(Screen.ColoringImageSelection.route) {
+            ColoringImageSelectionScreen(
+                onImageSelected = { template ->
+                    navController.navigate(Screen.Coloring.createRoute(template.id))
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.Coloring.route) { backStackEntry ->
+            val context = LocalContext.current
+            val templateId = backStackEntry.arguments?.getString("templateId") ?: ""
+            val template = com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, templateId)
+            
+            template?.let {
+                ColoringScreen(
+                    template = it,
+                    onBackClick = { navController.popBackStack() },
+                    onHomeClick = {
+                        navController.popBackStack(
+                            route = Screen.TemplateList.route,
+                            inclusive = false
+                        )
+                    }
+                )
+            }
         }
     }
 }

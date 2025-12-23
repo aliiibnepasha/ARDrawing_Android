@@ -75,6 +75,7 @@ dependencies {
     
     // Image Loading
     implementation(libs.coil.compose)
+    implementation("io.coil-kt:coil-svg:2.7.0")
     
     // Room Database
     implementation(libs.androidx.room.runtime)
@@ -87,6 +88,9 @@ dependencies {
     
     // Gson for JSON serialization
     implementation(libs.gson)
+    
+    // Color picker (Hsv wheel)
+    implementation("com.github.skydoves:colorpicker-compose:1.0.7")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

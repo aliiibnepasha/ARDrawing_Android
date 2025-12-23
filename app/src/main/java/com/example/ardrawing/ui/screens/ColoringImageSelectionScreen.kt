@@ -2,6 +2,7 @@ package com.example.ardrawing.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -16,7 +17,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.border
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -28,10 +28,9 @@ import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TemplateListScreen(
-    onTemplateSelected: (DrawingTemplate) -> Unit,
-    onStartLessonClick: () -> Unit = {},
-    onColoringClick: () -> Unit = {}
+fun ColoringImageSelectionScreen(
+    onImageSelected: (DrawingTemplate) -> Unit,
+    onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
     val templates = TemplateRepository.getTemplates(context)
@@ -39,66 +38,51 @@ fun TemplateListScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = "AR Drawing",
-                showBackButton = false
+                title = "Select Image to Color",
+                showBackButton = true,
+                onBackClick = onBackClick
             )
-        },
-        floatingActionButton = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.padding(16.dp)
-            ) {
-                FloatingActionButton(
-                    onClick = onColoringClick,
-                    containerColor = Color(0xFF9B59B6),
-                    modifier = Modifier
-                ) {
-                    Text(
-                        text = "Color",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    )
-                }
-                FloatingActionButton(
-                    onClick = onStartLessonClick,
-                    containerColor = Color(0xFF4CAF50),
-                    modifier = Modifier
-                ) {
-                    Text(
-                        text = "Start Lesson",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    )
-                }
-            }
         }
     ) { paddingValues ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            contentPadding = PaddingValues(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(Color.White)
         ) {
-            items(templates) { template ->
-                TemplateItem(
-                    template = template,
-                    onClick = { onTemplateSelected(template) }
-                )
+            if (templates.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No images available",
+                        color = Color.Gray,
+                        fontSize = 16.sp
+                    )
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    contentPadding = PaddingValues(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(templates) { template ->
+                        ColoringTemplateItem(
+                            template = template,
+                            onClick = { onImageSelected(template) }
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun TemplateItem(
+fun ColoringTemplateItem(
     template: DrawingTemplate,
     onClick: () -> Unit
 ) {

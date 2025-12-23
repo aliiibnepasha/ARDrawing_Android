@@ -6,6 +6,7 @@ import com.example.ardrawing.data.model.LessonStep
 import com.example.ardrawing.data.utils.AssetUtils
 
 object LessonRepository {
+    // Default subfolder name, but we also support top-level folders like "lesson_1"
     private const val LESSONS_FOLDER = "lessons"
     private val createdLessons = mutableListOf<Lesson>()
     
@@ -18,25 +19,53 @@ object LessonRepository {
         // Add created lessons (from images)
         lessons.addAll(createdLessons)
         
-        // Check if lessons folder exists in assets
-        val lessonFolders = try {
-            context.assets.list(LESSONS_FOLDER)?.toList() ?: emptyList()
+        // Discover lesson folders in assets.
+        // 1) Prefer subfolders under "lessons" if that directory exists.
+        // 2) Otherwise, look for top-level folders like "lesson_1", "lesson_face", etc.
+        val assetManager = context.assets
+        
+        val nestedLessonFolders = try {
+            assetManager.list(LESSONS_FOLDER)?.toList().orEmpty()
         } catch (e: Exception) {
             emptyList()
         }
         
-        // Load lessons from assets
-        val assetLessons = lessonFolders.mapIndexed { index, folderName ->
-            val stepImages = AssetUtils.listImageFiles(context, "$LESSONS_FOLDER/$folderName")
+        val lessonFolderPaths: List<String> = if (nestedLessonFolders.isNotEmpty()) {
+            // Use "lessons/<folderName>"
+            nestedLessonFolders.map { "$LESSONS_FOLDER/$it" }
+        } else {
+            // Fallback: look for top-level folders starting with "lesson"
+            val rootEntries = try {
+                assetManager.list("")?.toList().orEmpty()
+            } catch (e: Exception) {
+                emptyList()
+            }
+            
+            rootEntries.filter { name ->
+                // Treat as a lesson folder if it starts with "lesson" and actually contains files
+                name.startsWith("lesson", ignoreCase = true) &&
+                    (assetManager.list(name)?.isNotEmpty() == true)
+            }
+        }
+        
+        // Load lessons from discovered folders
+        val assetLessons = lessonFolderPaths.mapIndexed { index, folderPath ->
+            val stepImages = AssetUtils.listImageFiles(context, folderPath)
+                .sortedWith(::naturalOrderByNumbers) // ensure 1,2,3... order for numbered files
+            
+            val folderName = folderPath.substringAfterLast("/")
+            
             Lesson(
                 id = "asset_${index + 1}",
-                name = folderName.replaceFirstChar { it.uppercaseChar() },
+                name = folderName
+                    .replace("_", " ")
+                    .replaceFirstChar { it.uppercaseChar() },
                 description = "Learn to draw step by step",
                 steps = stepImages.mapIndexed { stepIndex, imageName ->
                     LessonStep(
                         stepNumber = stepIndex + 1,
                         title = "Step ${stepIndex + 1}",
-                        imageAssetPath = AssetUtils.getAssetPath("$LESSONS_FOLDER/$folderName", imageName)
+                        imageAssetPath = AssetUtils.getAssetPath(folderPath, imageName)
                     )
                 }
             )
@@ -56,6 +85,21 @@ object LessonRepository {
      */
     fun addCreatedLesson(lesson: Lesson) {
         createdLessons.add(lesson)
+    }
+
+    /**
+     * Natural sort that respects numeric order in filenames
+     * e.g. step1.png, step2.png, step10.png
+     */
+    private fun naturalOrderByNumbers(a: String, b: String): Int {
+        val regex = "\\d+".toRegex()
+        val aMatch = regex.find(a)?.value?.toIntOrNull()
+        val bMatch = regex.find(b)?.value?.toIntOrNull()
+
+        return when {
+            aMatch != null && bMatch != null && aMatch != bMatch -> aMatch.compareTo(bMatch)
+            else -> a.compareTo(b, ignoreCase = true)
+        }
     }
     
     /**

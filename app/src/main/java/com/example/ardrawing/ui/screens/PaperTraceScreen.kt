@@ -23,6 +23,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.WindowInsetsSides
 import com.example.ardrawing.R
 import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.ui.components.AppTopBar
@@ -103,31 +107,35 @@ fun PaperTraceScreen(
                     .fillMaxSize()
                     .background(Color.White)
             )
-
-            // Overlay Image
-            Image(
-                painter = rememberAssetImagePainter(template.imageAssetPath),
-                contentDescription = "Sketch",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .alpha(opacity)
-                    .graphicsLayer {
-                        scaleX = if (isHorizontallyFlipped) -imageScale else imageScale
-                        scaleY = if (isVerticallyFlipped) -imageScale else imageScale
-                        translationX = imageOffsetX
-                        translationY = imageOffsetY
-                    }
-                    .pointerInput(isLocked) {
-                        if (!isLocked) {
-                            detectTransformGestures { _, pan, zoom, _ ->
-                                imageScale *= zoom
-                                imageOffsetX += pan.x
-                                imageOffsetY += pan.y
-                            }
+            Box(
+                modifier = Modifier.fillMaxSize()
+                    .background(Color.Red.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                // Overlay Image
+                Image(
+                    painter = rememberAssetImagePainter(template.imageAssetPath),
+                    contentDescription = "Sketch",
+                    modifier = Modifier
+                        .alpha(opacity)
+                        .graphicsLayer {
+                            scaleX = if (isHorizontallyFlipped) -imageScale else imageScale
+                            scaleY = if (isVerticallyFlipped) -imageScale else imageScale
+                            translationX = imageOffsetX
+                            translationY = imageOffsetY
                         }
-                    },
-                contentScale = ContentScale.Fit
-            )
+                        .pointerInput(isLocked) {
+                            if (!isLocked) {
+                                detectTransformGestures { _, pan, zoom, _ ->
+                                    imageScale *= zoom
+                                    imageOffsetX += pan.x
+                                    imageOffsetY += pan.y
+                                }
+                            }
+                        },
+                    contentScale = ContentScale.Fit
+                )
+            }
 
             // Bottom Sheet Controls (hide in fullscreen)
             if (!isFullscreen) {
@@ -135,7 +143,6 @@ fun PaperTraceScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .navigationBarsPadding()
                 ) {
                     // Bottom Sheet Controls
                     Column(

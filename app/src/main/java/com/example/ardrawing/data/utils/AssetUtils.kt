@@ -22,7 +22,8 @@ object AssetUtils {
                         filename.endsWith(".png", ignoreCase = true) ||
                         filename.endsWith(".jpg", ignoreCase = true) ||
                         filename.endsWith(".jpeg", ignoreCase = true) ||
-                        filename.endsWith(".webp", ignoreCase = true)
+                        filename.endsWith(".webp", ignoreCase = true) ||
+                        filename.endsWith(".svg", ignoreCase = true)
                     }.sorted()
                 )
             }

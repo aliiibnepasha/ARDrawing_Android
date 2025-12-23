@@ -9,6 +9,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material.icons.Icons
@@ -46,36 +50,36 @@ fun CameraPreviewScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
-    
+
     // Camera permission state
     val cameraPermissionsState = rememberMultiplePermissionsState(
         permissions = listOf(Manifest.permission.CAMERA)
     )
-    
+
     // Image overlay state
     var imageScale by remember { mutableStateOf(1f) }
     var imageOffsetX by remember { mutableStateOf(0f) }
     var imageOffsetY by remember { mutableStateOf(0f) }
     var opacity by remember { mutableStateOf(1f) }
-    
+
     // Flashlight state
     var isFlashlightOn by remember { mutableStateOf(false) }
     var isLocked by remember { mutableStateOf(false) }
     var isFullscreen by remember { mutableStateOf(false) }
     var isVerticallyFlipped by remember { mutableStateOf(false) }
     var isHorizontallyFlipped by remember { mutableStateOf(false) }
-    
+
     // Camera provider
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
     var preview: Preview? by remember { mutableStateOf(null) }
     var camera: androidx.camera.core.Camera? by remember { mutableStateOf(null) }
-    
+
     LaunchedEffect(Unit) {
         if (!cameraPermissionsState.allPermissionsGranted) {
             cameraPermissionsState.launchMultiplePermissionRequest()
         }
     }
-    
+
     Scaffold(
         topBar = {
             if (!isFullscreen && cameraPermissionsState.allPermissionsGranted) {
@@ -124,42 +128,42 @@ fun CameraPreviewScreen(
                     },
                     modifier = Modifier
                         .fillMaxSize()
-                        .navigationBarsPadding()
                 )
-
-                // Overlay Image
-                Image(
-                    painter = rememberAssetImagePainter(template.imageAssetPath),
-                    contentDescription = "Overlay",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .navigationBarsPadding()
-                        .alpha(opacity)
-                        .graphicsLayer {
-                            scaleX = if (isHorizontallyFlipped) -imageScale else imageScale
-                            scaleY = if (isVerticallyFlipped) -imageScale else imageScale
-                            translationX = imageOffsetX
-                            translationY = imageOffsetY
-                        }
-                        .pointerInput(isLocked) {
-                            if (!isLocked) {
-                                detectTransformGestures { _, pan, zoom, _ ->
-                                    imageScale *= zoom
-                                    imageOffsetX += pan.x
-                                    imageOffsetY += pan.y
-                                }
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                    .background(Color.Red.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.TopCenter
+                ) {
+                    // Overlay Image
+                    Image(
+                        painter = rememberAssetImagePainter(template.imageAssetPath),
+                        contentDescription = "Overlay",
+                        modifier = Modifier
+                            .alpha(opacity)
+                            .graphicsLayer {
+                                scaleX = if (isHorizontallyFlipped) -imageScale else imageScale
+                                scaleY = if (isVerticallyFlipped) -imageScale else imageScale
+                                translationX = imageOffsetX
+                                translationY = imageOffsetY
                             }
-                        },
-                    contentScale = ContentScale.Fit
-                )
-
+                            .pointerInput(isLocked) {
+                                if (!isLocked) {
+                                    detectTransformGestures { _, pan, zoom, _ ->
+                                        imageScale *= zoom
+                                        imageOffsetX += pan.x
+                                        imageOffsetY += pan.y
+                                    }
+                                }
+                            },
+                        contentScale = ContentScale.Fit
+                    )
+                }
                 // Bottom Sheet Controls (hide in fullscreen)
                 if (!isFullscreen) {
                     Column(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth()
-                            .navigationBarsPadding()
                     ) {
                         // Bottom Sheet Controls
                         Column(
