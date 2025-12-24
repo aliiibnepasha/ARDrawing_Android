@@ -108,8 +108,7 @@ fun PaperTraceScreen(
                     .background(Color.White)
             )
             Box(
-                modifier = Modifier.fillMaxSize()
-                    .background(Color.Red.copy(alpha = 0.2f)),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.TopCenter
             ) {
                 // Overlay Image
@@ -194,7 +193,7 @@ fun PaperTraceScreen(
                                 Icon(
                                     painter = painterResource(id = R.drawable.flip_reverse),
                                     contentDescription = "Vertical Flip",
-                                    tint = Color.Black,
+                                    tint = if (isVerticallyFlipped) Color(0xFF2196F3) else Color.Gray,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -207,7 +206,7 @@ fun PaperTraceScreen(
                                 Icon(
                                     painter = painterResource(id = R.drawable.flip_straight),
                                     contentDescription = "Horizontal Flip",
-                                    tint = Color.Black,
+                                    tint = if (isHorizontallyFlipped) Color(0xFF2196F3) else Color.Gray,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -220,7 +219,7 @@ fun PaperTraceScreen(
                                 Icon(
                                     painter = painterResource(id = R.drawable.lock),
                                     contentDescription = if (isLocked) "Unlock" else "Lock",
-                                    tint = if (isLocked) Color.Black else Color.Gray,
+                                    tint = if (isLocked) Color(0xFF2196F3) else Color.Gray,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -233,7 +232,7 @@ fun PaperTraceScreen(
                                 Icon(
                                     painter = painterResource(id = R.drawable.full_screen),
                                     contentDescription = "Fullscreen",
-                                    tint = Color.Black,
+                                    tint = if (isFullscreen) Color(0xFF2196F3) else Color.Gray,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }

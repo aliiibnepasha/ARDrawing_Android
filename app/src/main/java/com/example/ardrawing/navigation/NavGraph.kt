@@ -13,19 +13,23 @@ import com.example.ardrawing.data.repository.SavedDrawingRepository
 import com.example.ardrawing.data.repository.LessonRepository
 import com.example.ardrawing.ui.screens.CameraPreviewScreen
 import com.example.ardrawing.ui.screens.CaptureResultScreen
+import com.example.ardrawing.ui.screens.CategoryDetailScreen
 import com.example.ardrawing.ui.screens.ColoringImageSelectionScreen
 import com.example.ardrawing.ui.screens.ColoringScreen
 import com.example.ardrawing.ui.screens.CreateLessonFromImageScreen
+import com.example.ardrawing.ui.screens.HomeScreen
 import com.example.ardrawing.ui.screens.LessonDrawingScreen
 import com.example.ardrawing.ui.screens.LessonListScreen
 import com.example.ardrawing.ui.screens.LessonPreviewScreen
 import com.example.ardrawing.ui.screens.MyCreativeScreen
 import com.example.ardrawing.ui.screens.PaperTraceScreen
+import com.example.ardrawing.ui.screens.SettingsScreen
 import com.example.ardrawing.ui.screens.TemplateDetailScreen
 import com.example.ardrawing.ui.screens.TemplateListScreen
 import com.example.ardrawing.ui.viewmodel.MyCreativeViewModel
 
 sealed class Screen(val route: String) {
+    object Home : Screen("home")
     object TemplateList : Screen("template_list")
     object TemplateDetail : Screen("template_detail/{templateId}") {
         fun createRoute(templateId: String) = "template_detail/$templateId"
@@ -52,19 +56,55 @@ sealed class Screen(val route: String) {
     object Coloring : Screen("coloring/{templateId}") {
         fun createRoute(templateId: String) = "coloring/$templateId"
     }
+    object Settings : Screen("settings")
+    object CategoryDetail : Screen("category_detail/{categoryId}") {
+        fun createRoute(categoryId: String) = "category_detail/$categoryId"
+    }
 }
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    startDestination: String = Screen.TemplateList.route
+    startDestination: String = Screen.Home.route
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier
     ) {
+        composable(Screen.Home.route) {
+            val context = LocalContext.current
+            HomeScreen(
+                onTemplateSelected = { template ->
+                    navController.navigate(Screen.TemplateDetail.createRoute(template.id))
+                },
+                onCategorySeeAll = { category ->
+                    navController.navigate(Screen.CategoryDetail.createRoute(category.id))
+                },
+                onFromGalleryClick = {
+                    // TODO: Implement gallery selection
+                },
+                onFromCameraClick = {
+                    // TODO: Implement camera capture
+                },
+                onProClick = {
+                    navController.navigate(Screen.Settings.route)
+                }
+            )
+        }
+        
+        composable(Screen.CategoryDetail.route) { backStackEntry ->
+            val categoryId = backStackEntry.arguments?.getString("categoryId") ?: ""
+            CategoryDetailScreen(
+                categoryId = categoryId,
+                onTemplateSelected = { template ->
+                    navController.navigate(Screen.TemplateDetail.createRoute(template.id))
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
         composable(Screen.TemplateList.route) {
             val context = LocalContext.current
             TemplateListScreen(
@@ -76,6 +116,9 @@ fun NavGraph(
                 },
                 onColoringClick = {
                     navController.navigate(Screen.ColoringImageSelection.route)
+                },
+                onSettingsClick = {
+                    navController.navigate(Screen.Settings.route)
                 }
             )
         }
@@ -110,7 +153,7 @@ fun NavGraph(
                     onBackClick = { navController.popBackStack() },
                     onHomeClick = {
                         navController.popBackStack(
-                            route = Screen.TemplateList.route,
+                            route = Screen.Home.route,
                             inclusive = false
                         )
                     }
@@ -129,7 +172,7 @@ fun NavGraph(
                     onBackClick = { navController.popBackStack() },
                     onHomeClick = {
                         navController.popBackStack(
-                            route = Screen.TemplateList.route,
+                            route = Screen.Home.route,
                             inclusive = false
                         )
                     },
@@ -153,13 +196,13 @@ fun NavGraph(
                     onCloseClick = { navController.popBackStack() },
                     onHomeClick = {
                         navController.popBackStack(
-                            route = Screen.TemplateList.route,
+                            route = Screen.Home.route,
                             inclusive = false
                         )
                     },
                     onSaveClick = {
                         navController.navigate(Screen.MyCreative.route) {
-                            popUpTo(Screen.TemplateList.route) { inclusive = false }
+                            popUpTo(Screen.Home.route) { inclusive = false }
                         }
                     }
                 )
@@ -280,6 +323,12 @@ fun NavGraph(
                     }
                 )
             }
+        }
+        
+        composable(Screen.Settings.route) {
+            SettingsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
         }
     }
 }

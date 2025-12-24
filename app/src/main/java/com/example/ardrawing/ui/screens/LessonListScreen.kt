@@ -74,7 +74,8 @@ private fun LessonListItem(
     lesson: Lesson,
     onClick: () -> Unit
 ) {
-    val firstStep = lesson.steps.lastOrNull()
+    // Use the last step (final/completed image) as thumbnail
+    val lastStep = lesson.steps.lastOrNull()
 
     Card(
         modifier = Modifier
@@ -93,9 +94,9 @@ private fun LessonListItem(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (firstStep != null) {
+            if (lastStep != null) {
                 Image(
-                    painter = rememberAssetImagePainter(firstStep.imageAssetPath),
+                    painter = rememberAssetImagePainter(lastStep.imageAssetPath),
                     contentDescription = lesson.name,
                     modifier = Modifier
                         .size(72.dp)

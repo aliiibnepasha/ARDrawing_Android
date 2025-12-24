@@ -28,9 +28,26 @@ object TemplateRepository {
 
     /**
      * Gets a template by ID
+     * First checks bg_remove folder, then checks all categories
      */
     fun getTemplateById(context: Context, id: String): DrawingTemplate? {
-        return getTemplates(context).find { it.id == id }
+        // First check bg_remove folder
+        val templateFromBgRemove = getTemplates(context).find { it.id == id }
+        if (templateFromBgRemove != null) {
+            return templateFromBgRemove
+        }
+        
+        // If not found, check categories (template IDs from categories are like "categoryName_index")
+        // Try to find in all categories
+        val categories = CategoryRepository.getCategories(context)
+        for (category in categories) {
+            val template = category.templates.find { it.id == id }
+            if (template != null) {
+                return template
+            }
+        }
+        
+        return null
     }
 }
 

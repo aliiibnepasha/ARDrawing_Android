@@ -43,5 +43,37 @@ object AssetUtils {
     fun getAssetPath(folderPath: String, filename: String): String {
         return "$folderPath/$filename"
     }
+    
+    /**
+     * Lists all subfolders in the specified assets folder
+     * @param context Android context to access AssetManager
+     * @param folderPath Path to the parent folder in assets (e.g., "home")
+     * @return List of folder names sorted alphabetically
+     */
+    fun listFolders(context: Context, folderPath: String): List<String> {
+        val folders = mutableListOf<String>()
+        
+        try {
+            val files = context.assets.list(folderPath)
+            if (files != null) {
+                // Filter for folders (directories) - check if it's a folder by trying to list it
+                files.forEach { name ->
+                    try {
+                        val subFiles = context.assets.list("$folderPath/$name")
+                        // If we can list it and it contains files, it's a folder
+                        if (subFiles != null && subFiles.isNotEmpty()) {
+                            folders.add(name)
+                        }
+                    } catch (e: Exception) {
+                        // Not a folder, skip
+                    }
+                }
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        
+        return folders.sorted()
+    }
 }
 

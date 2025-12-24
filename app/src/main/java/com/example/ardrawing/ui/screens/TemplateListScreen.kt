@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,16 +33,35 @@ import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 fun TemplateListScreen(
     onTemplateSelected: (DrawingTemplate) -> Unit,
     onStartLessonClick: () -> Unit = {},
-    onColoringClick: () -> Unit = {}
+    onColoringClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val templates = TemplateRepository.getTemplates(context)
     
     Scaffold(
         topBar = {
-            AppTopBar(
-                title = "AR Drawing",
-                showBackButton = false
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "AR Drawing",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                actions = {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = Color.Black
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    titleContentColor = Color.Black,
+                    actionIconContentColor = Color.Black
+                )
             )
         },
         floatingActionButton = {
