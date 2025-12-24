@@ -81,7 +81,7 @@ private fun BottomNavItem(
     ) {
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(30.dp)
                 .clip(CircleShape)
                 .background(
                     if (isSelected) Color(0xFFE3F2FD) else Color.Transparent

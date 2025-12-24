@@ -11,12 +11,16 @@ import com.example.ardrawing.data.local.database.AppDatabase
 import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.data.repository.SavedDrawingRepository
 import com.example.ardrawing.data.repository.LessonRepository
+import com.example.ardrawing.ui.screens.ARAnchorCaptureScreen
+import com.example.ardrawing.ui.viewmodel.ARViewModel
+import com.example.ardrawing.ui.screens.ARDrawingScreen
 import com.example.ardrawing.ui.screens.CameraPreviewScreen
 import com.example.ardrawing.ui.screens.CaptureResultScreen
 import com.example.ardrawing.ui.screens.CategoryDetailScreen
 import com.example.ardrawing.ui.screens.ColoringImageSelectionScreen
 import com.example.ardrawing.ui.screens.ColoringScreen
 import com.example.ardrawing.ui.screens.CreateLessonFromImageScreen
+import com.example.ardrawing.ui.screens.DrawingModeSelectionScreen
 import com.example.ardrawing.ui.screens.HomeScreen
 import com.example.ardrawing.ui.screens.LessonDrawingScreen
 import com.example.ardrawing.ui.screens.LessonListScreen
@@ -24,16 +28,13 @@ import com.example.ardrawing.ui.screens.LessonPreviewScreen
 import com.example.ardrawing.ui.screens.MyCreativeScreen
 import com.example.ardrawing.ui.screens.PaperTraceScreen
 import com.example.ardrawing.ui.screens.SettingsScreen
-import com.example.ardrawing.ui.screens.TemplateDetailScreen
 import com.example.ardrawing.ui.screens.TemplateListScreen
+import com.example.ardrawing.ui.screens.DrawingMode
 import com.example.ardrawing.ui.viewmodel.MyCreativeViewModel
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object TemplateList : Screen("template_list")
-    object TemplateDetail : Screen("template_detail/{templateId}") {
-        fun createRoute(templateId: String) = "template_detail/$templateId"
-    }
     object CameraPreview : Screen("camera_preview/{templateId}") {
         fun createRoute(templateId: String) = "camera_preview/$templateId"
     }
@@ -60,13 +61,23 @@ sealed class Screen(val route: String) {
     object CategoryDetail : Screen("category_detail/{categoryId}") {
         fun createRoute(categoryId: String) = "category_detail/$categoryId"
     }
+    object DrawingModeSelection : Screen("drawing_mode_selection/{templateId}") {
+        fun createRoute(templateId: String) = "drawing_mode_selection/$templateId"
+    }
+    object ARAnchorCapture : Screen("ar_anchor_capture/{templateId}") {
+        fun createRoute(templateId: String) = "ar_anchor_capture/$templateId"
+    }
+    object ARDrawing : Screen("ar_drawing/{templateId}") {
+        fun createRoute(templateId: String) = "ar_drawing/$templateId"
+    }
 }
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    startDestination: String = Screen.Home.route
+    startDestination: String = Screen.Home.route,
+    arViewModel: ARViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     NavHost(
         navController = navController,
@@ -77,7 +88,7 @@ fun NavGraph(
             val context = LocalContext.current
             HomeScreen(
                 onTemplateSelected = { template ->
-                    navController.navigate(Screen.TemplateDetail.createRoute(template.id))
+                    navController.navigate(Screen.DrawingModeSelection.createRoute(template.id))
                 },
                 onCategorySeeAll = { category ->
                     navController.navigate(Screen.CategoryDetail.createRoute(category.id))
@@ -99,7 +110,7 @@ fun NavGraph(
             CategoryDetailScreen(
                 categoryId = categoryId,
                 onTemplateSelected = { template ->
-                    navController.navigate(Screen.TemplateDetail.createRoute(template.id))
+                    navController.navigate(Screen.DrawingModeSelection.createRoute(template.id))
                 },
                 onBackClick = { navController.popBackStack() }
             )
@@ -109,7 +120,7 @@ fun NavGraph(
             val context = LocalContext.current
             TemplateListScreen(
                 onTemplateSelected = { template ->
-                    navController.navigate(Screen.TemplateDetail.createRoute(template.id))
+                    navController.navigate(Screen.DrawingModeSelection.createRoute(template.id))
                 },
                 onStartLessonClick = {
                     navController.navigate(Screen.LessonList.route)
@@ -123,20 +134,71 @@ fun NavGraph(
             )
         }
         
-        composable(Screen.TemplateDetail.route) { backStackEntry ->
+        composable(Screen.DrawingModeSelection.route) { backStackEntry ->
             val context = LocalContext.current
             val templateId = backStackEntry.arguments?.getString("templateId") ?: ""
             val template = com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, templateId)
             
             template?.let {
-                TemplateDetailScreen(
+                DrawingModeSelectionScreen(
                     template = it,
                     onBackClick = { navController.popBackStack() },
-                    onCameraSketchClick = {
-                        navController.navigate(Screen.CameraPreview.createRoute(templateId))
+                    onContinueClick = { mode ->
+                        when (mode) {
+                            DrawingMode.DRAW_WITH_CAMERA -> {
+                                navController.navigate(Screen.CameraPreview.createRoute(templateId))
+                            }
+                            DrawingMode.DRAW_WITH_AR -> {
+                                // Navigate to anchor capture first
+                                navController.navigate(Screen.ARAnchorCapture.createRoute(templateId))
+                            }
+                        }
+                    }
+                )
+            }
+        }
+        
+        composable(Screen.ARAnchorCapture.route) { backStackEntry ->
+            val context = LocalContext.current
+            val templateId = backStackEntry.arguments?.getString("templateId") ?: ""
+            val template = com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, templateId)
+            
+            template?.let {
+                ARAnchorCaptureScreen(
+                    template = it,
+                    onBackClick = { navController.popBackStack() },
+                    onAnchorCaptured = { bitmap ->
+                        arViewModel.setAnchorBitmap(bitmap)
+                        // Navigate to AR Drawing screen with anchor
+                        navController.navigate(Screen.ARDrawing.createRoute(templateId)) {
+                            popUpTo(Screen.DrawingModeSelection.createRoute(templateId)) { inclusive = false }
+                        }
+                    }
+                )
+            }
+        }
+        
+        composable(Screen.ARDrawing.route) { backStackEntry ->
+            val context = LocalContext.current
+            val templateId = backStackEntry.arguments?.getString("templateId") ?: ""
+            val template = com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, templateId)
+            
+            template?.let {
+                ARDrawingScreen(
+                    template = it,
+                    anchorBitmap = arViewModel.anchorBitmap,
+                    onBackClick = { navController.popBackStack() },
+                    onHomeClick = {
+                        navController.popBackStack(
+                            route = Screen.Home.route,
+                            inclusive = false
+                        )
                     },
-                    onPaperTraceClick = {
-                        navController.navigate(Screen.PaperTrace.createRoute(templateId))
+                    onRetakeAnchor = {
+                        arViewModel.clearAnchorBitmap()
+                        navController.navigate(Screen.ARAnchorCapture.createRoute(templateId)) {
+                            popUpTo(Screen.ARDrawing.createRoute(templateId)) { inclusive = false }
+                        }
                     }
                 )
             }

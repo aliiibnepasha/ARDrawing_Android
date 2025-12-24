@@ -8,7 +8,8 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     
     <!-- ARCore requires OpenGL ES 2.0 -->
-    <uses-feature android:name="android.hardware.camera.ar" android:required="false" />
+    <!-- Set camera.ar to required=true so Play Store auto-installs ARCore -->
+    <uses-feature android:name="android.hardware.camera.ar" android:required="true" />
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
 
     <application

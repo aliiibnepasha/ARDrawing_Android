@@ -84,6 +84,7 @@ fun HomeScreen(
                 .padding(paddingValues)
                 .background(Color.White)
                 .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 100.dp), // Add bottom padding for bottom nav
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // From Gallery and From Camera Buttons

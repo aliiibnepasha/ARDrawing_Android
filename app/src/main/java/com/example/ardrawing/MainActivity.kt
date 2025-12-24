@@ -35,16 +35,21 @@ class MainActivity : ComponentActivity() {
                 
                 // Determine which bottom nav item should be selected based on current route
                 val selectedRoute = when {
-                    currentRoute == Screen.Home.route || 
-                    currentRoute == null || 
-                    currentRoute.startsWith("category_") ||
-                    currentRoute.startsWith("template_detail") -> "home"
-                    currentRoute == Screen.LessonList.route || 
-                    currentRoute.startsWith("lesson_") -> "lesson_list"
+                    currentRoute == Screen.Home.route || currentRoute == null -> "home"
+                    currentRoute == Screen.LessonList.route -> "lesson_list"
                     currentRoute == Screen.MyCreative.route -> "my_creative"
                     currentRoute == "ar_text" -> "ar_text"
                     else -> null // Don't highlight any tab for other routes
                 }
+                
+                // Show bottom nav ONLY on: Home, Lesson, AR Text, My
+                // Hide on all other screens including TemplateDetail, CategoryDetail, Settings, etc.
+                val shouldShowBottomNav = currentRoute != null && (
+                    currentRoute == Screen.Home.route ||
+                    currentRoute == Screen.LessonList.route ||
+                    currentRoute == Screen.MyCreative.route ||
+                    currentRoute == "ar_text"
+                )
                 
                 Box(modifier = Modifier.fillMaxSize()) {
                     NavGraph(
@@ -52,34 +57,36 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize()
                     )
                     
-                    // Bottom navigation bar overlay - always visible
-                    BottomNavigationBar(
-                        currentRoute = selectedRoute,
-                        onItemClick = { route ->
-                            when (route) {
-                                "home" -> {
-                                    navController.navigate(Screen.Home.route) {
-                                        popUpTo(Screen.Home.route) { inclusive = true }
+                    // Bottom navigation bar overlay - only show on main screens
+                    if (shouldShowBottomNav) {
+                        BottomNavigationBar(
+                            currentRoute = selectedRoute,
+                            onItemClick = { route ->
+                                when (route) {
+                                    "home" -> {
+                                        navController.navigate(Screen.Home.route) {
+                                            popUpTo(Screen.Home.route) { inclusive = true }
+                                        }
+                                    }
+                                    "lesson_list" -> {
+                                        navController.navigate(Screen.LessonList.route) {
+                                            popUpTo(Screen.Home.route) { inclusive = false }
+                                        }
+                                    }
+                                    "ar_text" -> {
+                                        // TODO: Navigate to AR Text screen when implemented
+                                    }
+                                    "my_creative" -> {
+                                        navController.navigate(Screen.MyCreative.route) {
+                                            popUpTo(Screen.Home.route) { inclusive = false }
+                                        }
                                     }
                                 }
-                                "lesson_list" -> {
-                                    navController.navigate(Screen.LessonList.route) {
-                                        popUpTo(Screen.Home.route) { inclusive = false }
-                                    }
-                                }
-                                "ar_text" -> {
-                                    // TODO: Navigate to AR Text screen when implemented
-                                }
-                                "my_creative" -> {
-                                    navController.navigate(Screen.MyCreative.route) {
-                                        popUpTo(Screen.Home.route) { inclusive = false }
-                                    }
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                    )
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                        )
+                    }
                 }
             }
         }

@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -32,8 +34,7 @@ import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 fun TemplateDetailScreen(
     template: DrawingTemplate,
     onBackClick: () -> Unit,
-    onCameraSketchClick: () -> Unit,
-    onPaperTraceClick: () -> Unit
+    onStartDrawingClick: () -> Unit
 ) {
     val isFavorite = remember { mutableStateOf(false) }
     
@@ -51,8 +52,7 @@ fun TemplateDetailScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(Color.White),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Sketch Preview Card
             Card(
@@ -90,76 +90,25 @@ fun TemplateDetailScreen(
                 }
             }
             
-            // Action Buttons
-            Column(
+            // Start Drawing Button - Fixed at bottom with proper padding
+            Button(
+                onClick = onStartDrawingClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .height(56.dp)
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .windowInsetsPadding(WindowInsets.navigationBars),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFE91E63) // Pink
+                )
             ) {
-                // Camera Sketch Button
-                Button(
-                    onClick = onCameraSketchClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50) // Green
-                    )
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            painter = painterResource(android.R.drawable.ic_menu_camera),
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Camera Sketch",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
-                
-                // Paper Trace Button
-                Button(
-                    onClick = onPaperTraceClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2196F3) // Blue
-                    )
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            painter = painterResource(android.R.drawable.ic_menu_edit),
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Paper Trace",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
+                Text(
+                    text = "Start Drawing",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             }
         }
     }
