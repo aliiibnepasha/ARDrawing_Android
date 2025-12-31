@@ -68,8 +68,7 @@ dependencies {
     implementation(libs.androidx.camera.view)
     
     // ARCore
-    implementation(libs.google.ar.core)
-    
+    implementation("com.google.ar:core:1.44.0")
     // Permissions
     implementation(libs.accompanist.permissions)
     
@@ -80,6 +79,7 @@ dependencies {
     // Room Database
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.appcompat)
     kapt(libs.androidx.room.compiler)
     
     // ViewModel
