@@ -26,8 +26,15 @@
         android:theme="@style/Theme.ARDrawing">
 
 
-        <activity android:name="com.lowbyte.battery.arexample.LabelActivity"/>
-        <activity android:name="com.lowbyte.battery.arexample.CropActivity"/>
+        <activity
+            android:name=".LaunchActivity"
+            android:theme="@style/Theme.ARDrawing" />
+        <activity
+            android:name=".LabelActivity"
+            android:theme="@style/Theme.ARDrawing" />
+        <activity
+            android:name=".CropActivity"
+            android:theme="@style/Theme.ARDrawing" />
 
         <activity
             android:name=".MainActivity"

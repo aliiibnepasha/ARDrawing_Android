@@ -1,5 +1,6 @@
 package com.example.ardrawing.navigation
 
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -11,9 +12,7 @@ import com.example.ardrawing.data.local.database.AppDatabase
 import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.data.repository.SavedDrawingRepository
 import com.example.ardrawing.data.repository.LessonRepository
-import com.example.ardrawing.ui.screens.ARAnchorCaptureScreen
 import com.example.ardrawing.ui.viewmodel.ARViewModel
-import com.example.ardrawing.ui.screens.ARDrawingScreen
 import com.example.ardrawing.ui.screens.CameraPreviewScreen
 import com.example.ardrawing.ui.screens.CaptureResultScreen
 import com.example.ardrawing.ui.screens.CategoryDetailScreen
@@ -31,6 +30,7 @@ import com.example.ardrawing.ui.screens.SettingsScreen
 import com.example.ardrawing.ui.screens.TemplateListScreen
 import com.example.ardrawing.ui.screens.DrawingMode
 import com.example.ardrawing.ui.viewmodel.MyCreativeViewModel
+import com.example.ardrawing.LaunchActivity
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -64,12 +64,6 @@ sealed class Screen(val route: String) {
     object DrawingModeSelection : Screen("drawing_mode_selection/{templateId}") {
         fun createRoute(templateId: String) = "drawing_mode_selection/$templateId"
     }
-    object ARAnchorCapture : Screen("ar_anchor_capture/{templateId}") {
-        fun createRoute(templateId: String) = "ar_anchor_capture/$templateId"
-    }
-    object ARDrawing : Screen("ar_drawing/{templateId}") {
-        fun createRoute(templateId: String) = "ar_drawing/$templateId"
-    }
 }
 
 @Composable
@@ -85,26 +79,38 @@ fun NavGraph(
         modifier = modifier
     ) {
         composable(Screen.Home.route) {
-            val context = LocalContext.current
             HomeScreen(
                 onTemplateSelected = { template ->
-                    navController.navigate(Screen.DrawingModeSelection.createRoute(template.id))
+                    navController.navigate(
+                        Screen.DrawingModeSelection.createRoute(template.id)
+                    )
                 },
-                onCategorySeeAll = { category ->
-                    navController.navigate(Screen.CategoryDetail.createRoute(category.id))
+
+                onSeeAll = { category ->
+                    navController.navigate(
+                        Screen.CategoryDetail.createRoute(category.id)
+                    )
                 },
-                onFromGalleryClick = {
+
+                onStartAR = {
+                    // Open AR tracing flow
+                    navController.navigate(Screen.DrawingModeSelection.route)
+                },
+
+                onPhotoToSketch = {
                     // TODO: Implement gallery selection
                 },
-                onFromCameraClick = {
-                    // TODO: Implement camera capture
+
+                onAICreate = {
+                    // TODO: Implement AI create drawing
                 },
+
                 onProClick = {
                     navController.navigate(Screen.Settings.route)
                 }
             )
         }
-        
+
         composable(Screen.CategoryDetail.route) { backStackEntry ->
             val categoryId = backStackEntry.arguments?.getString("categoryId") ?: ""
             CategoryDetailScreen(
@@ -149,8 +155,12 @@ fun NavGraph(
                                 navController.navigate(Screen.CameraPreview.createRoute(templateId))
                             }
                             DrawingMode.DRAW_WITH_AR -> {
-                                // Navigate to anchor capture first
-                                navController.navigate(Screen.ARAnchorCapture.createRoute(templateId))
+                                // Launch existing ARCore LaunchActivity
+                                val intent = Intent(
+                                    context,
+                                    LaunchActivity::class.java
+                                )
+                                context.startActivity(intent)
                             }
                         }
                     }
@@ -158,51 +168,7 @@ fun NavGraph(
             }
         }
         
-        composable(Screen.ARAnchorCapture.route) { backStackEntry ->
-            val context = LocalContext.current
-            val templateId = backStackEntry.arguments?.getString("templateId") ?: ""
-            val template = com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, templateId)
-            
-            template?.let {
-                ARAnchorCaptureScreen(
-                    template = it,
-                    onBackClick = { navController.popBackStack() },
-                    onAnchorCaptured = { bitmap ->
-                        arViewModel.setAnchorBitmap(bitmap)
-                        // Navigate to AR Drawing screen with anchor
-                        navController.navigate(Screen.ARDrawing.createRoute(templateId)) {
-                            popUpTo(Screen.DrawingModeSelection.createRoute(templateId)) { inclusive = false }
-                        }
-                    }
-                )
-            }
-        }
-        
-        composable(Screen.ARDrawing.route) { backStackEntry ->
-            val context = LocalContext.current
-            val templateId = backStackEntry.arguments?.getString("templateId") ?: ""
-            val template = com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, templateId)
-            
-            template?.let {
-                ARDrawingScreen(
-                    template = it,
-                    anchorBitmap = arViewModel.anchorBitmap,
-                    onBackClick = { navController.popBackStack() },
-                    onHomeClick = {
-                        navController.popBackStack(
-                            route = Screen.Home.route,
-                            inclusive = false
-                        )
-                    },
-                    onRetakeAnchor = {
-                        arViewModel.clearAnchorBitmap()
-                        navController.navigate(Screen.ARAnchorCapture.createRoute(templateId)) {
-                            popUpTo(Screen.ARDrawing.createRoute(templateId)) { inclusive = false }
-                        }
-                    }
-                )
-            }
-        }
+
         
         composable(Screen.CameraPreview.route) { backStackEntry ->
             val context = LocalContext.current

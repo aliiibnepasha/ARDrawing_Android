@@ -1,109 +1,134 @@
 package com.example.ardrawing.ui.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.ardrawing.R
 
-enum class BottomNavItem(
-    val route: String,
-    val iconRes: Int,
-    val label: String
-) {
-    Home("home", R.drawable.home_nav_ic, "Home"),
-    Lesson("lesson_list", R.drawable.lesson_nav_ic, "Lesson"),
-    ARText("ar_text", R.drawable.text_nav_ic, "AR Text"),
-    My("my_creative", R.drawable.me_nav_ic, "My")
-}
-
 @Composable
-fun BottomNavigationBar(
+fun ARFloatingBottomBar(
     currentRoute: String?,
     onItemClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.navigationBars),
-        color = Color.White,
-        shadowElevation = 8.dp,
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+            .windowInsetsPadding(WindowInsets.navigationBars) // ✅ FIX 1
+            .padding(bottom = 12.dp),
+        contentAlignment = Alignment.BottomCenter
     ) {
-        Row(
+
+        // ===== PILL CONTAINER =====
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxWidth(0.94f)
+                .height(64.dp)
+                .clip(RoundedCornerShape(36.dp))
+                .background(Color(0xFFF3F4EF))
         ) {
-            BottomNavItem.values().forEach { item ->
-                BottomNavItem(
-                    item = item,
-                    isSelected = currentRoute == item.route || 
-                                 (item == BottomNavItem.Home && currentRoute == null) ||
-                                 (item == BottomNavItem.Home && currentRoute == "home"),
-                    onClick = { onItemClick(item.route) }
+
+            // ===== TOP SELECTION INDICATOR ROW =====
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+                    .align(Alignment.TopCenter),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                TopIndicator(selected = currentRoute == "home")
+                TopIndicator(selected = currentRoute == "lesson_list")
+                Spacer(modifier = Modifier.width(48.dp)) // FAB space
+                TopIndicator(selected = currentRoute == "ar_text")
+                TopIndicator(selected = currentRoute == "my_creative")
+            }
+
+            // ===== ICON ROW =====
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                IconItem(
+                    icon = R.drawable.home_nav_ic,
+                    onClick = { onItemClick("home") }
+                )
+
+                IconItem(
+                    icon = R.drawable.lesson_nav_ic,
+                    onClick = { onItemClick("lesson_list") }
+                )
+
+                Spacer(modifier = Modifier.width(48.dp))
+
+                IconItem(
+                    icon = R.drawable.text_nav_ic,
+                    onClick = { onItemClick("ar_text") }
+                )
+
+                IconItem(
+                    icon = R.drawable.me_nav_ic,
+                    onClick = { onItemClick("my_creative") }
                 )
             }
         }
-    }
-}
 
-@Composable
-private fun BottomNavItem(
-    item: BottomNavItem,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
+        // ===== CENTER FAB =====
         Box(
             modifier = Modifier
-                .size(30.dp)
+                .offset(y = (-30).dp)
+                .size(56.dp)
                 .clip(CircleShape)
-                .background(
-                    if (isSelected) Color(0xFFE3F2FD) else Color.Transparent
-                ),
+                .background(Color.White),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(id = item.iconRes),
-                contentDescription = item.label,
-                modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(
-                    if (isSelected) Color(0xFF2196F3) else Color(0xFF757575)
-                ),
-                contentScale = ContentScale.Fit
+            Icon(
+                painter = painterResource(R.drawable.magic_nav_ic),
+                contentDescription = null,
+                tint = Color.Black,
+                modifier = Modifier.size(26.dp)
             )
         }
-        Text(
-            text = item.label,
-            fontSize = 11.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) Color(0xFF2196F3) else Color(0xFF757575)
-        )
     }
+}
+@Composable
+private fun IconItem(
+    icon: Int,
+    onClick: () -> Unit
+) {
+    Icon(
+        painter = painterResource(icon),
+        contentDescription = null,
+        tint = Color(0xFF2C2C2C),
+        modifier = Modifier
+            .size(24.dp)
+            .clickable { onClick() }
+    )
+}
+@Composable
+private fun TopIndicator(selected: Boolean) {
+    Box(
+        modifier = Modifier
+            .width(18.dp)
+            .height(3.dp)
+            .clip(RoundedCornerShape(2.dp))
+            .background(
+                if (selected) Color(0xFF5E8BFF) else Color.Transparent
+            )
+    )
 }
 

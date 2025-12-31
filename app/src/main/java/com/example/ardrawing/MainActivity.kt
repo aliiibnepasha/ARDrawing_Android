@@ -12,9 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.ardrawing.data.repository.TemplateRepository
 import com.example.ardrawing.navigation.NavGraph
 import com.example.ardrawing.navigation.Screen
-import com.example.ardrawing.ui.components.BottomNavigationBar
+import com.example.ardrawing.ui.components.ARFloatingBottomBar
 import com.example.ardrawing.ui.theme.ARDrawingTheme
 
 class MainActivity : ComponentActivity() {
@@ -30,6 +31,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             ARDrawingTheme {
                 val navController = rememberNavController()
+
+
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
                 
@@ -59,7 +62,7 @@ class MainActivity : ComponentActivity() {
                     
                     // Bottom navigation bar overlay - only show on main screens
                     if (shouldShowBottomNav) {
-                        BottomNavigationBar(
+                        ARFloatingBottomBar(
                             currentRoute = selectedRoute,
                             onItemClick = { route ->
                                 when (route) {
@@ -74,7 +77,9 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     "ar_text" -> {
-                                        // TODO: Navigate to AR Text screen when implemented
+                                        navController.navigate(Screen.LessonList.route) {
+                                            popUpTo(Screen.Home.route) { inclusive = false }
+                                        }
                                     }
                                     "my_creative" -> {
                                         navController.navigate(Screen.MyCreative.route) {

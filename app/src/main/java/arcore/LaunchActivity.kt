@@ -1,4 +1,4 @@
-package com.lowbyte.battery.arexample
+package com.example.ardrawing
 
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,6 +9,8 @@ import android.provider.MediaStore
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import arcore.PermissionUtils
+import com.example.ardrawing.R
 
 
 class LaunchActivity : AppCompatActivity() {
@@ -143,9 +145,12 @@ class LaunchActivity : AppCompatActivity() {
 
     private fun proceedToARLabels() {
         try {
+            android.util.Log.d("LaunchActivity", "proceedToARLabels called, capturedBitmap is null: ${capturedBitmap == null}")
+            // Launch the existing LabelActivity for AR tracking
             startActivity(Intent(this, LabelActivity::class.java))
             finish() // Close LaunchActivity so user can't go back to empty screen
         } catch (e: Exception) {
+            android.util.Log.e("LaunchActivity", "Error starting AR labels: ${e.message}", e)
             Toast.makeText(this, "Error starting AR labels: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }

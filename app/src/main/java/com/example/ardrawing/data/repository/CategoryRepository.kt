@@ -47,8 +47,13 @@ object CategoryRepository {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        
-        return categories
+
+        // Sort categories with custom order: hot trend first, then anime, cute, anatomy, etc.
+        val customOrder = listOf("hot trend", "anime", "cute", "anatomy", "cartoon", "festival", "love", "nature", "people", "simple", "architecture", "objects", "asthetic")
+        return categories.sortedBy { category ->
+            val index = customOrder.indexOf(category.id.lowercase())
+            if (index >= 0) index else Int.MAX_VALUE
+        }
     }
     
     /**

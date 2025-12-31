@@ -1,4 +1,4 @@
-package com.lowbyte.battery.arexample
+package com.example.ardrawing
 
 import android.content.Context
 import android.graphics.Bitmap

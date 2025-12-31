@@ -13,6 +13,7 @@ import com.google.ar.core.Config
 import com.google.ar.core.Frame
 import com.google.ar.core.Session
 import com.google.ar.core.TrackingState
+import com.example.ardrawing.AnchorRenderer
 
 class LabelActivity : AppCompatActivity() {
 

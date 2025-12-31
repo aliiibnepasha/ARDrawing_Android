@@ -2,7 +2,6 @@ package com.example.ardrawing.ui.screens
 
 import android.Manifest
 import android.graphics.Bitmap
-import android.graphics.Matrix
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.util.Log
@@ -47,10 +46,13 @@ import androidx.compose.material3.SwitchDefaults
 import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.ui.components.AppTopBar
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
+import com.example.ardrawing.BoundingBoxRenderer
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.*
+import com.google.ar.core.Frame
+import com.example.ardrawing.LaunchActivity
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -66,7 +68,8 @@ fun ARDrawingScreen(
     Log.d("ARDrawing", "=== ARDrawingScreen ENTRY ===")
     Log.d("ARDrawing", "Template: ${template.name}, Image: ${template.imageAssetPath}")
     Log.d("ARDrawing", "Anchor bitmap provided: ${anchorBitmap != null}, Size: ${anchorBitmap?.let { "${it.width}x${it.height}" } ?: "null"}")
-//    Log.d("ARDrawing", "Debug mode: $debugMode")
+    Log.d("ARDrawing", "LaunchActivity.capturedBitmap available: ${LaunchActivity.capturedBitmap != null}")
+    //    Log.d("ARDrawing", "Debug mode: $debugMode")
 
     val context = LocalContext.current
     Log.d("ARDrawing", "Context obtained: ${context.javaClass.simpleName}")
@@ -79,11 +82,15 @@ fun ARDrawingScreen(
 
     val scope = rememberCoroutineScope()
     Log.d("ARDrawing", "Coroutine scope created: ${scope.javaClass.simpleName}")
-    
+
     val cameraPermissionsState = rememberMultiplePermissionsState(
         permissions = listOf(Manifest.permission.CAMERA)
     )
     Log.d("ARDrawing", "Camera permissions state initialized")
+
+    // ARCore renderers for image tracking
+    var boundingBoxRenderer by remember { mutableStateOf<BoundingBoxRenderer?>(null) }
+    Log.d("ARDrawing", "BoundingBoxRenderer state initialized: null")
 
     var arSession: Session? by remember { mutableStateOf(null) }
     Log.d("ARDrawing", "AR session state initialized: null")
@@ -113,8 +120,9 @@ fun ARDrawingScreen(
     Log.d("ARDrawing", "Plane detected state initialized: false")
 
     // Image tracking state (when anchorBitmap is provided)
-    var isImageTrackingMode by remember { mutableStateOf(anchorBitmap != null) }
+    var isImageTrackingMode by remember { mutableStateOf(anchorBitmap != null || LaunchActivity.capturedBitmap != null) }
     var isImageTracked by remember { mutableStateOf(false) }
+    Log.d("ARDrawing", "Image tracking mode: $isImageTrackingMode (anchorBitmap: ${anchorBitmap != null}, LaunchActivity: ${LaunchActivity.capturedBitmap != null})")
     var trackedImageName by remember { mutableStateOf("--") }
     var trackedImageSize by remember { mutableStateOf("--") }
     var trackedImageCoordinates by remember { mutableStateOf("--") }
@@ -643,6 +651,7 @@ fun ARDrawingScreen(
         Log.d("ARDrawing", "=== GLSurfaceView Timeout Monitor LaunchedEffect EXIT ===")
     }
 
+
     // Monitor AR tracking state - process frames from GL thread
     LaunchedEffect(arFrame) {
         Log.v("ARDrawing", "=== Frame Processing LaunchedEffect ENTRY ===")
@@ -678,7 +687,15 @@ fun ARDrawingScreen(
             // Handle image tracking mode
             if (isImageTrackingMode) {
                 Log.v("ARDrawing", "Processing image tracking mode")
-           //     processImageTracking(frame)
+                processImageTracking(frame,
+                    onTrackingUpdate = { tracked, name, size, coords, status ->
+                        isImageTracked = tracked
+                        trackedImageName = name
+                        trackedImageSize = size
+                        trackedImageCoordinates = coords
+                        trackedImageStatus = status
+                    }
+                )
                 return@LaunchedEffect
             }
 
@@ -1010,85 +1027,6 @@ fun ARDrawingScreen(
         }
     }
     
-    // Process image tracking for image tracking mode
-    fun processImageTracking(frame: Frame) {
-        Log.v("ARDrawing", "Processing image tracking...")
-
-        try {
-            val augmentedImages = frame.getUpdatedTrackables(AugmentedImage::class.java)
-            Log.v("ARDrawing", "Found ${augmentedImages.size} augmented images")
-
-            var foundTrackedImage = false
-
-            for (image in augmentedImages) {
-                when (image.trackingState) {
-                    TrackingState.TRACKING -> {
-                        Log.d("ARDrawing", "✓ Image TRACKED: ${image.name}")
-                        foundTrackedImage = true
-
-                        val oldTracked = isImageTracked
-                        val oldName = trackedImageName
-                        val oldSize = trackedImageSize
-                        val oldCoords = trackedImageCoordinates
-                        val oldStatus = trackedImageStatus
-
-                        isImageTracked = true
-                        trackedImageName = image.name
-                        trackedImageSize = String.format("%.2f x %.2f meters", image.extentX, image.extentZ)
-                        trackedImageCoordinates = String.format("(%.2f, %.2f, %.2f)",
-                            image.centerPose.tx(), image.centerPose.ty(), image.centerPose.tz())
-                        trackedImageStatus = "TRACKING ✅"
-
-                        if (oldTracked != isImageTracked || oldName != trackedImageName ||
-                            oldSize != trackedImageSize || oldCoords != trackedImageCoordinates ||
-                            oldStatus != trackedImageStatus) {
-                            Log.d("ARDrawing", "IMAGE TRACKING STATE CHANGES:")
-                            Log.d("ARDrawing", "  - isImageTracked: $oldTracked -> $isImageTracked")
-                            Log.d("ARDrawing", "  - trackedImageName: $oldName -> $trackedImageName")
-                            Log.d("ARDrawing", "  - trackedImageSize: $oldSize -> $trackedImageSize")
-                            Log.d("ARDrawing", "  - trackedImageCoordinates: $oldCoords -> $trackedImageCoordinates")
-                            Log.d("ARDrawing", "  - trackedImageStatus: $oldStatus -> $trackedImageStatus")
-                        }
-                    }
-                    TrackingState.PAUSED -> {
-                        Log.v("ARDrawing", "Image tracking PAUSED: ${image.name}")
-                        val oldStatus = trackedImageStatus
-                        trackedImageStatus = "PAUSED ⏸️"
-                        if (oldStatus != trackedImageStatus) {
-                            Log.d("ARDrawing", "IMAGE TRACKING STATE CHANGE: trackedImageStatus: $oldStatus -> $trackedImageStatus")
-                        }
-                    }
-                    TrackingState.STOPPED -> {
-                        Log.v("ARDrawing", "Image tracking STOPPED: ${image.name}")
-                        val oldTracked = isImageTracked
-                        val oldStatus = trackedImageStatus
-                        isImageTracked = false
-                        trackedImageStatus = "STOPPED ❌"
-                        if (oldTracked != isImageTracked || oldStatus != trackedImageStatus) {
-                            Log.d("ARDrawing", "IMAGE TRACKING STATE CHANGES:")
-                            Log.d("ARDrawing", "  - isImageTracked: $oldTracked -> $isImageTracked")
-                            Log.d("ARDrawing", "  - trackedImageStatus: $oldStatus -> $trackedImageStatus")
-                        }
-                    }
-                }
-            }
-
-            // If no images are being tracked, reset state
-            if (!foundTrackedImage && isImageTracked) {
-                Log.d("ARDrawing", "No images currently tracked - resetting state")
-                val oldTracked = isImageTracked
-                val oldStatus = trackedImageStatus
-                isImageTracked = false
-                trackedImageStatus = "Searching..."
-                Log.d("ARDrawing", "IMAGE TRACKING STATE CHANGES:")
-                Log.d("ARDrawing", "  - isImageTracked: $oldTracked -> $isImageTracked")
-                Log.d("ARDrawing", "  - trackedImageStatus: $oldStatus -> $trackedImageStatus")
-            }
-
-        } catch (e: Exception) {
-            Log.e("ARDrawing", "Error processing image tracking: ${e.message}", e)
-        }
-    }
 
     // Clean up AR Session when composable is disposed (not when session changes)
     DisposableEffect(Unit) {
@@ -1382,18 +1320,23 @@ fun ARDrawingScreen(
 
                 Log.d("ARDrawing", "Configuring session...")
                 val cfg = Config(arSession).apply {
-                    if (isImageTrackingMode && anchorBitmap != null) {
+                    if (isImageTrackingMode) {
                         // Image tracking mode - disable plane finding, enable image tracking
                         planeFindingMode = Config.PlaneFindingMode.DISABLED
                         updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
 
-                        // Create image database for tracking
-                        val imageDatabase = AugmentedImageDatabase(arSession)
-                        val processedBitmap = preprocessImageForARCore(anchorBitmap)
-                        imageDatabase.addImage("TrackedImage", processedBitmap)
-                        augmentedImageDatabase = imageDatabase
+                        // Create image database for tracking - use either ViewModel bitmap or LaunchActivity bitmap
+                        val trackingBitmap = anchorBitmap ?: LaunchActivity.capturedBitmap
+                        if (trackingBitmap != null) {
+                            val imageDatabase = AugmentedImageDatabase(arSession)
+                            val processedBitmap = preprocessImageForARCore(trackingBitmap)
+                            imageDatabase.addImage("TrackedImage", processedBitmap)
+                            augmentedImageDatabase = imageDatabase
 
-                        Log.d("ARDrawing", "Image tracking configured - planeFindingMode: $planeFindingMode, updateMode: $updateMode")
+                            Log.d("ARDrawing", "Image tracking configured - planeFindingMode: $planeFindingMode, updateMode: $updateMode")
+                        } else {
+                            Log.e("ARDrawing", "No bitmap available for image tracking")
+                        }
                     } else {
                         // Plane detection mode (original behavior)
                         planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
@@ -1414,6 +1357,15 @@ fun ARDrawingScreen(
                                                         Log.d("ARDrawing", "STATE CHANGE: sessionReady: $oldReadyState -> $sessionReady")
 
                                                         Log.e("ARDrawing", "✓ ARCore session fully initialized and ready")
+
+                                                // Initialize BoundingBoxRenderer for image tracking
+                                                if (boundingBoxRenderer == null && isImageTrackingMode) {
+                                                    Log.d("ARDrawing", "Initializing BoundingBoxRenderer for image tracking")
+                                                    boundingBoxRenderer = BoundingBoxRenderer(ctx)
+                                                    boundingBoxRenderer?.createOnGlThread()
+                                                    Log.d("ARDrawing", "✓ BoundingBoxRenderer initialized")
+                                                }
+
                                                     } else {
                                                         Log.d("ARDrawing", "AR session already exists, skipping creation")
                                                     }
@@ -1519,6 +1471,25 @@ fun ARDrawingScreen(
                                                     val runtime = Runtime.getRuntime()
                                                     val usedMemoryMB = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
                                                     Log.e("ARDrawing", "Error context - Memory usage: ${usedMemoryMB}MB, Frame count: $frameCount")
+                                                }
+
+                                                // Draw bounding boxes for image tracking
+                                                if (boundingBoxRenderer != null && arFrame != null) {
+                                                    try {
+                                                        Log.v("ARDrawing", "Drawing bounding boxes for tracked images")
+
+                                                        // Get camera matrices for rendering
+                                                        val camera = arFrame!!.camera
+                                                        val viewMatrix = FloatArray(16)
+                                                        val projectionMatrix = FloatArray(16)
+
+                                                        camera.getViewMatrix(viewMatrix, 0)
+                                                        camera.getProjectionMatrix(projectionMatrix, 0, 0.1f, 100.0f)
+
+                                                        boundingBoxRenderer?.draw(arFrame!!, viewMatrix, projectionMatrix)
+                                                    } catch (e: Exception) {
+                                                        Log.e("ARDrawing", "Error drawing bounding boxes: ${e.message}", e)
+                                                    }
                                                 }
 
                                                 val frameDuration = System.currentTimeMillis() - frameStartTime
@@ -2275,5 +2246,57 @@ fun ErrorView(message: String, onRetry: () -> Unit, onRetakePhoto: (() -> Unit)?
         ) {
             Text(if (isIncompatible) "Go Back" else "Retry", color = Color.White)
         }
+    }
+}
+
+// Process image tracking for image tracking mode
+fun processImageTracking(frame: Frame, onTrackingUpdate: (Boolean, String, String, String, String) -> Unit) {
+    Log.v("ARDrawing", "Processing image tracking...")
+
+    try {
+        val augmentedImages = frame.getUpdatedTrackables(AugmentedImage::class.java)
+        Log.v("ARDrawing", "Found ${augmentedImages.size} augmented images")
+
+        var foundTrackedImage = false
+
+        for (image in augmentedImages) {
+            when (image.trackingState) {
+                TrackingState.TRACKING -> {
+                    Log.d("ARDrawing", "✓ Image TRACKED: ${image.name}")
+                    foundTrackedImage = true
+
+                    val name = image.name
+                    val size = String.format("%.2f x %.2f meters", image.extentX, image.extentZ)
+                    val coords = String.format("(%.2f, %.2f, %.2f)",
+                        image.centerPose.tx(), image.centerPose.ty(), image.centerPose.tz())
+                    val status = "TRACKING ✅"
+
+                    Log.d("ARDrawing", "IMAGE TRACKING STATE CHANGES:")
+                    Log.d("ARDrawing", "  - trackedImageName: $name")
+                    Log.d("ARDrawing", "  - trackedImageSize: $size")
+                    Log.d("ARDrawing", "  - trackedImageCoordinates: $coords")
+                    Log.d("ARDrawing", "  - trackedImageStatus: $status")
+
+                    onTrackingUpdate(true, name, size, coords, status)
+                }
+                TrackingState.PAUSED -> {
+                    Log.v("ARDrawing", "Image tracking PAUSED: ${image.name}")
+                    onTrackingUpdate(true, "Paused", "--", "--", "PAUSED ⏸️")
+                }
+                TrackingState.STOPPED -> {
+                    Log.v("ARDrawing", "Image tracking STOPPED: ${image.name}")
+                    onTrackingUpdate(false, "None", "--", "--", "STOPPED ❌")
+                }
+            }
+        }
+
+        // If no images are being tracked, reset state
+        if (!foundTrackedImage) {
+            Log.d("ARDrawing", "No images currently tracked - resetting state")
+            onTrackingUpdate(false, "None", "--", "--", "Searching...")
+        }
+
+    } catch (e: Exception) {
+        Log.e("ARDrawing", "Error processing image tracking: ${e.message}", e)
     }
 }

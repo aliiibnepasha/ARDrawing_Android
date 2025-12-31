@@ -3,6 +3,8 @@ package com.example.ardrawing
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import com.google.ar.core.Session
+import com.example.ardrawing.AnchorRenderer
+import com.example.ardrawing.BackgroundRenderer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 

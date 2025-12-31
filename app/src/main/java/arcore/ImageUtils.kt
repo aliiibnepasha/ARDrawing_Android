@@ -1,4 +1,4 @@
-package com.lowbyte.battery.arexample
+package com.example.ardrawing
 
 import android.graphics.*
 import android.media.Image

@@ -58,7 +58,7 @@ fun ARAnchorCaptureScreen(
     
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
     var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
-    var camera: androidx.camera.core.Camera? by remember { mutableStateOf(null) }
+    var camera: Camera? by remember { mutableStateOf(null) }
     
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()

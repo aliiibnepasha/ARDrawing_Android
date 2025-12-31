@@ -1,4 +1,4 @@
-package com.lowbyte.battery.arexample
+package com.example.ardrawing
 
 import android.opengl.GLES11Ext
 import android.opengl.GLES20

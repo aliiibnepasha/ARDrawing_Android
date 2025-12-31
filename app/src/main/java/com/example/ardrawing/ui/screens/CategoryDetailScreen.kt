@@ -68,10 +68,10 @@ fun CategoryDetailScreen(
                     .background(Color.White)
             ) {
                 items(category.templates) { template ->
-                    CategoryTemplateItem(
-                        template = template,
-                        onClick = { onTemplateSelected(template) }
-                    )
+//                    CategoryTemplateItem(
+//                        template = template,
+//                        onClick = { onTemplateSelected(template) }
+//                    )
                 }
             }
         }
