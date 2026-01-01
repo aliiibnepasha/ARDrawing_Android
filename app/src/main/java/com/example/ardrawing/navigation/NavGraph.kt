@@ -19,18 +19,19 @@ import com.example.ardrawing.ui.screens.CategoryDetailScreen
 import com.example.ardrawing.ui.screens.ColoringImageSelectionScreen
 import com.example.ardrawing.ui.screens.ColoringScreen
 import com.example.ardrawing.ui.screens.CreateLessonFromImageScreen
-import com.example.ardrawing.ui.screens.DrawingModeSelectionScreen
+import com.example.ardrawing.ui.screens.ChooseToDrawScreen
 import com.example.ardrawing.ui.screens.HomeScreen
 import com.example.ardrawing.ui.screens.LessonDrawingScreen
 import com.example.ardrawing.ui.screens.LessonListScreen
 import com.example.ardrawing.ui.screens.LessonPreviewScreen
+import com.example.ardrawing.ui.screens.LessonScreen
 import com.example.ardrawing.ui.screens.MyCreativeScreen
 import com.example.ardrawing.ui.screens.PaperTraceScreen
 import com.example.ardrawing.ui.screens.SettingsScreen
 import com.example.ardrawing.ui.screens.TemplateListScreen
-import com.example.ardrawing.ui.screens.DrawingMode
 import com.example.ardrawing.ui.viewmodel.MyCreativeViewModel
 import com.example.ardrawing.LaunchActivity
+import com.example.ardrawing.data.repository.TemplateRepository
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -79,6 +80,8 @@ fun NavGraph(
         modifier = modifier
     ) {
         composable(Screen.Home.route) {
+            val context = LocalContext.current
+            
             HomeScreen(
                 onTemplateSelected = { template ->
                     navController.navigate(
@@ -91,12 +94,11 @@ fun NavGraph(
                         Screen.CategoryDetail.createRoute(category.id)
                     )
                 },
-
                 onStartAR = {
-                    // Open AR tracing flow
-                    navController.navigate(Screen.DrawingModeSelection.route)
+                    // Start AR tracing flow directly: Camera -> Crop -> AR
+                    val intent = Intent(context, LaunchActivity::class.java)
+                    context.startActivity(intent)
                 },
-
                 onPhotoToSketch = {
                     // TODO: Implement gallery selection
                 },
@@ -144,25 +146,16 @@ fun NavGraph(
             val context = LocalContext.current
             val templateId = backStackEntry.arguments?.getString("templateId") ?: ""
             val template = com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, templateId)
-            
+
             template?.let {
-                DrawingModeSelectionScreen(
+                ChooseToDrawScreen(
                     template = it,
                     onBackClick = { navController.popBackStack() },
-                    onContinueClick = { mode ->
-                        when (mode) {
-                            DrawingMode.DRAW_WITH_CAMERA -> {
-                                navController.navigate(Screen.CameraPreview.createRoute(templateId))
-                            }
-                            DrawingMode.DRAW_WITH_AR -> {
-                                // Launch existing ARCore LaunchActivity
-                                val intent = Intent(
-                                    context,
-                                    LaunchActivity::class.java
-                                )
-                                context.startActivity(intent)
-                            }
-                        }
+                    onDrawSketchClick = {
+                        navController.navigate(Screen.CameraPreview.createRoute(templateId))
+                    },
+                    onTraceImageClick = {
+                        navController.navigate(Screen.PaperTrace.createRoute(templateId))
                     }
                 )
             }
@@ -179,12 +172,6 @@ fun NavGraph(
                 CameraPreviewScreen(
                     template = it,
                     onBackClick = { navController.popBackStack() },
-                    onHomeClick = {
-                        navController.popBackStack(
-                            route = Screen.Home.route,
-                            inclusive = false
-                        )
-                    }
                 )
             }
         }
@@ -197,16 +184,7 @@ fun NavGraph(
             template?.let {
                 PaperTraceScreen(
                     template = it,
-                    onBackClick = { navController.popBackStack() },
-                    onHomeClick = {
-                        navController.popBackStack(
-                            route = Screen.Home.route,
-                            inclusive = false
-                        )
-                    },
-                    onCaptureClick = {
-                        navController.navigate(Screen.CaptureResult.createRoute(templateId, "Paper Trace"))
-                    }
+                    onBackClick = { navController.popBackStack() }
                 )
             }
         }
@@ -255,13 +233,7 @@ fun NavGraph(
         }
         
         composable(Screen.LessonList.route) {
-            val context = LocalContext.current
-            LessonListScreen(
-                onLessonSelected = { lesson ->
-                    navController.navigate(Screen.LessonDrawing.createRoute(lesson.id))
-                },
-                onBackClick = { navController.popBackStack() }
-            )
+            LessonScreen()
         }
         
         composable(Screen.LessonPreview.route) { backStackEntry ->

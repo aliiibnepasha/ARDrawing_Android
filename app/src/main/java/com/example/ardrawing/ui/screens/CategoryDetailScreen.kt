@@ -23,6 +23,7 @@ import com.example.ardrawing.data.model.Category
 import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.data.repository.CategoryRepository
 import com.example.ardrawing.ui.components.AppTopBar
+import com.example.ardrawing.ui.screens.TemplateItem
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,10 +69,10 @@ fun CategoryDetailScreen(
                     .background(Color.White)
             ) {
                 items(category.templates) { template ->
-//                    CategoryTemplateItem(
-//                        template = template,
-//                        onClick = { onTemplateSelected(template) }
-//                    )
+                    TemplateItem(
+                        template = template,
+                        onClick = { onTemplateSelected(template) }
+                    )
                 }
             }
         }

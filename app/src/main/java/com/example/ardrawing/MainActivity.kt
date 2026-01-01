@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
@@ -17,6 +17,7 @@ import com.example.ardrawing.navigation.NavGraph
 import com.example.ardrawing.navigation.Screen
 import com.example.ardrawing.ui.components.ARFloatingBottomBar
 import com.example.ardrawing.ui.theme.ARDrawingTheme
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,13 +33,31 @@ class MainActivity : ComponentActivity() {
             ARDrawingTheme {
                 val navController = rememberNavController()
 
-
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
                 
+                // Track if navigation is ready to prevent bottom bar from showing too early
+                var isNavigationReady by remember { mutableStateOf(false) }
+                var previousRoute by remember { mutableStateOf<String?>(null) }
+                
+                // Ensure navigation is ready before showing bottom bar
+                LaunchedEffect(currentRoute) {
+                    // Reset ready state when route changes
+                    if (currentRoute != previousRoute) {
+                        isNavigationReady = false
+                        previousRoute = currentRoute
+                        
+                        if (currentRoute != null) {
+                            // Small delay to ensure screen is fully rendered before showing bottom bar
+                            delay(100)
+                            isNavigationReady = true
+                        }
+                    }
+                }
+                
                 // Determine which bottom nav item should be selected based on current route
                 val selectedRoute = when {
-                    currentRoute == Screen.Home.route || currentRoute == null -> "home"
+                    currentRoute == Screen.Home.route -> "home"
                     currentRoute == Screen.LessonList.route -> "lesson_list"
                     currentRoute == Screen.MyCreative.route -> "my_creative"
                     currentRoute == "ar_text" -> "ar_text"
@@ -47,7 +66,7 @@ class MainActivity : ComponentActivity() {
                 
                 // Show bottom nav ONLY on: Home, Lesson, AR Text, My
                 // Hide on all other screens including TemplateDetail, CategoryDetail, Settings, etc.
-                val shouldShowBottomNav = currentRoute != null && (
+                val shouldShowBottomNav = isNavigationReady && currentRoute != null && (
                     currentRoute == Screen.Home.route ||
                     currentRoute == Screen.LessonList.route ||
                     currentRoute == Screen.MyCreative.route ||
@@ -60,7 +79,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize()
                     )
                     
-                    // Bottom navigation bar overlay - only show on main screens
+                    // Bottom navigation bar overlay - only show on main screens after navigation is ready
                     if (shouldShowBottomNav) {
                         ARFloatingBottomBar(
                             currentRoute = selectedRoute,
@@ -88,8 +107,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             },
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
+                            modifier = Modifier.align(Alignment.BottomCenter)
                         )
                     }
                 }

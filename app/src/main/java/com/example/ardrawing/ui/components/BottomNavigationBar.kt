@@ -6,12 +6,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.ardrawing.R
@@ -36,7 +36,7 @@ fun ARFloatingBottomBar(
                 .fillMaxWidth(0.94f)
                 .height(64.dp)
                 .clip(RoundedCornerShape(36.dp))
-                .background(Color(0xFFF3F4EF))
+                .background(colorResource(R.color.white))
         ) {
 
             // ===== TOP SELECTION INDICATOR ROW =====
@@ -93,7 +93,7 @@ fun ARFloatingBottomBar(
                 .offset(y = (-30).dp)
                 .size(56.dp)
                 .clip(CircleShape)
-                .background(Color.White),
+                .background(colorResource(R.color.card_color_blue)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
