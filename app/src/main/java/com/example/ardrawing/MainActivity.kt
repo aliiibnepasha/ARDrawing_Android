@@ -76,6 +76,7 @@ class MainActivity : ComponentActivity() {
                 Box(modifier = Modifier.fillMaxSize()) {
                     NavGraph(
                         navController = navController,
+                        currentTabRoute = selectedRoute,
                         modifier = Modifier.fillMaxSize()
                     )
                     

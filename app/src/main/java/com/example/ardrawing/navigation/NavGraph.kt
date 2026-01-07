@@ -20,7 +20,6 @@ import com.example.ardrawing.ui.screens.ColoringImageSelectionScreen
 import com.example.ardrawing.ui.screens.ColoringScreen
 import com.example.ardrawing.ui.screens.CreateLessonFromImageScreen
 import com.example.ardrawing.ui.screens.ChooseToDrawScreen
-import com.example.ardrawing.ui.screens.HomeScreenNew
 import com.example.ardrawing.ui.screens.LessonDrawingScreen
 import com.example.ardrawing.ui.screens.LessonPreviewScreen
 import com.example.ardrawing.ui.screens.LessonScreen
@@ -31,6 +30,7 @@ import com.example.ardrawing.ui.screens.TemplateListScreen
 import com.example.ardrawing.ui.viewmodel.MyCreativeViewModel
 import com.example.ardrawing.LaunchActivity
 import com.example.ardrawing.data.repository.TemplateRepository
+import com.example.ardrawing.ui.screens.HomeScreenNew
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -71,6 +71,7 @@ fun NavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     startDestination: String = Screen.Home.route,
+    currentTabRoute: String? = null,
     arViewModel: ARViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     NavHost(
@@ -82,6 +83,7 @@ fun NavGraph(
             val context = LocalContext.current
 
             HomeScreenNew(
+                currentRoute = currentTabRoute,
                 onTemplateSelected = { template ->
                     navController.navigate(
                         Screen.DrawingModeSelection.createRoute(template.id)
@@ -91,6 +93,11 @@ fun NavGraph(
                 onSeeAll = { category ->
                     navController.navigate(
                         Screen.CategoryDetail.createRoute(category.id)
+                    )
+                },
+                onCategoryClick = { categoryId ->
+                    navController.navigate(
+                        Screen.CategoryDetail.createRoute(categoryId)
                     )
                 },
                 onStartAR = {

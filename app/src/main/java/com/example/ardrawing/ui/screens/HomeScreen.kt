@@ -204,7 +204,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    ActionCard(
+                    ActionCard2(
                         title = "Photo to\nsketch",
                         subtitle = "Import & trace",
                         iconRes = R.drawable.camera_ic,   // <-- your png later
@@ -212,7 +212,7 @@ fun HomeScreen(
                         modifier = Modifier.weight(1f)
                     )
 
-                    ActionCard(
+                    ActionCard2(
                         title = "AI Create\nDrawing",
                         subtitle = "Generate Art",
                         iconRes = R.drawable.ai_icon,  // <-- your png later
@@ -300,7 +300,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun ActionCard(
+private fun ActionCard2(
     title: String,
     subtitle: String,
     iconRes: Int,
