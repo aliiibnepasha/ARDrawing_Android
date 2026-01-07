@@ -20,9 +20,8 @@ import com.example.ardrawing.ui.screens.ColoringImageSelectionScreen
 import com.example.ardrawing.ui.screens.ColoringScreen
 import com.example.ardrawing.ui.screens.CreateLessonFromImageScreen
 import com.example.ardrawing.ui.screens.ChooseToDrawScreen
-import com.example.ardrawing.ui.screens.HomeScreen
+import com.example.ardrawing.ui.screens.HomeScreenNew
 import com.example.ardrawing.ui.screens.LessonDrawingScreen
-import com.example.ardrawing.ui.screens.LessonListScreen
 import com.example.ardrawing.ui.screens.LessonPreviewScreen
 import com.example.ardrawing.ui.screens.LessonScreen
 import com.example.ardrawing.ui.screens.MyCreativeScreen
@@ -81,8 +80,8 @@ fun NavGraph(
     ) {
         composable(Screen.Home.route) {
             val context = LocalContext.current
-            
-            HomeScreen(
+
+            HomeScreenNew(
                 onTemplateSelected = { template ->
                     navController.navigate(
                         Screen.DrawingModeSelection.createRoute(template.id)
