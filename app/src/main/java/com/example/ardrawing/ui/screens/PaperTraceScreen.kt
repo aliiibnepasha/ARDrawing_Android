@@ -3,10 +3,18 @@ package com.example.ardrawing.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,10 +26,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.windowInsetsPadding
 import com.example.ardrawing.R
 import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
@@ -32,146 +39,289 @@ fun PaperTraceScreen(
     onBackClick: () -> Unit
 ) {
 
-    /* ---------- BACK HANDLER ---------- */
+    /* ---------------- BACK HANDLER ---------------- */
     BackHandler { onBackClick() }
 
-    /* ---------- STATES ---------- */
-    var imageScale by remember { mutableStateOf(0.75f) } // 👈 default smaller
+    /* ---------------- STATES ---------------- */
+    var imageScale by remember { mutableFloatStateOf(1f) }
     var imageOffset by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
-    var opacity by remember { mutableStateOf(0.5f) }
-
+    var imageRotation by remember { mutableFloatStateOf(0f) }
+    
+    var opacity by remember { mutableFloatStateOf(0.5f) }
     var isLocked by remember { mutableStateOf(false) }
-    var isFullscreen by remember { mutableStateOf(false) }
-    var flashOn by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
+    // Bottom Panel State
+    var isPanelVisible by remember { mutableStateOf(true) }
 
-        /* ================= CENTER IMAGE ================= */
+    Scaffold(
+        containerColor = Color.White,
+        contentWindowInsets = WindowInsets.statusBars // Handle Status Bar
+    ) { padding ->
+
         Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
         ) {
-            Image(
-                painter = rememberAssetImagePainter(template.imageAssetPath),
-                contentDescription = "Sketch",
+
+            /* ================= OVERLAY IMAGE ================= */
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .alpha(opacity)
-                    .graphicsLayer {
-                        scaleX = imageScale
-                        scaleY = imageScale
-                        translationX = imageOffset.x
-                        translationY = imageOffset.y
-                    }
-                    .pointerInput(isLocked) {
-                        if (!isLocked) {
-                            detectTransformGestures { _, pan, zoom, _ ->
-                                imageScale *= zoom
-                                imageOffset += pan
+                    .padding(bottom = if (isPanelVisible) 180.dp else 60.dp), // Adjust padding
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            scaleX = imageScale
+                            scaleY = imageScale
+                            translationX = imageOffset.x
+                            translationY = imageOffset.y
+                            rotationZ = imageRotation
+                        }
+                        .pointerInput(isLocked) {
+                            if (!isLocked) {
+                                detectTransformGestures { _, pan, zoom, _ ->
+                                    imageScale *= zoom
+                                    imageOffset += pan
+                                }
                             }
                         }
-                    },
-                contentScale = ContentScale.FillBounds
+                ) {
+                    // Actual Image
+                    Image(
+                        painter = rememberAssetImagePainter(template.imageAssetPath),
+                        contentDescription = "Sketch",
+                        modifier = Modifier
+                            .size(300.dp)
+                            .alpha(opacity)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Fit
+                    )
 
-            )
-        }
+                    // Overlay Controls
+                    if (!isLocked) {
+                        // Top Right: Lock
+                        IconButton(
+                            onClick = { isLocked = !isLocked },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 12.dp, y = (-12).dp)
+                                .size(32.dp)
+                                .background(Color.White, CircleShape)
+                                .border(1.dp, Color(0xFFE0E0E0), CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LockOpen,
+                                contentDescription = "Lock",
+                                tint = Color.Black,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        
+                        // Bottom Left: Rotate
+                        IconButton(
+                            onClick = { imageRotation -= 90f },
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .offset(x = (-12).dp, y = 12.dp)
+                                .size(32.dp)
+                                .background(Color.White, CircleShape)
+                                .border(1.dp, Color(0xFFE0E0E0), CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Rotate",
+                                tint = Color.Black,
+                                modifier = Modifier.size(16.dp).graphicsLayer { rotationY = 180f }
+                            )
+                        }
 
-        /* ================= TOP BAR (SAFE AREA FIXED) ================= */
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars) // 👈 FIX STATUS BAR
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+                        // Bottom Right: Resize/Reset
+                         IconButton(
+                            onClick = { 
+                                imageScale = 1f 
+                                imageOffset = androidx.compose.ui.geometry.Offset.Zero
+                                imageRotation = 0f
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .offset(x = 12.dp, y = 12.dp)
+                                .size(32.dp)
+                                .background(Color.White, CircleShape)
+                                .border(1.dp, Color(0xFFE0E0E0), CircleShape)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.full_screen),
+                                contentDescription = "Reset",
+                                tint = Color.Black,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    } else {
+                         // Locked State Icon
+                         IconButton(
+                            onClick = { isLocked = !isLocked },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 12.dp, y = (-12).dp)
+                                .size(32.dp)
+                                .background(Color(0xFF4285F4), CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Unlock",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
 
-            /* Back */
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    painter = painterResource(R.drawable.back_arrow),
+            /* ================= TOP BAR ================= */
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Back Button
+                Image(
+                    painter = painterResource(R.drawable.back_arrow_ic),
                     contentDescription = "Back",
-                    tint = Color.Black
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clickable(onClick = onBackClick)
                 )
+
+                Text(
+                    text = "Screen",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+
+                TextButton(onClick = onBackClick) {
+                    Text(
+                        text = "Done",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4285F4)
+                    )
+                }
             }
 
-            /* Right Icons */
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                TopCircleIcon(
-                    icon = R.drawable.lock,
-                    active = isLocked
-                ) { isLocked = !isLocked }
-
-                TopCircleIcon(
-                    icon = R.drawable.camera_ic,
-                    active = flashOn
-                ) { flashOn = !flashOn }
-            }
-        }
-
-        /* ================= BOTTOM PANEL ================= */
-        if (!isFullscreen) {
+            /* ================= BOTTOM CONTROLS ================= */
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color.White)
-                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Toggle Handle
+                Image(
+                    painter = painterResource(if (isPanelVisible) R.drawable.arrow_below else R.drawable.arrow_up),
+                    contentDescription = "Toggle",
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .size(36.dp)
+                        .clickable(onClick = { isPanelVisible = !isPanelVisible })
+                )
 
-                /* ----- SLIDER ----- */
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.camera_ic),
-                        contentDescription = null,
-                        tint = Color.Gray
-                    )
-
-                    Slider(
-                        value = opacity,
-                        onValueChange = { opacity = it },
-                        modifier = Modifier.weight(1f),
-                        colors = SliderDefaults.colors(
-                            thumbColor = Color(0xFF2979FF),
-                            activeTrackColor = Color(0xFF2979FF),
-                            inactiveTrackColor = Color(0xFF2979FF).copy(alpha = 0.3f)
+                if (isPanelVisible) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .padding(top = 16.dp, bottom = 32.dp, start = 20.dp, end = 20.dp)
+                    ) {
+                        Text(
+                            text = "Opacity",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.Black
                         )
-                    )
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    Text(
-                        text = "${(opacity * 100).toInt()}%",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.camera_ic),
+                                contentDescription = null,
+                                tint = Color.LightGray,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            
+                            Slider(
+                                value = opacity,
+                                onValueChange = { opacity = it },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(horizontal = 12.dp),
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Color(0xFF4285F4),
+                                    activeTrackColor = Color(0xFF4285F4),
+                                    inactiveTrackColor = Color(0xFFE0E0E0)
+                                )
+                            )
+                            
+                            Text(
+                                text = "${(opacity * 100).toInt()}%",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            )
+                            
+                            Spacer(modifier = Modifier.width(16.dp))
+                            
+                            // Gallery Icon
+                             IconButton(
+                                onClick = { /* TODO: Gallery */ },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                 Icon(
+                                    painter = painterResource(R.drawable.camera_ic),
+                                    contentDescription = "Gallery",
+                                    tint = Color.Black
+                                )
+                            }
+                        }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                /* ----- 4 ICONS ----- */
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-
-                    BottomCircleIcon(R.drawable.camera_ic)
-
-                    BottomCircleIcon(R.drawable.camera_ic)
-
-                    BottomCircleIcon(R.drawable.camera_ic) {
-                        imageScale = 0.75f
-                        imageOffset = androidx.compose.ui.geometry.Offset.Zero
-                    }
-
-                    BottomCircleIcon(R.drawable.full_screen) {
-                        isFullscreen = true
+                        Spacer(modifier = Modifier.height(20.dp))
+                        
+                        // Zoom Presets (Inverse colors for light theme)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            ZoomChip(
+                                text = "0.5x", 
+                                onClick = { imageScale = 0.5f }, 
+                                isSelected = imageScale == 0.5f,
+                                isDarkTheme = false
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            ZoomChip(
+                                text = "1.0x", 
+                                onClick = { imageScale = 1.0f }, 
+                                isSelected = imageScale == 1.0f,
+                                isDarkTheme = false
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            ZoomChip(
+                                text = "2.0x", 
+                                onClick = { imageScale = 2.0f }, 
+                                isSelected = imageScale == 2.0f,
+                                isDarkTheme = false
+                            )
+                        }
                     }
                 }
             }
@@ -179,48 +329,44 @@ fun PaperTraceScreen(
     }
 }
 
-/* ================= REUSABLE UI ================= */
+// Reusing ZoomChip from CameraPreviewScreen (which needs to be made public & adaptable or copied) 
+// Since files are separate and ZoomChip was inside CameraPreviewScreen.kt, I'll copy/adapt it header.
+// Actually, I should probably move ZoomChip to a shared utility or just duplicate for now.
+// I will duplicate it here for safety as I am not editing a Utils file.
 
 @Composable
-private fun TopCircleIcon(
-    icon: Int,
-    active: Boolean,
-    onClick: () -> Unit
+private fun ZoomChip(
+    text: String,
+    onClick: () -> Unit,
+    isSelected: Boolean,
+    isDarkTheme: Boolean
 ) {
-    IconButton(
-        onClick = onClick,
-        modifier = Modifier
-            .size(36.dp)
-            .background(
-                if (active) Color(0xFFE3F2FD) else Color(0xFFF1F5F9),
-                CircleShape
-            )
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = if (active) Color(0xFF2979FF) else Color.Black,
-            modifier = Modifier.size(18.dp)
-        )
+    val backgroundColor = if (isSelected) {
+        Color(0xFF4285F4)
+    } else {
+        if (isDarkTheme) Color.White else Color.Black
     }
-}
+    
+    val textColor = if (isSelected) {
+        Color.White
+    } else {
+        if (isDarkTheme) Color.Black else Color.White
+    }
 
-@Composable
-private fun BottomCircleIcon(
-    icon: Int,
-    onClick: () -> Unit = {}
-) {
-    IconButton(
-        onClick = onClick,
+    Box(
         modifier = Modifier
-            .size(44.dp)
-            .background(Color(0xFFF1F5F9), CircleShape)
+            .height(28.dp)
+            .width(50.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = Color(0xFF2979FF),
-            modifier = Modifier.size(20.dp)
+        Text(
+            text = text,
+            color = textColor,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }

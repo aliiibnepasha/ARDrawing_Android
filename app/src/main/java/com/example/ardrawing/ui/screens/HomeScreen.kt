@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -253,9 +254,11 @@ fun HomeScreen(
                                 color = Color(0xFF64748B)
                             )
                             Image(
-                                painter = painterResource(id = R.drawable.arrow_left),
+                                painter = painterResource(id = R.drawable.arrow_up),
                                 contentDescription = "Arrow",
-                                modifier = Modifier.size(12.dp)
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .graphicsLayer { rotationZ = 90f }
                             )
 
                         }

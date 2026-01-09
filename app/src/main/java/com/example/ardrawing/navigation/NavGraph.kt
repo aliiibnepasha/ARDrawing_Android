@@ -19,7 +19,7 @@ import com.example.ardrawing.ui.screens.CategoryDetailScreen
 import com.example.ardrawing.ui.screens.ColoringImageSelectionScreen
 import com.example.ardrawing.ui.screens.ColoringScreen
 import com.example.ardrawing.ui.screens.CreateLessonFromImageScreen
-import com.example.ardrawing.ui.screens.ChooseToDrawScreen
+import com.example.ardrawing.ui.screens.DrawingModeSelectionScreen
 import com.example.ardrawing.ui.screens.LessonDrawingScreen
 import com.example.ardrawing.ui.screens.LessonPreviewScreen
 import com.example.ardrawing.ui.screens.LessonScreen
@@ -154,7 +154,7 @@ fun NavGraph(
             val template = com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, templateId)
 
             template?.let {
-                ChooseToDrawScreen(
+                DrawingModeSelectionScreen(
                     template = it,
                     onBackClick = { navController.popBackStack() },
                     onDrawSketchClick = {

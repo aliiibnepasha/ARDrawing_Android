@@ -45,11 +45,10 @@ fun ARFloatingBottomBar(
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp)
                     .align(Alignment.TopCenter),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 TopIndicator(selected = currentRoute == "home")
                 TopIndicator(selected = currentRoute == "lesson_list")
-                Spacer(modifier = Modifier.width(48.dp)) // FAB space
                 TopIndicator(selected = currentRoute == "ar_text")
                 TopIndicator(selected = currentRoute == "my_creative")
             }
@@ -59,61 +58,47 @@ fun ARFloatingBottomBar(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 32.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
                 IconItem(
                     icon = R.drawable.home_nav_ic,
+                    selected = currentRoute == "home",
                     onClick = { onItemClick("home") }
                 )
 
                 IconItem(
                     icon = R.drawable.lesson_nav_ic,
+                    selected = currentRoute == "lesson_list",
                     onClick = { onItemClick("lesson_list") }
                 )
 
-                Spacer(modifier = Modifier.width(48.dp))
-
                 IconItem(
                     icon = R.drawable.text_nav_ic,
+                    selected = currentRoute == "ar_text",
                     onClick = { onItemClick("ar_text") }
                 )
 
                 IconItem(
                     icon = R.drawable.me_nav_ic,
+                    selected = currentRoute == "my_creative",
                     onClick = { onItemClick("my_creative") }
                 )
             }
-        }
-
-        // ===== CENTER FAB =====
-        Box(
-            modifier = Modifier
-                .offset(y = (-30).dp)
-                .size(56.dp)
-                .clip(CircleShape)
-                .background(colorResource(R.color.card_color_blue)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.magic_nav_ic),
-                contentDescription = null,
-                tint = Color.Black,
-                modifier = Modifier.size(26.dp)
-            )
         }
     }
 }
 @Composable
 private fun IconItem(
     icon: Int,
+    selected: Boolean,
     onClick: () -> Unit
 ) {
     Icon(
         painter = painterResource(icon),
         contentDescription = null,
-        tint = Color(0xFF2C2C2C),
+        tint = if (selected) Color(0xFF5E8BFF) else Color(0xFF2C2C2C),
         modifier = Modifier
             .size(24.dp)
             .clickable { onClick() }

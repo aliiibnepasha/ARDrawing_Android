@@ -1,5 +1,7 @@
 package com.example.ardrawing.ui.screens
 
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,6 +37,7 @@ import com.example.ardrawing.data.model.Category
 import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.data.utils.AssetUtils
 import androidx.compose.ui.platform.LocalContext
+import com.example.ardrawing.ui.components.ARFloatingBottomBar
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 
 @Composable
@@ -47,9 +51,20 @@ fun HomeScreenNew(
     onAICreate: () -> Unit = {},
     onProClick: () -> Unit = {}
 ) {
+    var selectedTab by remember { mutableStateOf(0) }
+
+
+    // Local state for navigation demo (since currentRoute is passed as null usually)
+    var navRoute by remember { mutableStateOf("home") }
+
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
-        bottomBar = { HomeBottomNavigation() }
+        bottomBar = { 
+            ARFloatingBottomBar(
+                currentRoute = navRoute,
+                onItemClick = { navRoute = it }
+            ) 
+        }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -58,33 +73,45 @@ fun HomeScreenNew(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            item { HomeHeader(currentRoute = currentRoute) }
-            item { TabSwitcher() }
-            item { IllustrationCard(onStartAR) }
-            item { ActionCardsRow(onPhotoToSketch, onAICreate, onProClick) }
-            item { CategoriesSection(onCategoryClick = onCategoryClick) }
+            item { 
+                HomeHeader(
+                    currentRoute = currentRoute,
+                    selectedTab = selectedTab
+                ) 
+            }
+            item { 
+                TabSwitcher(
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it }
+                ) 
+            }
+
+            if (selectedTab == 0) {
+                // Image Tab Content
+                item { IllustrationCard(onStartAR) }
+                item { ActionCardsRow(onPhotoToSketch, onAICreate, onProClick) }
+                item { CategoriesSection(onCategoryClick = onCategoryClick) }
+            } else {
+                // Text Tab Content
+                item { TextTabContent() }
+            }
+            
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }
 
 @Composable
-fun HomeHeader(currentRoute: String? = null) {
+fun HomeHeader(currentRoute: String? = null, selectedTab: Int = 0) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-            Image(
+        Image(
             painter = painterResource(
-                id = when (currentRoute) {
-                    "home" -> R.drawable.home_avtr
-                    "lesson_list" -> R.drawable.text_avtr
-                    "ar_text" -> R.drawable.text_avtr
-                    "my_creative" -> R.drawable.home_avtr
-                    else -> R.drawable.home_avtr
-                }
+                id = if (selectedTab == 1) R.drawable.text_avtr else R.drawable.home_avtr
             ),
             contentDescription = "Avatar",
             modifier = Modifier
@@ -109,8 +136,7 @@ fun HomeHeader(currentRoute: String? = null) {
 }
 
 @Composable
-fun TabSwitcher() {
-    var selectedTab by remember { mutableStateOf(0) }
+fun TabSwitcher(selectedTab: Int, onTabSelected: (Int) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -122,13 +148,13 @@ fun TabSwitcher() {
         TabButton(
             text = "Image",
             isSelected = selectedTab == 0,
-            onClick = { selectedTab = 0 },
+            onClick = { onTabSelected(0) },
             modifier = Modifier.weight(1f)
         )
         TabButton(
             text = "Text",
             isSelected = selectedTab == 1,
-            onClick = { selectedTab = 1 },
+            onClick = { onTabSelected(1) },
             modifier = Modifier.weight(1f)
         )
     }
@@ -340,6 +366,16 @@ fun CategoryItemNew(name: String, folderName: String, onClick: () -> Unit, modif
             horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
+            // Arrow above the image
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = null,
+                tint = Color(0xFF4285F4),
+                modifier = Modifier
+                    .size(20.dp)
+                    .align(Alignment.End)
+            )
+
             if (firstImagePath != null) {
                 Image(
                     painter = rememberAssetImagePainter(firstImagePath),
@@ -365,48 +401,135 @@ fun CategoryItemNew(name: String, folderName: String, onClick: () -> Unit, modif
             Spacer(modifier = Modifier.height(8.dp))
             Text(name, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color.Black)
         }
-        
-        Icon(
-            imageVector = androidx.compose.material.icons.Icons.Default.KeyboardArrowRight,
-            contentDescription = null,
-            tint = Color(0xFF4285F4),
-            modifier = Modifier.align(Alignment.TopEnd).size(20.dp)
-        )
     }
 }
 
 @Composable
-fun HomeBottomNavigation() {
-    NavigationBar(
-        containerColor = Color.White,
-        tonalElevation = 8.dp,
-        modifier = Modifier
-            .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
+fun TextTabContent() {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-         NavigationBarItem(
-            selected = true,
-            onClick = { /*TODO*/ },
-            icon = { Icon(Icons.Filled.Edit, contentDescription = "Home") }, 
-             colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF4285F4), indicatorColor = Color.Transparent)
-        )
-         NavigationBarItem(
-            selected = false,
-            onClick = { /*TODO*/ },
-            icon = { Icon(Icons.Filled.School, contentDescription = "Learn") },
-             colors = NavigationBarItemDefaults.colors(unselectedIconColor = Color.LightGray, indicatorColor = Color.Transparent)
-        )
-         NavigationBarItem(
-            selected = false,
-            onClick = { /*TODO*/ },
-            icon = { Icon(Icons.Filled.Favorite, contentDescription = "Saved") },
-             colors = NavigationBarItemDefaults.colors(unselectedIconColor = Color.LightGray, indicatorColor = Color.Transparent)
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = { /*TODO*/ },
-            icon = { Icon(Icons.Filled.Person, contentDescription = "Profile") },
-             colors = NavigationBarItemDefaults.colors(unselectedIconColor = Color.LightGray, indicatorColor = Color.Transparent)
-        )
+        // Two Cards Row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            TextActionCard(
+                title = "Write text to\ncreate image",
+                subtitle = "Generate Art",
+                iconRes = R.drawable.home_nav_ic, // Placeholder
+                backgroundColor = Color.White,
+                iconBackgroundColor = Color(0xFFE3F2FD), // Light Blue
+                iconTint = Color(0xFF4285F4),
+                modifier = Modifier.weight(1f)
+            )
+            
+            TextActionCard(
+                title = "Create custom\ntext to draw",
+                subtitle = "Generate Art",
+                iconRes = R.drawable.text_avtr, // Placeholder
+                backgroundColor = Color.White,
+                iconBackgroundColor = Color(0xFFE3F2FD),
+                iconTint = Color(0xFF4285F4),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        // Inspiration Section
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Today's Inspiration",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White)
+            ) {
+                 // Placeholder for the "Lilly Close-Up" image
+                 // Using a placeholder color and text since we don't have the exact image asset yet
+                 Box(
+                     modifier = Modifier
+                         .fillMaxSize()
+                         .background(Color.LightGray)
+                 )
+                 
+                // Tag
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .clip(RoundedCornerShape(topEnd = 16.dp)) // Design: Tab style
+                        .background(Color(0xFF4285F4))
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Lilly Close-Up",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TextActionCard(
+    title: String,
+    subtitle: String,
+    iconRes: Int,
+    backgroundColor: Color,
+    iconBackgroundColor: Color,
+    iconTint: Color,
+    modifier: Modifier = Modifier
+) {
+     Column(
+        modifier = modifier
+            .height(160.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(backgroundColor)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.Start
+    ) {
+         Box(
+             modifier = Modifier
+                 .size(48.dp)
+                 .clip(CircleShape)
+                 .background(iconBackgroundColor),
+             contentAlignment = Alignment.Center
+         ) {
+             Icon(
+                 painter = painterResource(id = iconRes),
+                 contentDescription = null,
+                 tint = iconTint,
+                 modifier = Modifier.size(24.dp)
+             )
+         }
+
+         Column {
+             Text(
+                 text = title,
+                 fontSize = 15.sp, // Slightly increased size
+                 fontWeight = FontWeight.SemiBold, // Reduced from Bold
+                 color = Color(0xFF1C1C1C), // Slightly softer black
+                 lineHeight = 22.sp 
+             )
+             Spacer(modifier = Modifier.height(4.dp))
+             Text(
+                 text = subtitle,
+                 fontSize = 12.sp,
+                 color = Color(0xFF7D7D7D) // Softer gray
+             )
+         }
     }
 }
 
