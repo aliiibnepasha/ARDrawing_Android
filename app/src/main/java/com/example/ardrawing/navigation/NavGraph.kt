@@ -128,7 +128,6 @@ fun NavGraph(
                 }
             )
         }
-        
         composable(Screen.PhotoToSketch.route) {
             com.example.ardrawing.ui.screens.PhotoToSketchScreen(
                 onBackClick = { navController.popBackStack() },
