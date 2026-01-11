@@ -27,6 +27,8 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, true)
         window.navigationBarColor = android.graphics.Color.BLACK
         window.statusBarColor = android.graphics.Color.BLACK
+        // Fix for black glitch during navigation transitions
+        window.setBackgroundDrawableResource(R.color.main_bg)
         
         enableEdgeToEdge()
         setContent {
@@ -36,43 +38,52 @@ class MainActivity : ComponentActivity() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
                 
-                // Track if navigation is ready to prevent bottom bar from showing too early
+                // Track if navigation is ready to show bottom bar
                 var isNavigationReady by remember { mutableStateOf(false) }
-                var previousRoute by remember { mutableStateOf<String?>(null) }
                 
-                // Ensure navigation is ready before showing bottom bar
+                // Define routes that should show the bottom bar
+                val bottomBarRoutes = listOf(
+                    Screen.Home.route,
+                    Screen.LessonList.route,
+                    Screen.MyCreative.route,
+                    "favorite"
+                )
+
+                // Effect to handle bottom bar visibility delay
                 LaunchedEffect(currentRoute) {
-                    // Reset ready state when route changes
-                    if (currentRoute != previousRoute) {
-                        isNavigationReady = false
-                        previousRoute = currentRoute
+                     if (currentRoute in bottomBarRoutes) {
+                        // If we are already on a bottom bar route and switching to another, show immediately
+                        // (We need to capture the previous state effectively, but for now assuming if we are in valid route)
+                         // Ideally we check internal state, but here we can just check if we want to show it.
                         
-                        if (currentRoute != null) {
-                            // Small delay to ensure screen is fully rendered before showing bottom bar
-                            delay(100)
-                            isNavigationReady = true
-                        }
-                    }
+                         // To prevent "late" appearance when coming BACK from detail screen:
+                         // We delay ONLY if the previous state wasn't one of the main tabs.
+                         // Since we can't easily access "previousRoute" directly from the state without tracking it manually:
+                         
+                         // We'll use a simple heuristic:
+                         // Always delay slightly to match screen transition (300ms is default compose nav transition)
+                         // UNLESS we know for sure it's a tab switch.
+                         
+                         // For simplicity and robustness to fix the specific "pop in" issue:
+                         delay(300) 
+                         isNavigationReady = true
+                     } else {
+                         isNavigationReady = false
+                     }
                 }
-                
+
                 // Determine which bottom nav item should be selected based on current route
                 val selectedRoute = when {
                     currentRoute == Screen.Home.route -> "home"
                     currentRoute == Screen.LessonList.route -> "lesson_list"
                     currentRoute == Screen.MyCreative.route -> "my_creative"
-                    currentRoute == "ar_text" -> "ar_text"
+                    currentRoute == "favorite" -> "favorite"
                     else -> null // Don't highlight any tab for other routes
                 }
                 
                 // Show bottom nav ONLY on: Home, Lesson, AR Text, My
-                // Hide on all other screens including TemplateDetail, CategoryDetail, Settings, etc.
-                val shouldShowBottomNav = isNavigationReady && currentRoute != null && (
-                    currentRoute == Screen.Home.route ||
-                    currentRoute == Screen.LessonList.route ||
-                    currentRoute == Screen.MyCreative.route ||
-                    currentRoute == "ar_text"
-                )
-                
+                val shouldShowBottomNav = currentRoute in bottomBarRoutes
+
                 Box(modifier = Modifier.fillMaxSize()) {
                     NavGraph(
                         navController = navController,
@@ -80,35 +91,54 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize()
                     )
                     
-                    // Bottom navigation bar overlay - only show on main screens after navigation is ready
-                    if (shouldShowBottomNav) {
+                    // Animated visibility for bottom bar
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = shouldShowBottomNav && isNavigationReady,
+                        enter = androidx.compose.animation.slideInVertically(
+                            initialOffsetY = { it }
+                        ) + androidx.compose.animation.fadeIn(),
+                        exit = androidx.compose.animation.slideOutVertically(
+                            targetOffsetY = { it }
+                        ) + androidx.compose.animation.fadeOut(),
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    ) {
                         ARFloatingBottomBar(
                             currentRoute = selectedRoute,
                             onItemClick = { route ->
+                                // On tab click, we want immediate feedback so we don't reset isNavigationReady here
+                                // implicitly by route change loop if we handle it carefully.
+                                
                                 when (route) {
                                     "home" -> {
-                                        navController.navigate(Screen.Home.route) {
-                                            popUpTo(Screen.Home.route) { inclusive = true }
+                                        if (currentRoute != Screen.Home.route) {
+                                            navController.navigate(Screen.Home.route) {
+                                                popUpTo(Screen.Home.route) { inclusive = true }
+                                            }
                                         }
                                     }
                                     "lesson_list" -> {
-                                        navController.navigate(Screen.LessonList.route) {
-                                            popUpTo(Screen.Home.route) { inclusive = false }
+                                        if (currentRoute != Screen.LessonList.route) {
+                                            navController.navigate(Screen.LessonList.route) {
+                                                popUpTo(Screen.Home.route) { inclusive = false }
+                                            }
                                         }
                                     }
-                                    "ar_text" -> {
-                                        navController.navigate(Screen.LessonList.route) {
-                                            popUpTo(Screen.Home.route) { inclusive = false }
+                                    "favorite" -> {
+                                        if (currentRoute != "favorite") {
+                                            navController.navigate("favorite") {
+                                                popUpTo(Screen.Home.route) { inclusive = false }
+                                            }
                                         }
                                     }
                                     "my_creative" -> {
-                                        navController.navigate(Screen.MyCreative.route) {
-                                            popUpTo(Screen.Home.route) { inclusive = false }
+                                        if (currentRoute != Screen.MyCreative.route) {
+                                            navController.navigate(Screen.MyCreative.route) {
+                                                popUpTo(Screen.Home.route) { inclusive = false }
+                                            }
                                         }
                                     }
                                 }
-                            },
-                            modifier = Modifier.align(Alignment.BottomCenter)
+                            }
                         )
                     }
                 }

@@ -50,6 +50,8 @@ fun HomeScreenNew(
     onStartAR: () -> Unit = {},
     onPhotoToSketch: () -> Unit = {},
     onAICreate: () -> Unit = {},
+    onTextToImage: () -> Unit = {},
+    onCustomText: () -> Unit = {},
     onProClick: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
@@ -85,7 +87,7 @@ fun HomeScreenNew(
                 item { CategoriesSection(onCategoryClick = onCategoryClick) }
             } else {
                 // Text Tab Content
-                item { TextTabContent() }
+                item { TextTabContent(onTextToImage, onCustomText) }
             }
             
             item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -176,7 +178,7 @@ fun IllustrationCard(onClick: () -> Unit) {
     val density = androidx.compose.ui.platform.LocalDensity.current
     val strokeWidth = with(density) { 2.dp.toPx() }
     val cornerRadius = with(density) { 24.dp.toPx() }
-    val stroke = Stroke(width = strokeWidth, pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f, 20f), 0f))
+    val stroke = Stroke(width = strokeWidth, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
     val primaryColor = Color(0xFF4285F4)
     
     Box(
@@ -241,6 +243,7 @@ fun ActionCard(title: String, buttonText: String, iconRes: Int, onClick: () -> U
             .height(150.dp)
             .clip(RoundedCornerShape(20.dp))
             .background(Color.White)
+            .clickable(onClick = onClick)
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
@@ -383,7 +386,7 @@ fun CategoryItemNew(name: String, folderName: String, onClick: () -> Unit, modif
 }
 
 @Composable
-fun TextTabContent() {
+fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
     Column(
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
@@ -399,7 +402,9 @@ fun TextTabContent() {
                 backgroundColor = Color.White,
                 iconBackgroundColor = Color(0xFFE3F2FD), // Light Blue
                 iconTint = Color(0xFF4285F4),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onTextToImage() }
             )
             
             TextActionCard(
@@ -409,7 +414,9 @@ fun TextTabContent() {
                 backgroundColor = Color.White,
                 iconBackgroundColor = Color(0xFFE3F2FD),
                 iconTint = Color(0xFF4285F4),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onCustomText() }
             )
         }
 

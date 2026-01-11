@@ -114,6 +114,14 @@ fun NavGraph(
                 onAICreate = {
                     navController.navigate(Screen.CreateWithAI.route)
                 },
+                
+                onTextToImage = {
+                     navController.navigate("text_to_image")
+                },
+                
+                onCustomText = {
+                    navController.navigate("ar_text")
+                },
 
                 onProClick = {
                     navController.navigate(Screen.Settings.route)
@@ -136,6 +144,30 @@ fun NavGraph(
                  onUseToDraw = {
                      // TODO: Navigate to drawing canvas with generated image
                  }
+            )
+        }
+        
+        composable("text_to_image") { // New Route
+             com.example.ardrawing.ui.screens.TextToImageScreen(
+                 onBackClick = { navController.popBackStack() },
+                 onUseToDraw = {
+                     // TODO: Navigate to drawing canvas
+                 }
+             )
+        }
+        
+        // This is the "Text" tab route (Now Favorites)
+        composable("favorite") {
+             com.example.ardrawing.ui.screens.FavoriteScreen()
+        }
+        
+        // Kept for direct access from Home
+        composable("ar_text") {
+            com.example.ardrawing.ui.screens.CustomTextScreen(
+                onBackClick = { navController.navigate(Screen.Home.route) }, 
+                onDrawClick = {
+                    // TODO: Navigate to drawing with text
+                }
             )
         }
 

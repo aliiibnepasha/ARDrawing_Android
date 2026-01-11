@@ -56,7 +56,7 @@ fun ARFloatingBottomBar(
             ) {
                 TopIndicator(selected = currentRoute == "home")
                 TopIndicator(selected = currentRoute == "lesson_list")
-                TopIndicator(selected = currentRoute == "ar_text")
+                TopIndicator(selected = currentRoute == "favorite")
                 TopIndicator(selected = currentRoute == "my_creative")
             }
 
@@ -82,9 +82,9 @@ fun ARFloatingBottomBar(
                 )
 
                 IconItem(
-                    icon = R.drawable.text_nav_ic,
-                    selected = currentRoute == "ar_text",
-                    onClick = { onItemClick("ar_text") }
+                    icon = R.drawable.fav_ic,
+                    selected = currentRoute == "favorite",
+                    onClick = { onItemClick("favorite") }
                 )
 
                 IconItem(
