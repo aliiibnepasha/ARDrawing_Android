@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -35,17 +36,23 @@ fun ARFloatingBottomBar(
             modifier = Modifier
                 .fillMaxWidth(0.94f)
                 .height(64.dp)
+                .shadow(
+                    elevation = 10.dp,
+                    shape = RoundedCornerShape(36.dp),
+                    spotColor = Color.Black.copy(alpha = 0.15f),
+                    ambientColor = Color.Black.copy(alpha = 0.15f)
+                )
+                .background(Color.White, RoundedCornerShape(36.dp))
                 .clip(RoundedCornerShape(36.dp))
-                .background(colorResource(R.color.white))
         ) {
 
             // ===== TOP SELECTION INDICATOR ROW =====
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
+                    .padding(horizontal = 40.dp) // Adjusted padding for better alignment
                     .align(Alignment.TopCenter),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceBetween // Changed to SpaceBetween
             ) {
                 TopIndicator(selected = currentRoute == "home")
                 TopIndicator(selected = currentRoute == "lesson_list")
@@ -57,8 +64,8 @@ fun ARFloatingBottomBar(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 32.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                    .padding(horizontal = 36.dp), // Matched padding logic
+                horizontalArrangement = Arrangement.SpaceBetween, // Changed to SpaceBetween
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -98,7 +105,7 @@ private fun IconItem(
     Icon(
         painter = painterResource(icon),
         contentDescription = null,
-        tint = if (selected) Color(0xFF5E8BFF) else Color(0xFF2C2C2C),
+        tint = if (selected) Color(0xFF4285F4) else Color(0xFF2C2C2C), // Updated blue color
         modifier = Modifier
             .size(24.dp)
             .clickable { onClick() }
@@ -108,11 +115,11 @@ private fun IconItem(
 private fun TopIndicator(selected: Boolean) {
     Box(
         modifier = Modifier
-            .width(18.dp)
+            .width(24.dp) // Slightly wider indicator
             .height(3.dp)
-            .clip(RoundedCornerShape(2.dp))
+            .clip(RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
             .background(
-                if (selected) Color(0xFF5E8BFF) else Color.Transparent
+                if (selected) Color(0xFF4285F4) else Color.Transparent // Updated blue color
             )
     )
 }

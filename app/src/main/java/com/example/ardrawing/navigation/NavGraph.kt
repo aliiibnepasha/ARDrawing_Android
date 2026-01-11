@@ -64,6 +64,8 @@ sealed class Screen(val route: String) {
     object DrawingModeSelection : Screen("drawing_mode_selection/{templateId}") {
         fun createRoute(templateId: String) = "drawing_mode_selection/$templateId"
     }
+    object PhotoToSketch : Screen("photo_to_sketch")
+    object CreateWithAI : Screen("create_with_ai")
 }
 
 @Composable
@@ -106,16 +108,34 @@ fun NavGraph(
                     context.startActivity(intent)
                 },
                 onPhotoToSketch = {
-                    // TODO: Implement gallery selection
+                    navController.navigate(Screen.PhotoToSketch.route)
                 },
 
                 onAICreate = {
-                    // TODO: Implement AI create drawing
+                    navController.navigate(Screen.CreateWithAI.route)
                 },
 
                 onProClick = {
                     navController.navigate(Screen.Settings.route)
                 }
+            )
+        }
+        
+        composable(Screen.PhotoToSketch.route) {
+            com.example.ardrawing.ui.screens.PhotoToSketchScreen(
+                onBackClick = { navController.popBackStack() },
+                onPhotoSelected = { uri ->
+                   // TODO: Handle photo selection (navigate to next step)
+                }
+            )
+        }
+        
+        composable(Screen.CreateWithAI.route) {
+            com.example.ardrawing.ui.screens.CreateWithAIScreen(
+                 onBackClick = { navController.popBackStack() },
+                 onUseToDraw = {
+                     // TODO: Navigate to drawing canvas with generated image
+                 }
             )
         }
 

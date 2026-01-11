@@ -37,7 +37,8 @@ import com.example.ardrawing.data.model.Category
 import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.data.utils.AssetUtils
 import androidx.compose.ui.platform.LocalContext
-import com.example.ardrawing.ui.components.ARFloatingBottomBar
+import androidx.compose.ui.text.style.TextAlign
+
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 
 @Composable
@@ -53,24 +54,15 @@ fun HomeScreenNew(
 ) {
     var selectedTab by remember { mutableStateOf(0) }
 
-
-    // Local state for navigation demo (since currentRoute is passed as null usually)
-    var navRoute by remember { mutableStateOf("home") }
-
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
-        bottomBar = { 
-            ARFloatingBottomBar(
-                currentRoute = navRoute,
-                onItemClick = { navRoute = it }
-            ) 
-        }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 20.dp),
+            contentPadding = PaddingValues(bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item { 
@@ -201,17 +193,11 @@ fun IllustrationCard(onClick: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-             Box(
-                 modifier = Modifier.size(50.dp)
-                 .background(primaryColor.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
-                 contentAlignment = Alignment.Center
-             ) {
                  Image(
                      painter = painterResource(id = R.drawable.add_illustration),
                      contentDescription = "Add illustration",
-                     modifier = Modifier.size(24.dp)
+                     modifier = Modifier.size(32.dp)
                  )
-             }
             Spacer(modifier = Modifier.height(16.dp))
             Text("Add your illustration", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF1E293B))
         }
@@ -259,25 +245,17 @@ fun ActionCard(title: String, buttonText: String, iconRes: Int, onClick: () -> U
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-         Box(
-                modifier = Modifier
-                 .size(48.dp)
-                 .clip(CircleShape)
-                 .background(Color(0xFFF0F4F9)),
-             contentAlignment = Alignment.Center
-         ) {
+
              Image(
                  painter = painterResource(id = iconRes),
                  contentDescription = null,
-                 modifier = Modifier.size(24.dp)
+                 modifier = Modifier.size(32.dp)
              )
-         }
-        
         Text(
             title, 
-            fontSize = 14.sp, 
-            fontWeight = FontWeight.Bold, 
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center, 
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
             color = Color.Black
         )
         
@@ -288,7 +266,7 @@ fun ActionCard(title: String, buttonText: String, iconRes: Int, onClick: () -> U
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4))
         ) {
-            Text(buttonText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Text(buttonText, fontSize = 12.sp, fontWeight = FontWeight.Medium)
         }
     }
 }
@@ -417,7 +395,7 @@ fun TextTabContent() {
             TextActionCard(
                 title = "Write text to\ncreate image",
                 subtitle = "Generate Art",
-                iconRes = R.drawable.home_nav_ic, // Placeholder
+                iconRes = R.drawable.magic_pen, // Placeholder
                 backgroundColor = Color.White,
                 iconBackgroundColor = Color(0xFFE3F2FD), // Light Blue
                 iconTint = Color(0xFF4285F4),
@@ -427,7 +405,7 @@ fun TextTabContent() {
             TextActionCard(
                 title = "Create custom\ntext to draw",
                 subtitle = "Generate Art",
-                iconRes = R.drawable.text_avtr, // Placeholder
+                iconRes = R.drawable.text_icon, // Placeholder
                 backgroundColor = Color.White,
                 iconBackgroundColor = Color(0xFFE3F2FD),
                 iconTint = Color(0xFF4285F4),
@@ -437,12 +415,12 @@ fun TextTabContent() {
 
         // Inspiration Section
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
                 text = "Today's Inspiration",
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = Color.Black
             )
 
@@ -500,20 +478,12 @@ fun TextActionCard(
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.Start
     ) {
-         Box(
-             modifier = Modifier
-                 .size(48.dp)
-                 .clip(CircleShape)
-                 .background(iconBackgroundColor),
-             contentAlignment = Alignment.Center
-         ) {
-             Icon(
-                 painter = painterResource(id = iconRes),
-                 contentDescription = null,
-                 tint = iconTint,
-                 modifier = Modifier.size(24.dp)
-             )
-         }
+
+         Image(
+             painter = painterResource(id = iconRes),
+             contentDescription = null,
+             modifier = Modifier.size(32.dp)
+         )
 
          Column {
              Text(

@@ -1,5 +1,6 @@
 package com.example.ardrawing.ui.screens
 
+import android.R.attr.tint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -11,17 +12,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -78,7 +77,6 @@ fun PaperTraceScreen(
                             scaleY = imageScale
                             translationX = imageOffset.x
                             translationY = imageOffset.y
-                            rotationZ = imageRotation
                         }
                         .pointerInput(isLocked) {
                             if (!isLocked) {
@@ -95,6 +93,9 @@ fun PaperTraceScreen(
                         contentDescription = "Sketch",
                         modifier = Modifier
                             .size(300.dp)
+                            .graphicsLayer {
+                                rotationZ = imageRotation // Applied ONLY to Image
+                            }
                             .alpha(opacity)
                             .clip(RoundedCornerShape(12.dp)),
                         contentScale = ContentScale.Fit
@@ -103,79 +104,72 @@ fun PaperTraceScreen(
                     // Overlay Controls
                     if (!isLocked) {
                         // Top Right: Lock
-                        IconButton(
-                            onClick = { isLocked = !isLocked },
+                        Image(
+                            painter = painterResource(R.drawable.lock),
+                            contentDescription = "Lock",
+                            colorFilter = ColorFilter.tint(Color.Black),
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .offset(x = 12.dp, y = (-12).dp)
                                 .size(32.dp)
-                                .background(Color.White, CircleShape)
-                                .border(1.dp, Color(0xFFE0E0E0), CircleShape)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LockOpen,
-                                contentDescription = "Lock",
-                                tint = Color.Black,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                        
-                        // Bottom Left: Rotate
-                        IconButton(
-                            onClick = { imageRotation -= 90f },
+                                .clickable { isLocked = !isLocked }
+                        )
+
+                        // Bottom Left: Rotate Controls (Left & Right)
+                        Row(
                             modifier = Modifier
                                 .align(Alignment.BottomStart)
-                                .offset(x = (-12).dp, y = 12.dp)
-                                .size(32.dp)
-                                .background(Color.White, CircleShape)
-                                .border(1.dp, Color(0xFFE0E0E0), CircleShape)
+                                .offset(x = (-12).dp, y = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Rotate",
-                                tint = Color.Black,
-                                modifier = Modifier.size(16.dp).graphicsLayer { rotationY = 180f }
+                            // Rotate Left (flip1)
+                            Image(
+                                painter = painterResource(R.drawable.flip1),
+                                contentDescription = "Rotate Left",
+                                colorFilter = ColorFilter.tint(Color.Black),
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clickable { imageRotation -= 90f }
+                            )
+                            
+                             // Rotate Right (flip2)
+                            Image(
+                                painter = painterResource(R.drawable.flip2),
+                                contentDescription = "Rotate Right",
+                                colorFilter = ColorFilter.tint(Color.Black),
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clickable { imageRotation += 90f }
                             )
                         }
 
-                        // Bottom Right: Resize/Reset
-                         IconButton(
-                            onClick = { 
-                                imageScale = 1f 
-                                imageOffset = androidx.compose.ui.geometry.Offset.Zero
-                                imageRotation = 0f
-                            },
+                        // Bottom Right: Resize/Reset (full_screen)
+                        Image(
+                            painter = painterResource(R.drawable.full_screen),
+                            contentDescription = "Reset",
+                            colorFilter = ColorFilter.tint(Color.Black),
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .offset(x = 12.dp, y = 12.dp)
                                 .size(32.dp)
-                                .background(Color.White, CircleShape)
-                                .border(1.dp, Color(0xFFE0E0E0), CircleShape)
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.full_screen),
-                                contentDescription = "Reset",
-                                tint = Color.Black,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
+                                .clickable { 
+                                    imageScale = 1f 
+                                    imageOffset = androidx.compose.ui.geometry.Offset.Zero
+                                    imageRotation = 0f
+                                }
+                        )
                     } else {
-                         // Locked State Icon
-                         IconButton(
-                            onClick = { isLocked = !isLocked },
-                            modifier = Modifier
+                         // Locked State Icon (lock)
+                         Image(
+                            painter = painterResource(R.drawable.lock),
+                            contentDescription = "Unlock",
+                             colorFilter = ColorFilter.tint(Color.Black),
+                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .offset(x = 12.dp, y = (-12).dp)
                                 .size(32.dp)
-                                .background(Color(0xFF4285F4), CircleShape)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "Unlock",
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
+                                .clickable { isLocked = !isLocked }
+                        )
                     }
                 }
             }
@@ -194,7 +188,7 @@ fun PaperTraceScreen(
                     painter = painterResource(R.drawable.back_arrow_ic),
                     contentDescription = "Back",
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(40.dp)
                         .clickable(onClick = onBackClick)
                 )
 
@@ -216,28 +210,23 @@ fun PaperTraceScreen(
             }
 
             /* ================= BOTTOM CONTROLS ================= */
-            Column(
+            Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                contentAlignment = Alignment.BottomCenter
             ) {
-                // Toggle Handle
-                Image(
-                    painter = painterResource(if (isPanelVisible) R.drawable.arrow_below else R.drawable.arrow_up),
-                    contentDescription = "Toggle",
-                    modifier = Modifier
-                        .padding(bottom = 8.dp)
-                        .size(36.dp)
-                        .clickable(onClick = { isPanelVisible = !isPanelVisible })
-                )
-
+                // Control Panel (Bottom Layer)
                 if (isPanelVisible) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color.White)
-                            .padding(top = 16.dp, bottom = 32.dp, start = 20.dp, end = 20.dp)
+                            .shadow(elevation = 16.dp, shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                            .background(
+                                color = Color.White,
+                                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                            )
+                            .padding(top = 24.dp, bottom = 32.dp, start = 20.dp, end = 20.dp)
                     ) {
                         Text(
                             text = "Opacity",
@@ -248,13 +237,14 @@ fun PaperTraceScreen(
                         
                         Spacer(modifier = Modifier.height(12.dp))
 
+                        // Slider
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.camera_ic),
+                                painter = painterResource(R.drawable.mask),
                                 contentDescription = null,
-                                tint = Color.LightGray,
+                                tint = Color.Black,
                                 modifier = Modifier.size(20.dp)
                             )
                             
@@ -286,7 +276,7 @@ fun PaperTraceScreen(
                                 modifier = Modifier.size(24.dp)
                             ) {
                                  Icon(
-                                    painter = painterResource(R.drawable.camera_ic),
+                                    painter = painterResource(R.drawable.galllery),
                                     contentDescription = "Gallery",
                                     tint = Color.Black
                                 )
@@ -304,50 +294,57 @@ fun PaperTraceScreen(
                             ZoomChip(
                                 text = "0.5x", 
                                 onClick = { imageScale = 0.5f }, 
-                                isSelected = imageScale == 0.5f,
+                                selected = imageScale == 0.5f,
                                 isDarkTheme = false
                             )
                             Spacer(modifier = Modifier.width(16.dp))
                             ZoomChip(
                                 text = "1.0x", 
                                 onClick = { imageScale = 1.0f }, 
-                                isSelected = imageScale == 1.0f,
+                                selected = imageScale == 1.0f,
                                 isDarkTheme = false
                             )
                             Spacer(modifier = Modifier.width(16.dp))
                             ZoomChip(
                                 text = "2.0x", 
                                 onClick = { imageScale = 2.0f }, 
-                                isSelected = imageScale == 2.0f,
+                                selected = imageScale == 2.0f,
                                 isDarkTheme = false
                             )
                         }
                     }
                 }
+
+                // Toggle Button (Top Layer)
+                Image(
+                    painter = painterResource(if (isPanelVisible) R.drawable.arrow_below else R.drawable.arrow_up),
+                    contentDescription = "Toggle",
+                    modifier = Modifier
+                        .align(if (isPanelVisible) Alignment.TopCenter else Alignment.BottomCenter)
+                        .offset(y = if (isPanelVisible) (-18).dp else (-12).dp)
+                        .size(36.dp)
+                        .clickable { isPanelVisible = !isPanelVisible }
+                )
             }
         }
     }
 }
 
-// Reusing ZoomChip from CameraPreviewScreen (which needs to be made public & adaptable or copied) 
-// Since files are separate and ZoomChip was inside CameraPreviewScreen.kt, I'll copy/adapt it header.
-// Actually, I should probably move ZoomChip to a shared utility or just duplicate for now.
-// I will duplicate it here for safety as I am not editing a Utils file.
 
 @Composable
 private fun ZoomChip(
     text: String,
     onClick: () -> Unit,
-    isSelected: Boolean,
+    selected: Boolean,
     isDarkTheme: Boolean
 ) {
-    val backgroundColor = if (isSelected) {
+    val backgroundColor = if (selected) {
         Color(0xFF4285F4)
     } else {
         if (isDarkTheme) Color.White else Color.Black
     }
     
-    val textColor = if (isSelected) {
+    val textColor = if (selected) {
         Color.White
     } else {
         if (isDarkTheme) Color.Black else Color.White

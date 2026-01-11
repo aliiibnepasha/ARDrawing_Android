@@ -60,13 +60,13 @@ fun LessonDrawingScreen(
             TopAppBar(
                 title = { },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.Black
-                        )
-                    }
+                    Image(
+                        painter = painterResource(R.drawable.back_arrow_ic),
+                        contentDescription = "Back",
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clickable(onClick = onBackClick)
+                    )
                 },
                 actions = {
                     Button(
