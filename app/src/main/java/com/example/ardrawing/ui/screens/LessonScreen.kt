@@ -47,12 +47,12 @@ fun LessonScreen() {
             // 2. Free Lesson Card
             item { FreeLessonCard() }
 
-            // 3. First Lesson Item
+            // 3. First Lesson Item (Lesson 1 - Full Image)
             item {
                 LessonItemCard(
-                    imageRes = R.drawable.lesson_boy,
+                    imagePath = "file:///android_asset/lessons/lesson_1/step_17.svg",
                     level = 3,
-                    steps = 8
+                    steps = 17
                 )
             }
 
@@ -62,17 +62,17 @@ fun LessonScreen() {
             // 5. More Lesson Items
             item {
                 LessonItemCard(
-                    imageRes = R.drawable.lesson_boy,
+                    imagePath = "file:///android_asset/lessons/lesson_2/Step_13.svg",
                     level = 2,
-                    steps = 8
+                    steps = 13
                 )
             }
 
             item {
                 LessonItemCard(
-                    imageRes = R.drawable.lesson_boy,
-                    level = 6,
-                    steps = 12
+                    imagePath = "file:///android_asset/lessons/lesson_3/Step_8.svg",
+                    level = 1,
+                    steps = 8
                 )
             }
         }
@@ -121,23 +121,24 @@ private fun FreeLessonCard() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(110.dp)
+            .height(100.dp) // Adjusted height for balance
             .shadow(
-                elevation = 2.dp,
-                shape = RoundedCornerShape(24.dp),
-                spotColor = Color.Black.copy(alpha = 0.05f)
+                elevation = 3.dp,
+                shape = RoundedCornerShape(22.dp),
+                spotColor = Color.Black.copy(alpha = 0.1f)
             )
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White) // Base white
+            .clip(RoundedCornerShape(22.dp))
+            .background(Color.White)
     ) {
-        // Custom Drawn Green Background (Right Side with Diagonal)
+        // Custom Drawn Green Background
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .drawBehind {
                     val path = Path()
-                    val startX = size.width * 0.28f // Top-left of green roughly
-                    val bottomStartX = size.width * 0.20f // Bottom-left of green (diagonal slant)
+                    // Shifted right to give Fox more space
+                    val startX = size.width * 0.35f 
+                    val bottomStartX = size.width * 0.24f
                     
                     path.moveTo(startX, 0f)
                     path.lineTo(size.width, 0f)
@@ -149,8 +150,8 @@ private fun FreeLessonCard() {
                         path = path,
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                Color(0xFF8FD866), // Light Green
-                                Color(0xFF67C240)  // Darker Green
+                                Color(0xFF8FD866),
+                                Color(0xFF67C240)
                             )
                         )
                     )
@@ -162,32 +163,35 @@ private fun FreeLessonCard() {
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Fox Image (Left side on White)
+            // Fox Image Area (Wider)
             Box(
                 modifier = Modifier
-                    .weight(0.32f) // Adjust weight to match graphic split
+                    .weight(0.36f) // Increased weight
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.lesson_fox),
+                    painter = painterResource(id = R.drawable.lesson_cat),
                     contentDescription = null,
-                    modifier = Modifier.size(75.dp) // Fox size
+                    modifier = Modifier
+                        .size(85.dp) // Much larger fox
+                        .offset(x = 4.dp) // Nudge right slightly
                 )
             }
 
-            // Info Column (Right side on Green)
+            // Info Column
             Column(
                 modifier = Modifier
-                    .weight(0.68f)
-                    .padding(start = 12.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+                    .weight(0.64f)
+                    .padding(start = 4.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = "Free Lesson",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 19.sp, // Larger title
+                    letterSpacing = 0.5.sp
                 )
 
                 Row(
@@ -196,27 +200,37 @@ private fun FreeLessonCard() {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     // Timer Chips
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         TimerBox("07")
-                        Text(":", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 2.dp))
+                        Text(":", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         TimerBox("20")
-                        Text(":", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 2.dp))
+                        Text(":", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         TimerBox("48")
                     }
+
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     // Start Button
                     Button(
                         onClick = { /* TODO */ },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4285F4) // Blue
+                            containerColor = Color(0xFF4285F4)
                         ),
                         shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp),
+                        contentPadding = PaddingValues(0.dp),
                         modifier = Modifier
-                            .width(80.dp)
-                            .height(34.dp)
+                            .weight(1f) // Fill remaining space
+                            .height(38.dp)
                     ) {
-                        Text("Start", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Start", 
+                            color = Color.White, 
+                            fontSize = 15.sp, 
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
@@ -228,14 +242,14 @@ private fun FreeLessonCard() {
 private fun TimerBox(time: String) {
     Box(
         modifier = Modifier
-            .size(width = 24.dp, height = 24.dp)
-            .background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(6.dp)),
+            .size(width = 26.dp, height = 26.dp)
+            .background(Color.White.copy(alpha = 0.25f), RoundedCornerShape(6.dp)),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = time,
             color = Color.White,
-            fontSize = 11.sp,
+            fontSize = 13.sp,
             fontWeight = FontWeight.Bold
         )
     }
@@ -243,20 +257,20 @@ private fun TimerBox(time: String) {
 
 @Composable
 private fun LessonItemCard(
-    imageRes: Int,
-    level: Int, // 1 to 10
+    imagePath: String,
+    level: Int,
     steps: Int
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp) // Taller card as per ref
+            .height(150.dp) // Reduced height from 180dp
             .shadow(
                 elevation = 2.dp,
-                shape = RoundedCornerShape(24.dp),
+                shape = RoundedCornerShape(20.dp),
                 spotColor = Color.Black.copy(alpha = 0.05f)
             )
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(Color.White)
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
@@ -266,25 +280,29 @@ private fun LessonItemCard(
                 modifier = Modifier
                     .weight(0.48f)
                     .fillMaxHeight()
-                    .padding(12.dp)
+                    .padding(10.dp)
             ) {
-                // Image
-                Image(
-                    painter = painterResource(id = imageRes),
+                // Image (Loaded from Assets via Coil)
+                val context = androidx.compose.ui.platform.LocalContext.current
+                coil.compose.AsyncImage(
+                    model = coil.request.ImageRequest.Builder(context)
+                        .data(imagePath)
+                        .decoderFactory(coil.decode.SvgDecoder.Factory())
+                        .build(),
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 16.dp, bottom = 8.dp) // Space for heart
+                        .padding(top = 12.dp, bottom = 4.dp)
                 )
 
-                // Heart Icon (Top Right of THIS box)
+                // Heart Icon
                 Icon(
                     imageVector = Icons.Outlined.FavoriteBorder,
                     contentDescription = null,
                     tint = Color(0xFF4285F4),
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .size(24.dp)
+                        .size(22.dp) // Smaller icon
                         .clickable { }
                 )
             }
@@ -293,9 +311,9 @@ private fun LessonItemCard(
             Box(
                 modifier = Modifier
                     .width(1.dp)
-                    .fillMaxHeight(0.8f) // Not full height
+                    .fillMaxHeight(0.7f)
                     .align(Alignment.CenterVertically)
-                    .background(Color(0xFFEEEEEE))
+                    .background(Color(0xFFF0F0F0)) // Subtle gray
             )
 
             // RIGHT SIDE: Details
@@ -303,26 +321,26 @@ private fun LessonItemCard(
                 modifier = Modifier
                     .weight(0.52f)
                     .fillMaxHeight()
-                    .padding(start = 24.dp, end = 16.dp, top = 24.dp, bottom = 24.dp),
+                    .padding(start = 20.dp, end = 16.dp),
                 verticalArrangement = Arrangement.Center
             ) {
                 
                 // Level Section
                 Text(
                     text = "Level:",
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     color = Color(0xFF5A5A5A),
                     fontWeight = FontWeight.Normal
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 
                 // Level Bars
                 Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                     repeat(10) { index ->
                         Box(
                             modifier = Modifier
-                                .width(5.dp)
-                                .height(16.dp)
+                                .width(4.dp) // Thinner bars
+                                .height(14.dp)
                                 .clip(RoundedCornerShape(4.dp))
                                 .background(
                                     if (index < level) Color(0xFF4285F4) else Color(0xFFD3E3FD)
@@ -331,19 +349,19 @@ private fun LessonItemCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // Steps Section
                 Text(
                     text = "Steps:",
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     color = Color(0xFF5A5A5A),
                     fontWeight = FontWeight.Normal
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "$steps",
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF4285F4)
                 )
@@ -357,18 +375,18 @@ private fun CourseBanner() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(95.dp)
+            .height(82.dp) // Reduced height from 95dp
             .clip(RoundedCornerShape(20.dp))
-            .background(Color.White) // Base white
+            .background(Color.White)
     ) {
-         // Custom Drawn Blue Background (Right Side with Diagonal)
+         // Custom Drawn Blue Background
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .drawBehind {
                     val path = Path()
-                    val startX = size.width * 0.35f // Top-left of blue
-                    val bottomStartX = size.width * 0.25f // Bottom-left of blue
+                    val startX = size.width * 0.35f
+                    val bottomStartX = size.width * 0.25f
                     
                     path.moveTo(startX, 0f)
                     path.lineTo(size.width, 0f)
@@ -380,8 +398,8 @@ private fun CourseBanner() {
                         path = path,
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                Color(0xFF559DFD), // Blue
-                                Color(0xFF559DFD)  // Blue
+                                Color(0xFF559DFD),
+                                Color(0xFF559DFD)
                             )
                         )
                     )
@@ -390,11 +408,10 @@ private fun CourseBanner() {
 
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 0.dp),
+                .fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left content (Image on White)
+            // Left content (Image)
             Box(
                  modifier = Modifier
                     .weight(0.3f)
@@ -402,54 +419,54 @@ private fun CourseBanner() {
                 contentAlignment = Alignment.Center
             ) {
                  Image(
-                    painter = painterResource(id = R.drawable.lesson_course_thumb),
+                    painter = painterResource(id = R.drawable.lesson_girls),
                     contentDescription = null,
                     modifier = Modifier
-                        .padding(start = 12.dp)
-                        .width(90.dp)
-                        .height(60.dp)
-                        // .clip(RoundedCornerShape(8.dp)) // If needed
+                        .padding(start = 8.dp)
+                        .width(80.dp)
+                        .height(55.dp)
                 )
             }
            
-            // Center Text (On Blue)
+            // Center Text
             Column(
                 modifier = Modifier
                     .weight(0.55f)
-                    .padding(start = 24.dp) // Push text right to clear diagonal
+                    .padding(start = 16.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
-                        .background(Color(0xFFF9AB26)) // Orange Pill
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .background(Color(0xFFF9AB26))
+                        .padding(horizontal = 10.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = "New lesson available",
                         color = Color.White,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 10.sp, // Reduced font size to ensure one line
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1 // Force single line
                     )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = "7-day course",
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
 
-            // Arrow (Right edge)
+            // Arrow
             Box(
                 modifier = Modifier
                     .weight(0.15f)
-                    .padding(end = 16.dp),
+                    .padding(end = 12.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(28.dp) // Smaller arrow circle
                         .background(Color.White.copy(alpha = 0.2f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
@@ -457,7 +474,7 @@ private fun CourseBanner() {
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
