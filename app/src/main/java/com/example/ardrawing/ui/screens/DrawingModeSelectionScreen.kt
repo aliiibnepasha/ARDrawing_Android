@@ -29,17 +29,20 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import com.example.ardrawing.R
 import com.example.ardrawing.data.model.DrawingTemplate
+import com.example.ardrawing.data.model.Lesson
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DrawingModeSelectionScreen(
-    template: DrawingTemplate,
+    template: DrawingTemplate?,
+    lesson: Lesson?,
     onBackClick: () -> Unit,
     onDrawSketchClick: () -> Unit,
     onTraceImageClick: () -> Unit
 ) {
+    val titleName = template?.name ?: lesson?.name ?: ""
     val modes = listOf(
         DrawingMode(
             id = "ar",
@@ -118,7 +121,7 @@ fun DrawingModeSelectionScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Select the drawing mode",
+                text = "Select mode for $titleName",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF1C1C1C),

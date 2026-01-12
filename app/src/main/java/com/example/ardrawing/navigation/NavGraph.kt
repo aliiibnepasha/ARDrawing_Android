@@ -35,11 +35,16 @@ import com.example.ardrawing.ui.screens.HomeScreenNew
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object TemplateList : Screen("template_list")
-    object CameraPreview : Screen("camera_preview/{templateId}") {
-        fun createRoute(templateId: String) = "camera_preview/$templateId"
+    object DrawingModeSelection : Screen("drawing_mode_selection/{id}/{type}") {
+        fun createRoute(id: String, type: String) = "drawing_mode_selection/$id/$type"
     }
-    object PaperTrace : Screen("paper_trace/{templateId}") {
-        fun createRoute(templateId: String) = "paper_trace/$templateId"
+    // Updated route to include type
+    object CameraPreview : Screen("camera_preview/{id}/{type}") {
+        fun createRoute(id: String, type: String) = "camera_preview/$id/$type"
+    }
+    // Updated route to include type
+    object PaperTrace : Screen("paper_trace/{id}/{type}") {
+        fun createRoute(id: String, type: String) = "paper_trace/$id/$type"
     }
     object CaptureResult : Screen("capture_result/{templateId}/{sourceType}") {
         fun createRoute(templateId: String, sourceType: String) = "capture_result/$templateId/$sourceType"
@@ -60,9 +65,6 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object CategoryDetail : Screen("category_detail/{categoryId}") {
         fun createRoute(categoryId: String) = "category_detail/$categoryId"
-    }
-    object DrawingModeSelection : Screen("drawing_mode_selection/{templateId}") {
-        fun createRoute(templateId: String) = "drawing_mode_selection/$templateId"
     }
     object PhotoToSketch : Screen("photo_to_sketch")
     object CreateWithAI : Screen("create_with_ai")
@@ -88,7 +90,7 @@ fun NavGraph(
                 currentRoute = currentTabRoute,
                 onTemplateSelected = { template ->
                     navController.navigate(
-                        Screen.DrawingModeSelection.createRoute(template.id)
+                        Screen.DrawingModeSelection.createRoute(template.id, "template")
                     )
                 },
 
@@ -175,7 +177,7 @@ fun NavGraph(
             CategoryDetailScreen(
                 categoryId = categoryId,
                 onTemplateSelected = { template ->
-                    navController.navigate(Screen.DrawingModeSelection.createRoute(template.id))
+                    navController.navigate(Screen.DrawingModeSelection.createRoute(template.id, "template"))
                 },
                 onBackClick = { navController.popBackStack() }
             )
@@ -185,7 +187,7 @@ fun NavGraph(
             val context = LocalContext.current
             TemplateListScreen(
                 onTemplateSelected = { template ->
-                    navController.navigate(Screen.DrawingModeSelection.createRoute(template.id))
+                    navController.navigate(Screen.DrawingModeSelection.createRoute(template.id, "template"))
                 },
                 onStartLessonClick = {
                     navController.navigate(Screen.LessonList.route)
@@ -201,33 +203,61 @@ fun NavGraph(
         
         composable(Screen.DrawingModeSelection.route) { backStackEntry ->
             val context = LocalContext.current
-            val templateId = backStackEntry.arguments?.getString("templateId") ?: ""
-            val template = com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, templateId)
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            val type = backStackEntry.arguments?.getString("type") ?: "template"
+            
+            val template = if (type == "template") {
+                com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, id)
+            } else null
+            
+            val lesson = if (type == "lesson") {
+                LessonRepository.getLessonById(context, id)
+            } else null
 
-            template?.let {
+            if (template != null) {
                 DrawingModeSelectionScreen(
-                    template = it,
+                    template = template,
+                    lesson = null,
                     onBackClick = { navController.popBackStack() },
                     onDrawSketchClick = {
-                        navController.navigate(Screen.CameraPreview.createRoute(templateId))
+                        navController.navigate(Screen.CameraPreview.createRoute(id, "template"))
                     },
                     onTraceImageClick = {
-                        navController.navigate(Screen.PaperTrace.createRoute(templateId))
+                        navController.navigate(Screen.PaperTrace.createRoute(id, "template"))
+                    }
+                )
+            } else if (lesson != null) {
+                DrawingModeSelectionScreen(
+                    template = null,
+                    lesson = lesson,
+                    onBackClick = { navController.popBackStack() },
+                    onDrawSketchClick = {
+                        navController.navigate(Screen.CameraPreview.createRoute(id, "lesson"))
+                    },
+                    onTraceImageClick = {
+                        navController.navigate(Screen.PaperTrace.createRoute(id, "lesson"))
                     }
                 )
             }
         }
         
-
-        
         composable(Screen.CameraPreview.route) { backStackEntry ->
             val context = LocalContext.current
-            val templateId = backStackEntry.arguments?.getString("templateId") ?: ""
-            val template = com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, templateId)
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            val type = backStackEntry.arguments?.getString("type") ?: "template"
             
-            template?.let {
+            val template = if (type == "template") {
+                com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, id)
+            } else null
+            
+            val lesson = if (type == "lesson") {
+                LessonRepository.getLessonById(context, id)
+            } else null
+
+            if (template != null || lesson != null) {
                 CameraPreviewScreen(
-                    template = it,
+                    template = template,
+                    lesson = lesson,
                     onBackClick = { navController.popBackStack() },
                 )
             }
@@ -235,12 +265,21 @@ fun NavGraph(
         
         composable(Screen.PaperTrace.route) { backStackEntry ->
             val context = LocalContext.current
-            val templateId = backStackEntry.arguments?.getString("templateId") ?: ""
-            val template = com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, templateId)
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            val type = backStackEntry.arguments?.getString("type") ?: "template"
             
-            template?.let {
+            val template = if (type == "template") {
+                com.example.ardrawing.data.repository.TemplateRepository.getTemplateById(context, id)
+            } else null
+            
+            val lesson = if (type == "lesson") {
+                LessonRepository.getLessonById(context, id)
+            } else null
+            
+            if (template != null || lesson != null) {
                 PaperTraceScreen(
-                    template = it,
+                    template = template,
+                    lesson = lesson,
                     onBackClick = { navController.popBackStack() }
                 )
             }
@@ -290,9 +329,13 @@ fun NavGraph(
         }
         
         composable(Screen.LessonList.route) {
-            LessonScreen()
+            LessonScreen(
+                onLessonClick = { lessonId ->
+                    navController.navigate(Screen.DrawingModeSelection.createRoute(lessonId, "lesson"))
+                }
+            )
         }
-        
+
         composable(Screen.LessonPreview.route) { backStackEntry ->
             val context = LocalContext.current
             val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""
@@ -306,11 +349,7 @@ fun NavGraph(
                         navController.navigate(Screen.LessonDrawing.createRoute(lessonId))
                     },
                     onTraceImageClick = {
-                        // Navigate to PaperTrace with lesson step
-                        val templates = com.example.ardrawing.data.repository.TemplateRepository.getTemplates(context)
-                        if (templates.isNotEmpty()) {
-                            navController.navigate(Screen.PaperTrace.createRoute(templates.first().id))
-                        }
+                         // TODO: Remove this legacy route later
                     }
                 )
             }

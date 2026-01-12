@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,18 +30,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
 import com.example.ardrawing.R
 import com.example.ardrawing.data.model.DrawingTemplate
+import com.example.ardrawing.data.model.Lesson
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 
 @Composable
 fun PaperTraceScreen(
-    template: DrawingTemplate,
+    template: DrawingTemplate? = null,
+    lesson: Lesson? = null,
     onBackClick: () -> Unit
 ) {
 
     /* ---------------- BACK HANDLER ---------------- */
     BackHandler { onBackClick() }
+
+    val context = LocalContext.current
 
     /* ---------------- STATES ---------------- */
     var imageScale by remember { mutableFloatStateOf(1f) }
@@ -51,6 +61,10 @@ fun PaperTraceScreen(
 
     // Bottom Panel State
     var isPanelVisible by remember { mutableStateOf(true) }
+
+    // Lesson Step State
+    var currentStepIndex by remember { mutableIntStateOf(0) }
+    val totalSteps = lesson?.steps?.size ?: 0
 
     Scaffold(
         containerColor = Color.White,
@@ -88,18 +102,37 @@ fun PaperTraceScreen(
                         }
                 ) {
                     // Actual Image
-                    Image(
-                        painter = rememberAssetImagePainter(template.imageAssetPath),
-                        contentDescription = "Sketch",
-                        modifier = Modifier
-                            .size(300.dp)
-                            .graphicsLayer {
-                                rotationZ = imageRotation // Applied ONLY to Image
-                            }
-                            .alpha(opacity)
-                            .clip(RoundedCornerShape(12.dp)),
-                        contentScale = ContentScale.Fit
-                    )
+                    if (lesson != null && currentStepIndex < lesson.steps.size) {
+                        val step = lesson.steps[currentStepIndex]
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data("file:///android_asset/${step.imageAssetPath}")
+                                .decoderFactory(SvgDecoder.Factory())
+                                .build(),
+                            contentDescription = "Step ${step.stepNumber}",
+                            modifier = Modifier
+                                .size(300.dp)
+                                .graphicsLayer {
+                                    rotationZ = imageRotation
+                                }
+                                .alpha(opacity)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Fit
+                        )
+                    } else if (template != null) {
+                        Image(
+                            painter = rememberAssetImagePainter(template.imageAssetPath),
+                            contentDescription = "Sketch",
+                            modifier = Modifier
+                                .size(300.dp)
+                                .graphicsLayer {
+                                    rotationZ = imageRotation
+                                }
+                                .alpha(opacity)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
 
                     // Overlay Controls
                     if (!isLocked) {
@@ -115,14 +148,13 @@ fun PaperTraceScreen(
                                 .clickable { isLocked = !isLocked }
                         )
 
-                        // Bottom Left: Rotate Controls (Left & Right)
+                        // Bottom Left: Rotate Controls
                         Row(
                             modifier = Modifier
                                 .align(Alignment.BottomStart)
                                 .offset(x = (-12).dp, y = 12.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // Rotate Left (flip1)
                             Image(
                                 painter = painterResource(R.drawable.flip1),
                                 contentDescription = "Rotate Left",
@@ -131,8 +163,6 @@ fun PaperTraceScreen(
                                     .size(32.dp)
                                     .clickable { imageRotation -= 90f }
                             )
-                            
-                             // Rotate Right (flip2)
                             Image(
                                 painter = painterResource(R.drawable.flip2),
                                 contentDescription = "Rotate Right",
@@ -143,7 +173,7 @@ fun PaperTraceScreen(
                             )
                         }
 
-                        // Bottom Right: Resize/Reset (full_screen)
+                        // Bottom Right: Reset
                         Image(
                             painter = painterResource(R.drawable.full_screen),
                             contentDescription = "Reset",
@@ -159,7 +189,7 @@ fun PaperTraceScreen(
                                 }
                         )
                     } else {
-                         // Locked State Icon (lock)
+                         // Locked State Icon
                          Image(
                             painter = painterResource(R.drawable.lock),
                             contentDescription = "Unlock",
@@ -173,6 +203,65 @@ fun PaperTraceScreen(
                     }
                 }
             }
+            
+            /* ================= STEP NAVIGATION (LESSONS ONLY) ================= */
+            if (lesson != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = if (isPanelVisible) 170.dp else 40.dp) // Auto-adjusts
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier
+                            .shadow(4.dp, RoundedCornerShape(12.dp))
+                            .background(Color.White, RoundedCornerShape(12.dp))
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        IconButton(
+                            onClick = { if (currentStepIndex > 0) currentStepIndex-- },
+                            enabled = currentStepIndex > 0,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ChevronLeft,
+                                contentDescription = "Previous",
+                                tint = if (currentStepIndex > 0) Color.Black else Color.Gray
+                            )
+                        }
+
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                             Text(
+                                "step",
+                                fontSize = 10.sp,
+                                color = Color.Gray,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                "${currentStepIndex + 1}/$totalSteps",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { if (currentStepIndex < totalSteps - 1) currentStepIndex++ },
+                            enabled = currentStepIndex < totalSteps - 1,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = "Next",
+                                tint = if (currentStepIndex < totalSteps - 1) Color.Black else Color.Gray
+                            )
+                        }
+                    }
+                }
+            }
 
             /* ================= TOP BAR ================= */
             Row(
@@ -183,12 +272,11 @@ fun PaperTraceScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Back Button
                 Image(
                     painter = painterResource(R.drawable.back_arrow_ic),
                     contentDescription = "Back",
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(32.dp)
                         .clickable(onClick = onBackClick)
                 )
 
@@ -216,7 +304,7 @@ fun PaperTraceScreen(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.BottomCenter
             ) {
-                // Control Panel (Bottom Layer)
+                // Control Panel
                 if (isPanelVisible) {
                     Column(
                         modifier = Modifier
@@ -285,7 +373,7 @@ fun PaperTraceScreen(
 
                         Spacer(modifier = Modifier.height(20.dp))
                         
-                        // Zoom Presets (Inverse colors for light theme)
+                        // Zoom Presets
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center,
@@ -315,7 +403,7 @@ fun PaperTraceScreen(
                     }
                 }
 
-                // Toggle Button (Top Layer)
+                // Toggle Button
                 Image(
                     painter = painterResource(if (isPanelVisible) R.drawable.arrow_below else R.drawable.arrow_up),
                     contentDescription = "Toggle",
@@ -330,7 +418,6 @@ fun PaperTraceScreen(
     }
 }
 
-
 @Composable
 private fun ZoomChip(
     text: String,
@@ -341,13 +428,16 @@ private fun ZoomChip(
     val backgroundColor = if (selected) {
         Color(0xFF4285F4)
     } else {
-        if (isDarkTheme) Color.White else Color.Black
+        if (isDarkTheme) Color.White else Color.Black // Using Black for light theme inactive? Original was Color.Black for text and White for bg?
+        // Wait, original: if selected Blue else (if dark White else Black)
+        // Let's stick to standard behavior: Blue if selected, otherwise Grey/Black for text
+        Color(0xFFF0F0F0) // Light grey background for unselected in Light Theme
     }
     
     val textColor = if (selected) {
         Color.White
     } else {
-        if (isDarkTheme) Color.Black else Color.White
+        Color.Black
     }
 
     Box(

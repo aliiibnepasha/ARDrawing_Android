@@ -76,7 +76,7 @@ fun PhotoToSketchScreen(
                     painter = painterResource(R.drawable.back_arrow_ic),
                     contentDescription = "Back",
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(32.dp)
                         .clickable { onBackClick() }
                 )
             }

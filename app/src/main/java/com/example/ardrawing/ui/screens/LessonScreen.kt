@@ -28,7 +28,9 @@ import androidx.compose.ui.unit.sp
 import com.example.ardrawing.R
 
 @Composable
-fun LessonScreen() {
+fun LessonScreen(
+    onLessonClick: (String) -> Unit = {}
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -52,7 +54,8 @@ fun LessonScreen() {
                 LessonItemCard(
                     imagePath = "file:///android_asset/lessons/lesson_1/step_17.svg",
                     level = 3,
-                    steps = 17
+                    steps = 17,
+                    onClick = { onLessonClick("lesson_1") }
                 )
             }
 
@@ -64,7 +67,8 @@ fun LessonScreen() {
                 LessonItemCard(
                     imagePath = "file:///android_asset/lessons/lesson_2/Step_13.svg",
                     level = 2,
-                    steps = 13
+                    steps = 13,
+                    onClick = { onLessonClick("lesson_2") }
                 )
             }
 
@@ -72,7 +76,8 @@ fun LessonScreen() {
                 LessonItemCard(
                     imagePath = "file:///android_asset/lessons/lesson_3/Step_8.svg",
                     level = 1,
-                    steps = 8
+                    steps = 8,
+                    onClick = { onLessonClick("lesson_3") }
                 )
             }
         }
@@ -80,7 +85,6 @@ fun LessonScreen() {
 }
 
 // ---------------- COMPONENTS ----------------
-
 @Composable
 private fun LessonHeader() {
     Row(
@@ -121,13 +125,13 @@ private fun FreeLessonCard() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp) // Adjusted height for balance
+            .height(86.dp) // Reduced height to match compact reference
             .shadow(
-                elevation = 3.dp,
-                shape = RoundedCornerShape(22.dp),
-                spotColor = Color.Black.copy(alpha = 0.1f)
+                elevation = 2.dp,
+                shape = RoundedCornerShape(20.dp),
+                spotColor = Color.Black.copy(alpha = 0.05f)
             )
-            .clip(RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(Color.White)
     ) {
         // Custom Drawn Green Background
@@ -136,9 +140,8 @@ private fun FreeLessonCard() {
                 .fillMaxSize()
                 .drawBehind {
                     val path = Path()
-                    // Shifted right to give Fox more space
-                    val startX = size.width * 0.35f 
-                    val bottomStartX = size.width * 0.24f
+                    val startX = size.width * 0.32f // Adjusted start
+                    val bottomStartX = size.width * 0.22f 
                     
                     path.moveTo(startX, 0f)
                     path.lineTo(size.width, 0f)
@@ -163,34 +166,34 @@ private fun FreeLessonCard() {
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Fox Image Area (Wider)
+            // Image Area
             Box(
                 modifier = Modifier
-                    .weight(0.36f) // Increased weight
+                    .weight(0.34f)
                     .fillMaxHeight(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.CenterStart // ⬅️ IMPORTANT
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.lesson_cat),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(85.dp) // Much larger fox
-                        .offset(x = 4.dp) // Nudge right slightly
+                        .size(70.dp)
+                        .offset(x = 6.dp) // ⬅️ optical centering
                 )
             }
 
             // Info Column
             Column(
                 modifier = Modifier
-                    .weight(0.64f)
-                    .padding(start = 4.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
+                    .weight(0.66f)
+                    .padding(start = 2.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = "Free Lesson",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 19.sp, // Larger title
+                    fontSize = 16.sp, // Reduced font
                     letterSpacing = 0.5.sp
                 )
 
@@ -201,17 +204,17 @@ private fun FreeLessonCard() {
                 ) {
                     // Timer Chips
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         TimerBox("07")
-                        Text(":", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(":", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         TimerBox("20")
-                        Text(":", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(":", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         TimerBox("48")
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
 
                     // Start Button
                     Button(
@@ -219,17 +222,17 @@ private fun FreeLessonCard() {
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF4285F4)
                         ),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(0.dp),
                         modifier = Modifier
-                            .weight(1f) // Fill remaining space
-                            .height(38.dp)
+                            .weight(1f)
+                            .height(30.dp)
                     ) {
                         Text(
                             "Start", 
                             color = Color.White, 
-                            fontSize = 15.sp, 
-                            fontWeight = FontWeight.Bold
+                            fontSize = 12.sp, 
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -242,14 +245,14 @@ private fun FreeLessonCard() {
 private fun TimerBox(time: String) {
     Box(
         modifier = Modifier
-            .size(width = 26.dp, height = 26.dp)
-            .background(Color.White.copy(alpha = 0.25f), RoundedCornerShape(6.dp)),
+            .size(width = 22.dp, height = 22.dp)
+            .background(Color.White.copy(alpha = 0.25f), RoundedCornerShape(5.dp)),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = time,
             color = Color.White,
-            fontSize = 13.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold
         )
     }
@@ -259,7 +262,8 @@ private fun TimerBox(time: String) {
 private fun LessonItemCard(
     imagePath: String,
     level: Int,
-    steps: Int
+    steps: Int,
+    onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -272,6 +276,7 @@ private fun LessonItemCard(
             )
             .clip(RoundedCornerShape(20.dp))
             .background(Color.White)
+            .clickable(onClick = onClick) // Added Clickable
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
             
@@ -303,9 +308,10 @@ private fun LessonItemCard(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .size(22.dp) // Smaller icon
-                        .clickable { }
                 )
             }
+// ... rest of LessonItemCard
+
 
             // Vertical Divider
             Box(

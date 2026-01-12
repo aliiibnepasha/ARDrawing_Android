@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
@@ -24,7 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -35,8 +39,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
+import coil.request.ImageRequest
 import com.example.ardrawing.R
 import com.example.ardrawing.data.model.DrawingTemplate
+import com.example.ardrawing.data.model.Lesson
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -45,7 +53,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun CameraPreviewScreen(
-    template: DrawingTemplate,
+    template: DrawingTemplate? = null,
+    lesson: Lesson? = null,
     onBackClick: () -> Unit
 ) {
 
@@ -70,6 +79,10 @@ fun CameraPreviewScreen(
 
     // Bottom Panel State
     var isPanelVisible by remember { mutableStateOf(true) }
+
+    // Lesson Step State
+    var currentStepIndex by remember { mutableIntStateOf(0) }
+    val totalSteps = lesson?.steps?.size ?: 0
 
     // Camera setup
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
@@ -135,7 +148,7 @@ fun CameraPreviewScreen(
                     painter = painterResource(R.drawable.back_arrow_ic),
                     contentDescription = "Back",
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(32.dp)
                         .clickable(onClick = onBackClick)
                 )
 
@@ -162,7 +175,7 @@ fun CameraPreviewScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = if (isPanelVisible) 180.dp else 60.dp), // Adjust padding based on panel visibility
+                    .padding(bottom = if (isPanelVisible) 200.dp else 80.dp), // Increased padding for steps
                 contentAlignment = Alignment.Center
             ) {
                 Box(
@@ -184,18 +197,37 @@ fun CameraPreviewScreen(
                         }
                 ) {
                     // Actual Image
-                    Image(
-                        painter = rememberAssetImagePainter(template.imageAssetPath),
-                        contentDescription = "Sketch",
-                        modifier = Modifier
-                            .size(300.dp)
-                            .graphicsLayer {
-                                rotationZ = imageRotation // Applied ONLY to Image
-                            }
-                            .alpha(opacity)
-                            .clip(RoundedCornerShape(12.dp)),
-                        contentScale = ContentScale.Fit
-                    )
+                    if (lesson != null && currentStepIndex < lesson.steps.size) {
+                         val step = lesson.steps[currentStepIndex]
+                         AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data("file:///android_asset/${step.imageAssetPath}")
+                                .decoderFactory(SvgDecoder.Factory())
+                                .build(),
+                            contentDescription = "Step ${step.stepNumber}",
+                            modifier = Modifier
+                                .size(300.dp)
+                                .graphicsLayer {
+                                    rotationZ = imageRotation
+                                }
+                                .alpha(opacity)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Fit
+                        )
+                    } else if (template != null) {
+                        Image(
+                            painter = rememberAssetImagePainter(template.imageAssetPath),
+                            contentDescription = "Sketch",
+                            modifier = Modifier
+                                .size(300.dp)
+                                .graphicsLayer {
+                                    rotationZ = imageRotation
+                                }
+                                .alpha(opacity)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
 
                     // Overlay Controls
                     if (!isLocked) {
@@ -261,6 +293,65 @@ fun CameraPreviewScreen(
                                 .size(32.dp)
                                 .clickable { isLocked = !isLocked }
                         )
+                    }
+                }
+            }
+            
+            /* ================= STEP NAVIGATION (LESSONS ONLY) ================= */
+            if (lesson != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = if (isPanelVisible) 180.dp else 40.dp) // Auto-adjusts
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier
+                            .shadow(4.dp, RoundedCornerShape(12.dp))
+                            .background(Color.White, RoundedCornerShape(12.dp))
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        IconButton(
+                            onClick = { if (currentStepIndex > 0) currentStepIndex-- },
+                            enabled = currentStepIndex > 0,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ChevronLeft,
+                                contentDescription = "Previous",
+                                tint = if (currentStepIndex > 0) Color.Black else Color.Gray
+                            )
+                        }
+
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                             Text(
+                                "step",
+                                fontSize = 10.sp,
+                                color = Color.Gray,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                "${currentStepIndex + 1}/$totalSteps",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { if (currentStepIndex < totalSteps - 1) currentStepIndex++ },
+                            enabled = currentStepIndex < totalSteps - 1,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = "Next",
+                                tint = if (currentStepIndex < totalSteps - 1) Color.Black else Color.Gray
+                            )
+                        }
                     }
                 }
             }
@@ -331,7 +422,7 @@ fun CameraPreviewScreen(
                                 modifier = Modifier.size(24.dp)
                             ) {
                                  Icon(
-                                    painter = painterResource(R.drawable.galllery), // Placeholder
+                                    painter = painterResource(R.drawable.galllery),
                                     contentDescription = "Gallery",
                                      tint = Color.White
                                 )

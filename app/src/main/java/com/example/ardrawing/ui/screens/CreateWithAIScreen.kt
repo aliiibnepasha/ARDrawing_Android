@@ -77,28 +77,28 @@ fun CreateWithAIScreen(
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.statusBars) // Fix status bar overlap
                 ) {
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         // Back Button
                         Image(
                             painter = painterResource(R.drawable.back_arrow_ic),
                             contentDescription = "Back",
                             modifier = Modifier
-                                .size(40.dp) // Size from user request/image
+                                .size(32.dp)
                                 .clickable {
                                     if (currentStep > 1) currentStep-- else onBackClick()
                                 }
                         )
 
+                        Spacer(modifier = Modifier.height(16.dp))
+
                         // Progress Indicators
                         Row(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .width(120.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             repeat(totalSteps) { index ->
                                 val stepNum = index + 1
@@ -106,8 +106,8 @@ fun CreateWithAIScreen(
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(4.dp)
-                                        .clip(RoundedCornerShape(2.dp))
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp))
                                         .background(if (isActive) Color(0xFF4285F4) else Color(0xFFE0E0E0))
                                 )
                             }
@@ -127,7 +127,7 @@ fun CreateWithAIScreen(
                         painter = painterResource(R.drawable.back_arrow_ic),
                         contentDescription = "Back",
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(32.dp)
                             .clickable {
                                 generatedImageVisible = false
                                 currentStep = 3

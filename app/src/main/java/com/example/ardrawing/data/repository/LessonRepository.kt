@@ -56,7 +56,7 @@ object LessonRepository {
             val folderName = folderPath.substringAfterLast("/")
             
             Lesson(
-                id = "asset_${index + 1}",
+                id = folderName,
                 name = folderName
                     .replace("_", " ")
                     .replaceFirstChar { it.uppercaseChar() },
