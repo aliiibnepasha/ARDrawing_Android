@@ -70,25 +70,25 @@ fun ARFloatingBottomBar(
             ) {
 
                 IconItem(
-                    icon = R.drawable.home_nav_ic,
+                    icon = if (currentRoute == "home") R.drawable.blue_brush else R.drawable.brush,
                     selected = currentRoute == "home",
                     onClick = { onItemClick("home") }
                 )
 
                 IconItem(
-                    icon = R.drawable.lesson_nav_ic,
+                    icon = if (currentRoute == "lesson_list") R.drawable.teacher_blue else R.drawable.teacher,
                     selected = currentRoute == "lesson_list",
                     onClick = { onItemClick("lesson_list") }
                 )
 
                 IconItem(
-                    icon = R.drawable.fav_ic,
+                    icon = if (currentRoute == "favorite") R.drawable.fav_heart else R.drawable.fav_ic,
                     selected = currentRoute == "favorite",
                     onClick = { onItemClick("favorite") }
                 )
 
                 IconItem(
-                    icon = R.drawable.me_nav_ic,
+                    icon = if (currentRoute == "my_creative") R.drawable.profile_blue else R.drawable.profile,
                     selected = currentRoute == "my_creative",
                     onClick = { onItemClick("my_creative") }
                 )
@@ -105,7 +105,7 @@ private fun IconItem(
     Icon(
         painter = painterResource(icon),
         contentDescription = null,
-        tint = if (selected) Color(0xFF4285F4) else Color(0xFF2C2C2C), // Updated blue color
+        tint = Color.Unspecified, // Use original drawable colors
         modifier = Modifier
             .size(24.dp)
             .clickable { onClick() }
@@ -119,7 +119,7 @@ private fun TopIndicator(selected: Boolean) {
             .height(3.dp)
             .clip(RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
             .background(
-                if (selected) Color(0xFF4285F4) else Color.Transparent // Updated blue color
+                if (selected) Color(0xFF4DA3FF) else Color.Transparent // Updated blue color
             )
     )
 }

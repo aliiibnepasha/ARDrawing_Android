@@ -38,6 +38,7 @@ import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.data.utils.AssetUtils
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import com.example.ardrawing.ui.components.WaterWaveBackground
 
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 
@@ -56,41 +57,48 @@ fun HomeScreenNew(
 ) {
     var selectedTab by remember { mutableStateOf(0) }
 
-    Scaffold(
-        containerColor = Color(0xFFF5F5F5),
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 20.dp),
-            contentPadding = PaddingValues(bottom = 100.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            item { 
-                HomeHeader(
-                    currentRoute = currentRoute,
-                    selectedTab = selectedTab
-                ) 
-            }
-            item { 
-                TabSwitcher(
-                    selectedTab = selectedTab,
-                    onTabSelected = { selectedTab = it }
-                ) 
-            }
+    // Wrap with Box to put Water Animation behind everything
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 1. Background Animation
+        WaterWaveBackground()
 
-            if (selectedTab == 0) {
-                // Image Tab Content
-                item { IllustrationCard(onStartAR) }
-                item { ActionCardsRow(onPhotoToSketch, onAICreate, onProClick) }
-                item { CategoriesSection(onCategoryClick = onCategoryClick) }
-            } else {
-                // Text Tab Content
-                item { TextTabContent(onTextToImage, onCustomText) }
+        // 2. Foreground Content
+        Scaffold(
+            containerColor = Color.Transparent, // Transparent to show water background
+        ) { paddingValues ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 20.dp),
+                contentPadding = PaddingValues(bottom = 100.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                item { 
+                    HomeHeader(
+                        currentRoute = currentRoute,
+                        selectedTab = selectedTab
+                    ) 
+                }
+                item { 
+                    TabSwitcher(
+                        selectedTab = selectedTab,
+                        onTabSelected = { selectedTab = it }
+                    ) 
+                }
+
+                if (selectedTab == 0) {
+                    // Image Tab Content
+                    item { IllustrationCard(onStartAR) }
+                    item { ActionCardsRow(onPhotoToSketch, onAICreate, onProClick) }
+                    item { CategoriesSection(onCategoryClick = onCategoryClick) }
+                } else {
+                    // Text Tab Content
+                    item { TextTabContent(onTextToImage, onCustomText) }
+                }
+                
+                item { Spacer(modifier = Modifier.height(16.dp)) }
             }
-            
-            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }
