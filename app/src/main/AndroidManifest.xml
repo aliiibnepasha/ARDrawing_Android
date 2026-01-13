@@ -36,6 +36,16 @@
             android:name=".CropActivity"
             android:theme="@style/Theme.ARDrawing" />
 
+        <!-- UCrop built-in activity for cropping UI -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ARDrawing" />
+        <activity
+            android:name=".CameraPreviewActivity"
+            android:theme="@style/Theme.ARDrawing"
+            android:screenOrientation="portrait" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

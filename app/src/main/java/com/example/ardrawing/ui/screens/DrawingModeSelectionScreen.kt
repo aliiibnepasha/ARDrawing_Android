@@ -40,7 +40,8 @@ fun DrawingModeSelectionScreen(
     lesson: Lesson?,
     onBackClick: () -> Unit,
     onDrawSketchClick: () -> Unit,
-    onTraceImageClick: () -> Unit
+    onTraceImageClick: () -> Unit,
+    onStartAR: () -> Unit = {}
 ) {
     val titleName = template?.name ?: lesson?.name ?: ""
     val modes = listOf(
@@ -93,7 +94,8 @@ fun DrawingModeSelectionScreen(
             Button(
                 onClick = {
                     when (selectedModeId) {
-                        "ar", "camera" -> onDrawSketchClick()
+                        "ar" -> onStartAR()
+                        "camera" -> onDrawSketchClick()
                         "screen" -> onTraceImageClick()
                     }
                 },

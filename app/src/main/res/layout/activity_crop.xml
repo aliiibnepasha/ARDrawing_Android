@@ -11,10 +11,10 @@
         android:layout_height="wrap_content"
         android:text="Crop Your AR Object"
         android:textColor="#FFFFFF"
-        android:textSize="20sp"
+        android:textSize="16sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:padding="16dp"
+        android:padding="8dp"
         android:layout_alignParentTop="true"
         android:background="#CC000000"/>
 
@@ -24,16 +24,16 @@
         android:layout_height="match_parent"
         android:layout_below="@id/titleText"
         android:layout_above="@id/buttonLayout"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="140dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp">
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="0dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginRight="0dp">
 
         <ImageView
             android:id="@+id/imageView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:scaleType="fitCenter"
+            android:scaleType="centerCrop"
             android:layout_gravity="center"/>
 
         <!-- Crop overlay will be drawn programmatically -->
@@ -43,27 +43,13 @@
             android:layout_height="match_parent"/>
     </FrameLayout>
 
-    <!-- Instructions -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Drag to move the crop area over your object"
-        android:textColor="#CCCCCC"
-        android:textSize="14sp"
-        android:gravity="center"
-        android:layout_above="@id/buttonLayout"
-        android:layout_marginBottom="8dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"/>
-
-    <!-- Button Layout -->
     <LinearLayout
         android:id="@+id/buttonLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:padding="8dp"
         android:background="#CC000000">
 
         <Button

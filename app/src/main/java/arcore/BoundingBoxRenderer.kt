@@ -5,13 +5,14 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.opengl.GLES20
 import android.opengl.GLUtils
+import android.util.Log
 import com.google.ar.core.AugmentedImage
 import com.google.ar.core.Frame
 import com.google.ar.core.TrackingState
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
-class BoundingBoxRenderer(private val context: Context) {
+class BoundingBoxRenderer(private val context: Context, private val userBitmap: Bitmap? = null) {
 
     private var boundingBoxProgram = 0
     private var positionParam = 0
@@ -144,16 +145,28 @@ class BoundingBoxRenderer(private val context: Context) {
         android.util.Log.d("BoundingBoxRenderer", "Starting texture load...")
 
         try {
-            // Load bitmap from assets (using one of the animal images)
-            val assetManager = context.assets
-            val inputStream = assetManager.open("home/Animals/Animal_1.png")
-            val bitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream.close()
-            val decodeTime = System.currentTimeMillis() - loadStartTime
-            android.util.Log.d("BoundingBoxRenderer", "Bitmap decode time: ${decodeTime}ms")
+            // Use user-selected bitmap if provided, otherwise load from assets
+            val bitmap = if (userBitmap != null && !userBitmap.isRecycled) {
+                Log.d("BoundingBoxRenderer", "Using user-selected bitmap: ${userBitmap.width}x${userBitmap.height}")
+                userBitmap
+            } else {
+                // Fallback to static asset image
+                val assetManager = context.assets
+                val inputStream = assetManager.open("home/Animals/Animal_1.png")
+                val assetBitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream.close()
+                val decodeTime = System.currentTimeMillis() - loadStartTime
+                Log.d("BoundingBoxRenderer", "Bitmap decode time: ${decodeTime}ms")
+                
+                if (assetBitmap == null) {
+                    android.util.Log.e("BoundingBoxRenderer", "Failed to load Animal_1.png from assets")
+                    return
+                }
+                assetBitmap
+            }
 
             if (bitmap == null) {
-                android.util.Log.e("BoundingBoxRenderer", "Failed to load Animal_1.png from assets")
+                Log.e("BoundingBoxRenderer", "No bitmap available")
                 return
             }
 
@@ -178,17 +191,20 @@ class BoundingBoxRenderer(private val context: Context) {
             val totalLoadTime = System.currentTimeMillis() - loadStartTime
 
             if (error != GLES20.GL_NO_ERROR) {
-                android.util.Log.e("BoundingBoxRenderer", "OpenGL error loading texture: $error (total time: ${totalLoadTime}ms)")
+                Log.e("BoundingBoxRenderer", "OpenGL error loading texture: $error (total time: ${totalLoadTime}ms)")
             } else {
-                android.util.Log.d("BoundingBoxRenderer", "Successfully loaded Animal_1.png texture - texId=$animalTextureId size=${bitmap.width}x${bitmap.height} (total time: ${totalLoadTime}ms)")
+                val source = if (userBitmap != null && bitmap == userBitmap) "user-selected" else "asset (Animal_1.png)"
+                Log.d("BoundingBoxRenderer", "Successfully loaded $source texture - texId=$animalTextureId size=${bitmap.width}x${bitmap.height} (total time: ${totalLoadTime}ms)")
             }
 
-            // Recycle bitmap to free memory
-            bitmap.recycle()
+            // Only recycle if it's not the user's bitmap (we don't own user's bitmap)
+            if (userBitmap == null || bitmap != userBitmap) {
+                bitmap.recycle()
+            }
 
         } catch (e: Exception) {
             val totalLoadTime = System.currentTimeMillis() - loadStartTime
-            android.util.Log.e("BoundingBoxRenderer", "Error loading icon texture: ${e.message} (total time: ${totalLoadTime}ms)")
+            Log.e("BoundingBoxRenderer", "Error loading icon texture: ${e.message} (total time: ${totalLoadTime}ms)")
         }
     }
 

@@ -1,188 +1,194 @@
 package com.example.ardrawing
 
-import android.graphics.*
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
-import android.view.MotionEvent
-import android.view.View
-import android.widget.Button
-import android.widget.ImageView
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import com.example.ardrawing.R
+import androidx.core.content.FileProvider
+import com.yalantis.ucrop.UCrop
+import java.io.File
 
 class CropActivity : AppCompatActivity() {
 
-    private lateinit var imageView: ImageView
-    private lateinit var cropOverlayView: CropOverlayView
-    private lateinit var cropButton: Button
-    private lateinit var cancelButton: Button
-
-    private var bitmap: Bitmap? = null
-
-    // Crop rectangle
-    var cropRect = RectF()
+    companion object {
+        private const val TAG = "CropActivity"
+        private const val REQUEST_CROP = 200
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_crop)
-
-        imageView = findViewById(R.id.imageView)
-        cropButton = findViewById(R.id.cropButton)
-        cancelButton = findViewById(R.id.cancelButton)
 
         // Load the captured image
-        bitmap = LaunchActivity.tempCapturedBitmap
+        val bitmap = LaunchActivity.tempCapturedBitmap
         if (bitmap == null) {
-            finish()
-            return
-        }
-
-        setupImageView()
-        setupButtons()
-
-        // Initialize crop rectangle to center square
-        initializeCropRect()
-    }
-
-    private fun setupImageView() {
-        imageView.setImageBitmap(bitmap)
-        imageView.scaleType = ImageView.ScaleType.FIT_CENTER
-
-        cropOverlayView = findViewById(R.id.cropOverlay)
-        cropOverlayView.updateCropRectangle(cropRect)
-    }
-
-    private fun setupButtons() {
-        cropButton.setOnClickListener {
-            performCrop()
-        }
-
-        cancelButton.setOnClickListener {
-            setResult(RESULT_CANCELED)
-            finish()
-        }
-    }
-
-    private fun initializeCropRect() {
-        val viewWidth = cropOverlayView.width.toFloat()
-        val viewHeight = cropOverlayView.height.toFloat()
-
-        if (viewWidth > 0 && viewHeight > 0) {
-            // Get image display rect to determine proper crop size
-            val imageRect = getImageDisplayRect(imageView)
-
-            // Make crop rectangle much bigger - 85% of visible image size
-            val size = minOf(imageRect.width(), imageRect.height()) * 0.85f
-
-            // Center the crop rectangle on the actual image position
-            val left = imageRect.centerX() - size / 2
-            val top = imageRect.centerY() - size / 2
-            val right = left + size
-            val bottom = top + size
-
-            cropRect.set(left, top, right, bottom)
-            cropOverlayView.invalidate()
-        }
-    }
-
-    /**
-     * Force crop rectangle to remain square and within image bounds
-     */
-    fun constrainCropRect() {
-        val imageRect = getImageDisplayRect(imageView)
-
-        // Force square crop
-        val currentSize = cropRect.width()
-        val centerX = cropRect.centerX()
-        val centerY = cropRect.centerY()
-
-        cropRect.left = centerX - currentSize / 2
-        cropRect.right = centerX + currentSize / 2
-        cropRect.top = centerY - currentSize / 2
-        cropRect.bottom = centerY + currentSize / 2
-
-        // Constrain to image area
-        cropRect.left = cropRect.left.coerceIn(imageRect.left, imageRect.right - cropRect.width())
-        cropRect.top = cropRect.top.coerceIn(imageRect.top, imageRect.bottom - cropRect.height())
-        cropRect.right = cropRect.right.coerceAtMost(imageRect.right)
-        cropRect.bottom = cropRect.bottom.coerceAtMost(imageRect.bottom)
-
-        cropOverlayView.invalidate()
-    }
-
-    /**
-     * Get the actual display rectangle of the image within the ImageView (accounts for FIT_CENTER scaling)
-     */
-    private fun getImageDisplayRect(imageView: ImageView): RectF {
-        val drawable = imageView.drawable ?: return RectF()
-        val matrix = imageView.imageMatrix
-        val rect = RectF(
-            0f,
-            0f,
-            drawable.intrinsicWidth.toFloat(),
-            drawable.intrinsicHeight.toFloat()
-        )
-        matrix.mapRect(rect)
-        return rect
-    }
-
-
-    private fun performCrop() {
-        val bitmap = bitmap ?: return
-
-        val imageView = findViewById<ImageView>(R.id.imageView)
-        val imageRect = getImageDisplayRect(imageView)
-
-        // 🔒 Clamp crop rect inside image area to prevent errors
-        val safeCrop = RectF(
-            maxOf(cropRect.left, imageRect.left),
-            maxOf(cropRect.top, imageRect.top),
-            minOf(cropRect.right, imageRect.right),
-            minOf(cropRect.bottom, imageRect.bottom)
-        )
-
-        if (safeCrop.width() <= 0 || safeCrop.height() <= 0) {
-            android.util.Log.e("CROP_DEBUG", "Crop rectangle is outside image area")
+            Log.e(TAG, "No bitmap found in LaunchActivity.tempCapturedBitmap")
             setResult(RESULT_CANCELED)
             finish()
             return
         }
 
+        if (bitmap.isRecycled) {
+            Log.e(TAG, "Bitmap has been recycled")
+            setResult(RESULT_CANCELED)
+            finish()
+            return
+        }
+
+        Log.d(TAG, "Starting UCrop with bitmap: ${bitmap.width}x${bitmap.height}")
+
+        // Save bitmap to temporary file for UCrop
+        val sourceFile = saveBitmapToTempFile(bitmap)
+        if (sourceFile == null) {
+            Log.e(TAG, "Failed to save bitmap to file")
+            setResult(RESULT_CANCELED)
+            finish()
+            return
+        }
+
+        // Start UCrop
+        startUCrop(sourceFile)
+    }
+
+    private fun saveBitmapToTempFile(bitmap: Bitmap): File? {
+        return try {
+            val timeStamp = System.currentTimeMillis()
+            val imageFileName = "AR_CROP_SOURCE_$timeStamp.jpg"
+            val storageDir = File(getExternalFilesDir(null), "AR_Crop")
+            if (!storageDir.exists()) {
+                storageDir.mkdirs()
+            }
+            val imageFile = File(storageDir, imageFileName)
+
+            // Save bitmap to file
+            val outputStream = imageFile.outputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+            Log.d(TAG, "Bitmap saved to: ${imageFile.absolutePath}")
+            imageFile
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving bitmap to file: ${e.message}", e)
+            null
+        }
+    }
+
+    private fun startUCrop(sourceFile: File) {
         try {
-            // Calculate scale between bitmap & displayed image
-            val scaleX = bitmap.width / imageRect.width()
-            val scaleY = bitmap.height / imageRect.height()
+            // Create destination file
+            val timeStamp = System.currentTimeMillis()
+            val destFileName = "AR_CROP_RESULT_$timeStamp.jpg"
+            val storageDir = File(getExternalFilesDir(null), "AR_Crop")
+            val destFile = File(storageDir, destFileName)
 
-            // Convert crop rect to bitmap coordinates
-            val bitmapX = ((safeCrop.left - imageRect.left) * scaleX).toInt()
-                .coerceIn(0, bitmap.width - 1)
-            val bitmapY = ((safeCrop.top - imageRect.top) * scaleY).toInt()
-                .coerceIn(0, bitmap.height - 1)
-            val bitmapW = (safeCrop.width() * scaleX).toInt()
-                .coerceAtMost(bitmap.width - bitmapX)
-            val bitmapH = (safeCrop.height() * scaleY).toInt()
-                .coerceAtMost(bitmap.height - bitmapY)
+            // Get URIs using FileProvider
+            val sourceUri = FileProvider.getUriForFile(
+                this,
+                "${applicationContext.packageName}.fileprovider",
+                sourceFile
+            )
+            val destinationUri = FileProvider.getUriForFile(
+                this,
+                "${applicationContext.packageName}.fileprovider",
+                destFile
+            )
 
-            android.util.Log.d("CROP_DEBUG", "Image rect: $imageRect")
-            android.util.Log.d("CROP_DEBUG", "Safe crop: $safeCrop")
-            android.util.Log.d("CROP_DEBUG", "Bitmap crop: $bitmapX, $bitmapY, $bitmapW, $bitmapH")
+            // Configure UCrop
+            val uCrop = UCrop.of(sourceUri, destinationUri)
+                .withAspectRatio(1f, 1f) // Square crop for AR
+                .withMaxResultSize(1024, 1024) // Max size for AR
+                .withOptions(getUCropOptions())
 
-            // Ensure valid dimensions
-            if (bitmapW <= 0 || bitmapH <= 0) {
-                android.util.Log.e("CROP_DEBUG", "Invalid crop dimensions")
+            // Start UCrop activity (uses startActivityForResult internally)
+            uCrop.start(this, REQUEST_CROP)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error starting UCrop: ${e.message}", e)
+            setResult(RESULT_CANCELED)
+            finish()
+        }
+    }
+
+    private fun getUCropOptions(): com.yalantis.ucrop.UCrop.Options {
+        val options = com.yalantis.ucrop.UCrop.Options()
+        
+        // UI Customization
+        options.setHideBottomControls(false)
+        options.setFreeStyleCropEnabled(true) // Allow free-form cropping
+        options.setShowCropFrame(true)
+        options.setShowCropGrid(true)
+        options.setCropFrameColor(android.graphics.Color.parseColor("#4285F4"))
+        options.setCropGridColor(android.graphics.Color.parseColor("#4285F4"))
+        options.setCropGridStrokeWidth(2)
+        options.setCropFrameStrokeWidth(3)
+        
+        // Toolbar
+        options.setToolbarTitle("Crop Your AR Object")
+        options.setToolbarColor(android.graphics.Color.parseColor("#1C1C1C"))
+        options.setStatusBarColor(android.graphics.Color.parseColor("#000000"))
+        options.setToolbarWidgetColor(android.graphics.Color.parseColor("#FFFFFF"))
+        
+        // Compression
+        options.setCompressionQuality(95)
+        options.setCompressionFormat(Bitmap.CompressFormat.JPEG)
+        
+        // Max size
+        options.setMaxBitmapSize(2048)
+        
+        return options
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_CROP) {
+            if (resultCode == RESULT_OK && data != null) {
+                val resultUri = UCrop.getOutput(data)
+                if (resultUri != null) {
+                    processCroppedImage(resultUri)
+                } else {
+                    Log.e(TAG, "UCrop result URI is null")
+                    setResult(RESULT_CANCELED)
+                    finish()
+                }
+            } else if (resultCode == UCrop.RESULT_ERROR && data != null) {
+                val cropError = UCrop.getError(data)
+                Log.e(TAG, "UCrop error: ${cropError?.message ?: "Unknown error"}")
+                setResult(RESULT_CANCELED)
+                finish()
+            } else {
+                Log.d(TAG, "User cancelled cropping")
+                setResult(RESULT_CANCELED)
+                finish()
+            }
+        }
+    }
+
+    private fun processCroppedImage(resultUri: Uri) {
+        try {
+            // Load the cropped image
+            val inputStream = contentResolver.openInputStream(resultUri)
+            val croppedBitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream?.close()
+
+            if (croppedBitmap == null) {
+                Log.e(TAG, "Failed to decode cropped image")
                 setResult(RESULT_CANCELED)
                 finish()
                 return
             }
 
-            // Crop the bitmap
-            val croppedBitmap = Bitmap.createBitmap(bitmap, bitmapX, bitmapY, bitmapW, bitmapH)
+            Log.d(TAG, "Cropped image loaded: ${croppedBitmap.width}x${croppedBitmap.height}")
 
             // Create square bitmap for AR (ARCore prefers square images)
             val squareSize = maxOf(croppedBitmap.width, croppedBitmap.height)
             val squareBitmap = Bitmap.createBitmap(squareSize, squareSize, Bitmap.Config.ARGB_8888)
 
-            val canvas = Canvas(squareBitmap)
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+            val canvas = android.graphics.Canvas(squareBitmap)
+            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
 
             // Center the cropped image in the square
             val left = (squareSize - croppedBitmap.width) / 2f
@@ -199,53 +205,16 @@ class CropActivity : AppCompatActivity() {
             // Store the result
             LaunchActivity.croppedBitmap = finalBitmap
 
-            android.util.Log.d("CROP_DEBUG", "Final bitmap size: ${finalBitmap.width}x${finalBitmap.height}")
+            Log.d(TAG, "Final bitmap size: ${finalBitmap.width}x${finalBitmap.height}")
 
-            // Show preview of cropped image
-            showCroppedPreview(finalBitmap)
-
-        } catch (e: Exception) {
-            android.util.Log.e("CROP_DEBUG", "Error during cropping: ${e.message}", e)
-            setResult(RESULT_CANCELED)
-            finish()
-        }
-    }
-
-    private fun showCroppedPreview(croppedBitmap: Bitmap) {
-        val dialog = android.app.AlertDialog.Builder(this)
-            .setTitle("Cropped Image Preview")
-            .setMessage("Does this look correct? This will be used for AR tracking.")
-            .create()
-
-        val imageView = android.widget.ImageView(this)
-        imageView.setImageBitmap(croppedBitmap)
-        imageView.scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
-        imageView.layoutParams = android.widget.LinearLayout.LayoutParams(
-            300, 300
-        )
-
-        val layout = android.widget.LinearLayout(this)
-        layout.orientation = android.widget.LinearLayout.VERTICAL
-        layout.setPadding(32, 16, 32, 16)
-        layout.addView(imageView)
-
-        dialog.setView(layout)
-        dialog.setButton(android.app.AlertDialog.BUTTON_POSITIVE, "Use This Image") { _, _ ->
+            // Go directly to AR - no preview dialog
             setResult(RESULT_OK)
             finish()
-        }
-        dialog.setButton(android.app.AlertDialog.BUTTON_NEGATIVE, "Crop Again") { _, _ ->
-            // Don't finish, let user try cropping again
-        }
-        dialog.setCancelable(false)
-        dialog.show()
-    }
 
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus && cropRect.isEmpty) {
-            // Initialize crop rect when view is ready
-            initializeCropRect()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error processing cropped image: ${e.message}", e)
+            setResult(RESULT_CANCELED)
+            finish()
         }
     }
 }

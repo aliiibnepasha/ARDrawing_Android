@@ -239,9 +239,10 @@ class CropOverlayView @JvmOverloads constructor(
         cropRect = rect
 
         // Apply constraints from activity (square crop, image bounds)
-        val activity = context as? CropActivity
-        activity?.cropRect = rect
-        activity?.constrainCropRect()
+        // Note: This is no longer used with UCrop - kept for compatibility
+        // val activity = context as? CropActivity
+        // activity?.cropRect = rect
+        // activity?.constrainCropRect()
 
         lastTouchX = x
         lastTouchY = y

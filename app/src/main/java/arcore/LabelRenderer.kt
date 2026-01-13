@@ -2,6 +2,7 @@ package com.example.ardrawing
 
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
+import android.util.Log
 import com.google.ar.core.Session
 import com.example.ardrawing.AnchorRenderer
 import com.example.ardrawing.BackgroundRenderer
@@ -102,7 +103,7 @@ class LabelRenderer(
             }
 
         } catch (e: Exception) {
-            android.util.Log.e("LABEL_RENDERER", "Error in onDrawFrame: ${e.message}")
+            Log.e("LABEL_RENDERER", "Error in onDrawFrame: ${e.message}")
         }
     }
 

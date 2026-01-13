@@ -201,7 +201,7 @@ private fun CustomTextTopBar(onBackClick: () -> Unit) {
 fun Modifier.dashedBorder(color: Color, cornerRadius: androidx.compose.ui.unit.Dp) = drawBehind {
     val stroke = Stroke(
         width = 2.dp.toPx(),
-        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+        pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f)
     )
     drawRoundRect(
         color = color,

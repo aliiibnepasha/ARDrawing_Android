@@ -13,7 +13,6 @@ import com.google.ar.core.Config
 import com.google.ar.core.Frame
 import com.google.ar.core.Session
 import com.google.ar.core.TrackingState
-import com.example.ardrawing.AnchorRenderer
 
 class LabelActivity : AppCompatActivity() {
 
@@ -61,8 +60,9 @@ class LabelActivity : AppCompatActivity() {
         statusText = findViewById(R.id.statusText)
         capturedImageView = findViewById(R.id.capturedImageView)
 
-        // Display captured image thumbnail
-        LaunchActivity.capturedBitmap?.let {
+        // Display cropped image thumbnail (user's selected image) if available, otherwise show captured image
+        val thumbnailBitmap = LaunchActivity.croppedBitmap ?: LaunchActivity.capturedBitmap
+        thumbnailBitmap?.let {
             capturedImageView.setImageBitmap(it)
             capturedImageView.visibility = View.VISIBLE
         }
@@ -73,10 +73,19 @@ class LabelActivity : AppCompatActivity() {
 
         setupAR()
 
+        // Check if AR session was successfully initialized
+        if (!::arSession.isInitialized) {
+            return
+        }
+
         // Create renderers
         labelRenderer = LabelRenderer(this, arSession)
         anchorRenderer = AnchorRenderer(this)
-        val boundingBoxRenderer = BoundingBoxRenderer(this)
+        
+        // Use user-selected cropped bitmap if available, otherwise use default asset
+        val userBitmap = LaunchActivity.croppedBitmap
+        val boundingBoxRenderer = BoundingBoxRenderer(this, userBitmap)
+        
         labelRenderer.setAnchorRenderer(anchorRenderer)
         labelRenderer.setBoundingBoxRenderer(boundingBoxRenderer)
 
@@ -113,9 +122,10 @@ class LabelActivity : AppCompatActivity() {
             android.util.Log.d("AR_DEBUG", "Initializing AR session...")
             arSession = Session(this)
 
-            // Check if we have a captured bitmap for image tracking
-            if (LaunchActivity.capturedBitmap == null) {
-                android.util.Log.w("AR_DEBUG", "No captured bitmap found for image tracking")
+            // Check if we have a cropped or captured bitmap for image tracking
+            val hasBitmap = LaunchActivity.croppedBitmap != null || LaunchActivity.capturedBitmap != null
+            if (!hasBitmap) {
+                android.util.Log.w("AR_DEBUG", "No bitmap found for image tracking")
                 runOnUiThread {
                     android.app.AlertDialog.Builder(this)
                         .setTitle("No Image Found")
@@ -133,12 +143,15 @@ class LabelActivity : AppCompatActivity() {
             // Create Augmented Image Database for image detection
             val db = AugmentedImageDatabase(arSession)
 
-            val bitmap = LaunchActivity.capturedBitmap
+            // Use cropped bitmap (user's selected image) if available, otherwise use captured bitmap
+            val bitmap = LaunchActivity.croppedBitmap ?: LaunchActivity.capturedBitmap
             if (bitmap == null || bitmap.isRecycled) {
                 android.util.Log.e("AR_DEBUG", "Bitmap is null or recycled")
                 handleGenericARError("Image data is not available")
                 return
             }
+            
+            android.util.Log.d("AR_DEBUG", "Using ${if (LaunchActivity.croppedBitmap != null) "cropped" else "captured"} bitmap: ${bitmap.width}x${bitmap.height}")
 
             // Validate bitmap properties
             if (bitmap.width < 32 || bitmap.height < 32) {
@@ -190,7 +203,14 @@ class LabelActivity : AppCompatActivity() {
     private fun handleImageQualityFallback() {
         try {
             android.util.Log.d("AR_DEBUG", "Trying enhanced image processing...")
-            val enhancedBitmap = enhanceImageFurther(LaunchActivity.capturedBitmap!!)
+            // Use cropped bitmap if available, otherwise use captured bitmap
+            val sourceBitmap = LaunchActivity.croppedBitmap ?: LaunchActivity.capturedBitmap
+            if (sourceBitmap == null) {
+                android.util.Log.e("AR_DEBUG", "No bitmap available for enhancement")
+                useDemoImageFallback()
+                return
+            }
+            val enhancedBitmap = enhanceImageFurther(sourceBitmap)
             val db2 = AugmentedImageDatabase(arSession)
             db2.addImage("CapturedImage", enhancedBitmap)
 
@@ -426,16 +446,20 @@ class LabelActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        arSession.resume()
-        glSurfaceView.onResume()
-        glSurfaceView.requestLayout()
+        if (::arSession.isInitialized) {
+            arSession.resume()
+            glSurfaceView.onResume()
+            glSurfaceView.requestLayout()
+        }
     }
 
     override fun onPause() {
         super.onPause()
         try {
-            glSurfaceView.onPause()
-            arSession.pause()
+            if (::arSession.isInitialized) {
+                glSurfaceView.onPause()
+                arSession.pause()
+            }
         } catch (e: Exception) {
             android.util.Log.e("AR_DEBUG", "Error pausing AR session: ${e.message}")
         }
@@ -444,7 +468,9 @@ class LabelActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         try {
-            arSession.close()
+            if (::arSession.isInitialized) {
+                arSession.close()
+            }
         } catch (e: Exception) {
             android.util.Log.e("AR_DEBUG", "Error closing AR session: ${e.message}")
         }

@@ -1,5 +1,6 @@
 package com.example.ardrawing
 
+import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.*
@@ -8,17 +9,33 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.*
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.core.content.ContextCompat
 import arcore.PermissionUtils
 import com.example.ardrawing.R
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 
 class LaunchActivity : AppCompatActivity() {
+
+    private lateinit var cameraExecutor: ExecutorService
+    private var imageCapture: ImageCapture? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Show minimal loading screen while checking permissions
         setContentView(R.layout.activity_loading)
+
+        // Initialize camera executor
+        cameraExecutor = Executors.newSingleThreadExecutor()
 
         // Immediately start camera capture flow
         if (PermissionUtils.hasCameraPermission(this)) {
@@ -41,6 +58,11 @@ class LaunchActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraExecutor.shutdown()
+    }
+
     fun captureImage() {
         // Show pre-capture tips
         android.app.AlertDialog.Builder(this)
@@ -51,46 +73,19 @@ class LaunchActivity : AppCompatActivity() {
                        "• Hold steady and focus\n\n" +
                        "After taking photo, you'll be able to crop the object!")
             .setPositiveButton("📸 Take Photo") { _, _ ->
-                captureHighQualityImage()
+                startCameraPreview()
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
-    private fun captureHighQualityImage() {
+    private fun startCameraPreview() {
         try {
-            // Create file to store the high-quality image
-            val timeStamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())
-            val imageFileName = "AR_CAPTURE_$timeStamp.jpg"
-            val storageDir = java.io.File(getExternalFilesDir(null), "AR_Images")
-            if (!storageDir.exists()) {
-                storageDir.mkdirs()
-            }
-            val imageFile = java.io.File(storageDir, imageFileName)
-
-            // Save file path for later use
-            currentPhotoPath = imageFile.absolutePath
-
-            val photoURI = androidx.core.content.FileProvider.getUriForFile(
-                this,
-                "${applicationContext.packageName}.fileprovider",
-                imageFile
-            )
-
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-
-            // Grant permissions for camera app to write to our file
-            val resInfoList = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
-            for (resolveInfo in resInfoList) {
-                val packageName = resolveInfo.activityInfo.packageName
-                grantUriPermission(packageName, photoURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
-            startActivityForResult(intent, REQUEST_IMAGE)
-
+            // Create CameraX preview activity
+            val intent = Intent(this, com.example.ardrawing.CameraPreviewActivity::class.java)
+            startActivityForResult(intent, REQUEST_CAMERA_PREVIEW)
         } catch (e: Exception) {
-            android.util.Log.e("CAMERA_DEBUG", "Error setting up camera: ${e.message}")
+            android.util.Log.e("CAMERA_DEBUG", "Error starting camera preview: ${e.message}")
             // Fallback to basic camera intent
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             startActivityForResult(intent, REQUEST_IMAGE)
@@ -99,7 +94,7 @@ class LaunchActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_IMAGE && resultCode == RESULT_OK) {
+        if ((requestCode == REQUEST_IMAGE || requestCode == REQUEST_CAMERA_PREVIEW) && resultCode == RESULT_OK) {
             try {
                 val rawBitmap = loadHighQualityBitmap()
                 if (rawBitmap != null) {
@@ -129,16 +124,14 @@ class LaunchActivity : AppCompatActivity() {
             if (croppedBitmap != null) {
                 capturedBitmap = enhanceImageForAR(croppedBitmap!!)
 
-                // Analyze image quality and give feedback (dialog will proceed to AR)
-                val qualityScore = analyzeImageQuality(capturedBitmap!!)
-                showImageQualityFeedback(qualityScore)
+                // Go directly to AR - no quality dialog
+                // NOTE: Keep croppedBitmap for AR tracking - don't clear it!
+                proceedToARLabels()
 
-                Toast.makeText(this, "Image cropped and enhanced!", Toast.LENGTH_SHORT).show()
-
-                // Clear temp data
+                // Clear temp data (but keep croppedBitmap for AR)
                 tempCapturedBitmap = null
-                croppedBitmap = null
                 currentPhotoPath = null
+                // croppedBitmap is kept for AR tracking in LabelActivity
             }
         }
     }
@@ -375,6 +368,7 @@ class LaunchActivity : AppCompatActivity() {
         const val REQUEST_CAMERA: Int = 100
         const val REQUEST_IMAGE: Int = 101
         const val REQUEST_CROP: Int = 102
+        const val REQUEST_CAMERA_PREVIEW: Int = 103
         var capturedBitmap: Bitmap? = null
         var tempCapturedBitmap: Bitmap? = null
         var croppedBitmap: Bitmap? = null

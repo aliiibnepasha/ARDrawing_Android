@@ -75,7 +75,10 @@ dependencies {
     // Image Loading
     implementation(libs.coil.compose)
     implementation("io.coil-kt:coil-svg:2.7.0")
-    
+
+    // Constraint Layout
+    implementation(libs.androidx.constraintlayout)
+
     // Room Database
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
@@ -94,6 +97,9 @@ dependencies {
     
     // Color picker (Hsv wheel)
     implementation("com.github.skydoves:colorpicker-compose:1.0.7")
+    
+    // UCrop - Image Cropping Library
+    implementation("com.github.yalantis:ucrop:2.2.8")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

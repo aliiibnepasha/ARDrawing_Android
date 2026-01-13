@@ -224,6 +224,10 @@ fun NavGraph(
                     },
                     onTraceImageClick = {
                         navController.navigate(Screen.PaperTrace.createRoute(id, "template"))
+                    },
+                    onStartAR = {
+                        val intent = Intent(context, LaunchActivity::class.java)
+                        context.startActivity(intent)
                     }
                 )
             } else if (lesson != null) {
@@ -236,6 +240,10 @@ fun NavGraph(
                     },
                     onTraceImageClick = {
                         navController.navigate(Screen.PaperTrace.createRoute(id, "lesson"))
+                    },
+                    onStartAR = {
+                        val intent = Intent(context, LaunchActivity::class.java)
+                        context.startActivity(intent)
                     }
                 )
             }

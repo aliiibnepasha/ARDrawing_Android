@@ -143,7 +143,7 @@ fun TabSwitcher(selectedTab: Int, onTabSelected: (Int) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
             .padding(4.dp)
     ) {
@@ -167,7 +167,7 @@ fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit, modifier: 
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(if (isSelected) Color(0xFF4285F4) else Color.Transparent)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -198,16 +198,16 @@ fun IllustrationCard(onClick: () -> Unit) {
             .drawBehind {
                 drawRoundRect(color = primaryColor, style = stroke, cornerRadius = CornerRadius(cornerRadius))
             }
-            .clickable(onClick = onClick)
+            // Removed .clickable() - card is now not clickable
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                 Image(
-                     painter = painterResource(id = R.drawable.add_illustration),
-                     contentDescription = "Add illustration",
-                     modifier = Modifier.size(32.dp)
-                 )
+            Image(
+                painter = painterResource(id = R.drawable.add_illustration),
+                contentDescription = "Add illustration",
+                modifier = Modifier.size(32.dp)
+            )
             Spacer(modifier = Modifier.height(16.dp))
             Text("Add your illustration", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF1E293B))
         }
@@ -265,7 +265,7 @@ fun ActionCard(title: String, buttonText: String, iconRes: Int, onClick: () -> U
         Text(
             title, 
             fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
             color = Color.Black
         )
@@ -361,7 +361,7 @@ fun CategoryItemNew(name: String, folderName: String, onClick: () -> Unit, modif
                 contentDescription = null,
                 tint = Color(0xFF4285F4),
                 modifier = Modifier
-                    .size(20.dp)
+                    .size(30.dp)
                     .align(Alignment.End)
             )
 
@@ -497,7 +497,7 @@ fun TextActionCard(
          Image(
              painter = painterResource(id = iconRes),
              contentDescription = null,
-             modifier = Modifier.size(32.dp)
+             modifier = Modifier.size(40.dp)
          )
 
          Column {
