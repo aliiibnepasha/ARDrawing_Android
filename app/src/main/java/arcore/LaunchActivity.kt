@@ -373,5 +373,7 @@ class LaunchActivity : AppCompatActivity() {
         var tempCapturedBitmap: Bitmap? = null
         var croppedBitmap: Bitmap? = null
         var currentPhotoPath: String? = null
+        // Bitmap to be displayed as overlay in AR (distinct from the tracked/captured bitmap)
+        var selectedOverlayBitmap: Bitmap? = null
     }
 }

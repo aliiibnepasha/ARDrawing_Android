@@ -68,7 +68,7 @@ fun PaperTraceScreen(
 
     Scaffold(
         containerColor = Color.White,
-        contentWindowInsets = WindowInsets.statusBars // Handle Status Bar
+        contentWindowInsets = WindowInsets.systemBars // Handle Status Bar and Navigation Bar
     ) { padding ->
 
         Box(

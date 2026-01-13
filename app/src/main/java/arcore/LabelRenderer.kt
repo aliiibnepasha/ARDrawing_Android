@@ -17,6 +17,8 @@ class LabelRenderer(
     private val backgroundRenderer = BackgroundRenderer()
     private lateinit var anchorRenderer: AnchorRenderer
     private lateinit var boundingBoxRenderer: BoundingBoxRenderer
+    private lateinit var texturedPlaneRenderer: TexturedPlaneRenderer
+    private lateinit var strokeRenderer: StrokeRenderer
 
     private var viewportWidth = 0
     private var viewportHeight = 0
@@ -33,6 +35,14 @@ class LabelRenderer(
     fun setBoundingBoxRenderer(renderer: BoundingBoxRenderer) {
         boundingBoxRenderer = renderer
     }
+    
+    fun setTexturedPlaneRenderer(renderer: TexturedPlaneRenderer) {
+        texturedPlaneRenderer = renderer
+    }
+    
+    fun setStrokeRenderer(renderer: StrokeRenderer) {
+        strokeRenderer = renderer
+    }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         backgroundRenderer.createOnGlThread()
@@ -41,6 +51,8 @@ class LabelRenderer(
         // Initialize renderers
         anchorRenderer.createOnGlThread()
         boundingBoxRenderer.createOnGlThread()
+        texturedPlaneRenderer.createOnGlThread()
+        strokeRenderer.createOnGlThread()
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -88,9 +100,15 @@ class LabelRenderer(
 
             // Update activity with frame data
             activity.update(frame)
+            activity.setCurrentFrame(frame)
 
             // Draw camera background
             backgroundRenderer.draw()
+
+            // Draw selected image as texture on anchor plane
+            if (::texturedPlaneRenderer.isInitialized) {
+                texturedPlaneRenderer.draw(viewMatrix, projectionMatrix)
+            }
 
             // Draw AR anchors with textures (if any)
             if (::anchorRenderer.isInitialized) {
@@ -100,6 +118,11 @@ class LabelRenderer(
             // Draw bounding boxes around detected images (if enabled)
             if (::boundingBoxRenderer.isInitialized && activity.showBoundingBoxes) {
                 boundingBoxRenderer.draw(frame, viewMatrix, projectionMatrix)
+            }
+            
+            // Draw user strokes on top
+            if (::strokeRenderer.isInitialized) {
+                strokeRenderer.draw(viewMatrix, projectionMatrix)
             }
 
         } catch (e: Exception) {

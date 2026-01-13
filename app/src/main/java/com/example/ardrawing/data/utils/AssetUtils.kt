@@ -75,5 +75,21 @@ object AssetUtils {
         
         return folders.sorted()
     }
+
+    /**
+     * Loads a bitmap from the assets folder
+     * @param context Android context
+     * @param path Relative path in assets (e.g. "categories/Animals/cat.png")
+     * @return Bitmap or null if failed
+     */
+    fun getBitmapFromAsset(context: Context, path: String): android.graphics.Bitmap? {
+        return try {
+            val inputStream = context.assets.open(path)
+            android.graphics.BitmapFactory.decodeStream(inputStream)
+        } catch (e: IOException) {
+            e.printStackTrace()
+            null
+        }
+    }
 }
 

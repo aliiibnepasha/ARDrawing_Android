@@ -132,7 +132,7 @@ fun CameraPreviewScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.statusBars)
+                .windowInsetsPadding(WindowInsets.systemBars)
         ) {
 
             /* ================= TOP BAR ================= */

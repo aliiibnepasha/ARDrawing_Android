@@ -30,6 +30,7 @@ import com.example.ardrawing.ui.screens.TemplateListScreen
 import com.example.ardrawing.ui.viewmodel.MyCreativeViewModel
 import com.example.ardrawing.LaunchActivity
 import com.example.ardrawing.data.repository.TemplateRepository
+import com.example.ardrawing.data.utils.AssetUtils
 import com.example.ardrawing.ui.screens.HomeScreenNew
 
 sealed class Screen(val route: String) {
@@ -226,6 +227,22 @@ fun NavGraph(
                         navController.navigate(Screen.PaperTrace.createRoute(id, "template"))
                     },
                     onStartAR = {
+                        // If we have a template, load its image for overlay
+                        if (template != null) {
+                            android.util.Log.d("NavGraph", "Loading template image from: ${template.imageAssetPath}")
+                            val bitmap = com.example.ardrawing.data.utils.AssetUtils.getBitmapFromAsset(context, template.imageAssetPath)
+                            if (bitmap != null) {
+                                android.util.Log.d("NavGraph", "Template bitmap loaded successfully: ${bitmap.width}x${bitmap.height}")
+                                LaunchActivity.selectedOverlayBitmap = bitmap
+                            } else {
+                                android.util.Log.e("NavGraph", "Failed to load template bitmap")
+                                LaunchActivity.selectedOverlayBitmap = null
+                            }
+                        } else {
+                            // Clear previous overlay if not using a template
+                            LaunchActivity.selectedOverlayBitmap = null
+                        }
+                        
                         val intent = Intent(context, LaunchActivity::class.java)
                         context.startActivity(intent)
                     }
@@ -242,6 +259,22 @@ fun NavGraph(
                         navController.navigate(Screen.PaperTrace.createRoute(id, "lesson"))
                     },
                     onStartAR = {
+                         // If we have a lesson, load its image (using first step or main image if available)
+                        // For now assuming lesson also has imageAssetPath or similar logic
+                        if (lesson != null && lesson.steps.isNotEmpty()) {
+                             android.util.Log.d("NavGraph", "Loading lesson image from: ${lesson.steps[0].imageAssetPath}")
+                             val bitmap = com.example.ardrawing.data.utils.AssetUtils.getBitmapFromAsset(context, lesson.steps[0].imageAssetPath)
+                             if (bitmap != null) {
+                                 android.util.Log.d("NavGraph", "Lesson bitmap loaded successfully: ${bitmap.width}x${bitmap.height}")
+                                 LaunchActivity.selectedOverlayBitmap = bitmap
+                             } else {
+                                 android.util.Log.e("NavGraph", "Failed to load lesson bitmap")
+                                 LaunchActivity.selectedOverlayBitmap = null
+                             }
+                        } else {
+                             LaunchActivity.selectedOverlayBitmap = null
+                        }
+                        
                         val intent = Intent(context, LaunchActivity::class.java)
                         context.startActivity(intent)
                     }

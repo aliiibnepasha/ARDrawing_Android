@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.example.ardrawing.databinding.ActivityLabelBinding
 import com.google.ar.core.AugmentedImage
 import com.google.ar.core.AugmentedImageDatabase
 import com.google.ar.core.Config
@@ -16,12 +17,10 @@ import com.google.ar.core.TrackingState
 
 class LabelActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityLabelBinding
     private lateinit var arSession: Session
     private lateinit var glSurfaceView: GLSurfaceView
 
-    // UI Elements
-    private lateinit var statusText: TextView
-    private lateinit var capturedImageView: ImageView
 
     // Tracking state management for better continuous tracking
     private var lastTrackingState = TrackingState.STOPPED
@@ -46,6 +45,12 @@ class LabelActivity : AppCompatActivity() {
     // AR Components
     private lateinit var labelRenderer: LabelRenderer
     private lateinit var anchorRenderer: AnchorRenderer
+    private lateinit var texturedPlaneRenderer: TexturedPlaneRenderer
+    private lateinit var strokeRenderer: StrokeRenderer
+    
+    // Drawing state
+    private var isDrawing = false
+    private var currentFrame: Frame? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,21 +59,12 @@ class LabelActivity : AppCompatActivity() {
         // Force portrait orientation for AR
         requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
-        setContentView(R.layout.activity_label)
-
-        // Initialize UI elements
-        statusText = findViewById(R.id.statusText)
-        capturedImageView = findViewById(R.id.capturedImageView)
-
-        // Display cropped image thumbnail (user's selected image) if available, otherwise show captured image
-        val thumbnailBitmap = LaunchActivity.croppedBitmap ?: LaunchActivity.capturedBitmap
-        thumbnailBitmap?.let {
-            capturedImageView.setImageBitmap(it)
-            capturedImageView.visibility = View.VISIBLE
-        }
+        // Initialize view binding
+        binding = ActivityLabelBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // Setup AR
-        glSurfaceView = findViewById(R.id.glSurfaceView)
+        glSurfaceView = binding.glSurfaceView
         glSurfaceView.setEGLContextClientVersion(2)
 
         setupAR()
@@ -81,39 +77,48 @@ class LabelActivity : AppCompatActivity() {
         // Create renderers
         labelRenderer = LabelRenderer(this, arSession)
         anchorRenderer = AnchorRenderer(this)
+        texturedPlaneRenderer = TexturedPlaneRenderer()
+        strokeRenderer = StrokeRenderer()
         
         // Use user-selected cropped bitmap if available, otherwise use default asset
-        val userBitmap = LaunchActivity.croppedBitmap
-        val boundingBoxRenderer = BoundingBoxRenderer(this, userBitmap)
+        val displayBitmap = LaunchActivity.selectedOverlayBitmap ?: LaunchActivity.croppedBitmap
+        val boundingBoxRenderer = BoundingBoxRenderer(this, displayBitmap)
         
         labelRenderer.setAnchorRenderer(anchorRenderer)
         labelRenderer.setBoundingBoxRenderer(boundingBoxRenderer)
+        labelRenderer.setTexturedPlaneRenderer(texturedPlaneRenderer)
+        labelRenderer.setStrokeRenderer(strokeRenderer)
 
         glSurfaceView.setRenderer(labelRenderer)
         glSurfaceView.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
 
-        // Set up double-tap to toggle bounding boxes
+        // Set up touch handling for drawing
         var lastTapTime = 0L
         glSurfaceView.setOnTouchListener { _, event ->
-            if (event.action == MotionEvent.ACTION_UP) {
-                val currentTime = System.currentTimeMillis()
-                if (currentTime - lastTapTime < 300) { // Double tap detected
-                    showBoundingBoxes = !showBoundingBoxes
-                    runOnUiThread {
-                        val status = if (showBoundingBoxes) "Bounding boxes: ON" else "Bounding boxes: OFF"
-                        Toast.makeText(this@LabelActivity, status, Toast.LENGTH_SHORT).show()
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    handleTouchDown(event)
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    if (isDrawing) {
+                        handleTouchMove(event)
                     }
                 }
-                lastTapTime = currentTime
+                MotionEvent.ACTION_UP -> {
+                    handleTouchUp(event)
+                    // Double tap to toggle bounding boxes
+                    val currentTime = System.currentTimeMillis()
+                    if (currentTime - lastTapTime < 300) {
+                        showBoundingBoxes = !showBoundingBoxes
+                        runOnUiThread {
+                            val status = if (showBoundingBoxes) "Bounding boxes: ON" else "Bounding boxes: OFF"
+                            Toast.makeText(this@LabelActivity, status, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    lastTapTime = currentTime
+                }
             }
             true
-        }
-
-        updateStatus("📸 Point camera at captured image")
-
-        // Add professional guidance for optimal AR tracking
-        runOnUiThread {
-            statusText.text = "📸 Point camera at captured image\n📏 Keep image 30-50cm away & flat\n💡 Ensure good lighting\n👆 Double-tap to toggle bounding boxes"
         }
     }
 
@@ -219,7 +224,6 @@ class LabelActivity : AppCompatActivity() {
             arSession.configure(config2)
 
             android.util.Log.d("AR_DEBUG", "AR setup completed with enhanced image")
-            updateStatus("AR Camera Ready - Using enhanced image")
 
         } catch (e2: Exception) {
             android.util.Log.e("AR_DEBUG", "Enhanced image also failed: ${e2.message}")
@@ -239,8 +243,6 @@ class LabelActivity : AppCompatActivity() {
             arSession.configure(config3)
 
             android.util.Log.d("AR_DEBUG", "AR setup completed with demo image")
-            updateStatus("AR Camera Ready - Demo Mode")
-
             runOnUiThread {
                 android.app.AlertDialog.Builder(this)
                     .setTitle("Using Demo Image")
@@ -252,7 +254,6 @@ class LabelActivity : AppCompatActivity() {
                                "• Well-lit scenes with good contrast")
                     .setPositiveButton("Got it!") { _, _ ->
                         // Update UI to show we're using demo image
-                        updateStatus("AR Camera Ready - Demo Mode")
                     }
                     .setCancelable(false)
                     .show()
@@ -611,21 +612,50 @@ class LabelActivity : AppCompatActivity() {
         try {
             trackingAnchor = image.createAnchor(image.centerPose)
             anchorCreated = true
+            
+            // Store image dimensions
+            imageWidth = image.extentX
+            imageHeight = image.extentZ
 
             android.util.Log.d("AR_TRACKING", "Created stable tracking anchor - switching to anchor-based tracking")
 
+            // Set up image plane with selected bitmap
+            // PRIORITY: Use user-selected overlay (template) if available, otherwise use the captured one
+            val overlayBitmap = LaunchActivity.selectedOverlayBitmap
+            val displayBitmap = overlayBitmap ?: LaunchActivity.croppedBitmap ?: LaunchActivity.capturedBitmap
+            
+            if (overlayBitmap != null) {
+                android.util.Log.d("AR_TRACKING", "Using SELECTED OVERLAY bitmap: ${overlayBitmap.width}x${overlayBitmap.height}")
+                runOnUiThread {
+                    Toast.makeText(this@LabelActivity, "Overlay Image Loaded!", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                android.util.Log.d("AR_TRACKING", "Using captured/cropped bitmap (no overlay selected)")
+            }
+            
+            if (displayBitmap != null && !displayBitmap.isRecycled) {
+                trackingAnchor?.let { anchor ->
+                    // Set up textured plane renderer on GL thread
+                    glSurfaceView.queueEvent {
+                        // NOTE: We still use imageWidth/imageHeight from the TRACKED image (augmentedImage)
+                        // to ensure the overlay matches the physical size of the tracker
+                        texturedPlaneRenderer.setImage(displayBitmap, anchor, imageWidth, imageHeight)
+                        strokeRenderer.setAnchor(anchor, imageWidth, imageHeight)
+                    }
+                    android.util.Log.d("AR_TRACKING", "Image plane set up with bitmap: ${displayBitmap.width}x${displayBitmap.height}, anchor: ${anchor.trackingState}")
+                }
+            } else {
+                android.util.Log.e("AR_TRACKING", "No bitmap available for image plane!")
+            }
+
             // Visual feedback for anchor creation
             runOnUiThread {
-                Toast.makeText(this@LabelActivity, "🎯 Anchor locked - stable tracking!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@LabelActivity, "🎯 Anchor locked - you can now draw!", Toast.LENGTH_SHORT).show()
             }
 
         } catch (e: Exception) {
             android.util.Log.e("AR_TRACKING", "Failed to create tracking anchor: ${e.message}")
         }
-    }
-
-    private fun updateStatus(message: String) {
-        statusText.text = message
     }
 
 
@@ -689,53 +719,103 @@ class LabelActivity : AppCompatActivity() {
             lastTrackingState = currentTrackingState
 
             // Provide continuous feedback based on overall tracking state
-            runOnUiThread {
-                when {
-                    hasTrackingImage -> {
-                        // Check if anchor has been created for stable tracking
-                        if (anchorCreated) {
-                            val trackingDuration = (System.currentTimeMillis() - trackingStartTime) / 1000
-                            statusText.text = "🎯 Anchor locked - stable tracking! (${trackingDuration}s)"
-                            statusText.setTextColor(resources.getColor(android.R.color.holo_green_dark))
-                        } else if (poseStabilityCounter >= STABILITY_THRESHOLD) {
-                            statusText.text = "🔄 Creating anchor..."
-                            statusText.setTextColor(resources.getColor(android.R.color.holo_blue_light))
-                        } else {
-                            val progress = (poseStabilityCounter.toFloat() / STABILITY_THRESHOLD * 100).toInt()
-                            statusText.text = "🔄 Stabilizing... ${progress}%"
-                            statusText.setTextColor(resources.getColor(android.R.color.holo_blue_light))
-                        }
-                    }
-                    hasPausedImage -> {
-                        // Images detected but tracking paused - guide user
-                        statusText.text = "⏸️ Hold camera steady"
-                        statusText.setTextColor(resources.getColor(android.R.color.holo_orange_light))
-                    }
-
-                    hasStoppedImage -> {
-                        // Tracking lost - help user regain it
-                        if (framesSinceLastDetection < 30) {
-                            statusText.text = "📱 Reposition camera slowly"
-                        } else {
-                            statusText.text = "🔍 Locate your image again"
-                        }
-                        statusText.setTextColor(resources.getColor(android.R.color.holo_red_light))
-                    }
-                    else -> {
-                        // No images detected at all
-                        statusText.text = "📸 Point camera at captured image"
-                        statusText.setTextColor(resources.getColor(android.R.color.holo_blue_light))
-                    }
-                }
-            }
-
         } catch (e: Exception) {
             android.util.Log.e("AR_DEBUG", "Error in update: ${e.message}")
-            runOnUiThread {
-                statusText.text = "⚠️ Tracking error - try restarting"
-                statusText.setTextColor(resources.getColor(android.R.color.holo_red_light))
+
+        }
+    }
+    
+    fun setCurrentFrame(frame: Frame) {
+        currentFrame = frame
+    }
+    
+    private fun handleTouchDown(event: MotionEvent) {
+        val frame = currentFrame ?: return
+        val anchor = trackingAnchor ?: return
+        
+        // Perform hit test
+        val hits = frame.hitTest(event.x, event.y)
+        
+        for (hit in hits) {
+            val hitPose = hit.hitPose
+            val anchorPose = anchor.pose
+            
+            // Convert hit pose to anchor-local coordinates
+            val localPoint = convertToAnchorLocal(hitPose, anchorPose)
+            
+            if (localPoint != null) {
+                // Check if point is within image bounds (-0.5 to 0.5)
+                if (localPoint.first in -0.5f..0.5f && localPoint.second in -0.5f..0.5f) {
+                    isDrawing = true
+                    strokeRenderer.startNewStroke()
+                    strokeRenderer.addStrokePoint(StrokePoint(localPoint.first, localPoint.second))
+                    break
+                }
             }
         }
     }
+    
+    private fun handleTouchMove(event: MotionEvent) {
+        val frame = currentFrame ?: return
+        val anchor = trackingAnchor ?: return
+        
+        // Perform hit test
+        val hits = frame.hitTest(event.x, event.y)
+        
+        for (hit in hits) {
+            val hitPose = hit.hitPose
+            val anchorPose = anchor.pose
+            
+            // Convert hit pose to anchor-local coordinates
+            val localPoint = convertToAnchorLocal(hitPose, anchorPose)
+            
+            if (localPoint != null) {
+                // Check if point is within image bounds
+                if (localPoint.first in -0.5f..0.5f && localPoint.second in -0.5f..0.5f) {
+                    strokeRenderer.addStrokePoint(StrokePoint(localPoint.first, localPoint.second))
+                    break
+                }
+            }
+        }
+    }
+    
+    private fun handleTouchUp(event: MotionEvent) {
+        isDrawing = false
+    }
+    
+    /**
+     * Convert world pose to anchor-local coordinates
+     * Returns (x, y) in local coordinate system where image is -0.5 to 0.5
+     */
+    private fun convertToAnchorLocal(worldPose: com.google.ar.core.Pose, anchorPose: com.google.ar.core.Pose): Pair<Float, Float>? {
+        try {
+            // Get anchor pose inverse
+            val anchorInverse = anchorPose.inverse()
+            
+            // Transform world point to anchor-local space
+            val worldPoint = floatArrayOf(
+                worldPose.tx(),
+                worldPose.ty(),
+                worldPose.tz()
+            )
+            
+            // Transform to anchor-local coordinates
+            val localPoint = floatArrayOf(3F)
+            anchorInverse.transformPoint(worldPoint, 0, localPoint, 0)
+            
+            // Convert to normalized coordinates (-0.5 to 0.5)
+            // localPoint is in meters, divide by image dimensions to normalize
+            val localX = localPoint[0] / imageWidth
+            val localY = localPoint[1] / imageHeight
+            
+            return Pair(localX, localY)
+        } catch (e: Exception) {
+            android.util.Log.e("AR_DEBUG", "Error converting to anchor local: ${e.message}")
+            return null
+        }
+    }
+    
+    private var imageWidth: Float = 0.2f
+    private var imageHeight: Float = 0.2f
 
 }

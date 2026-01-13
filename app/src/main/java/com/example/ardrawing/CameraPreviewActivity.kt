@@ -7,7 +7,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
-import android.widget.ImageButton
 import android.widget.Toast
 import androidx.camera.view.PreviewView
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,6 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.ardrawing.LaunchActivity
 import com.example.ardrawing.R
+import com.example.ardrawing.databinding.ActivityCameraPreviewBinding
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.launch
 import java.io.File
@@ -27,6 +27,8 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class CameraPreviewActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityCameraPreviewBinding
 
     private lateinit var cameraExecutor: ExecutorService
     private var imageCapture: ImageCapture? = null
@@ -45,7 +47,34 @@ class CameraPreviewActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_camera_preview)
+        
+        // Enable edge-to-edge display
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+        
+        // Initialize view binding
+        binding = ActivityCameraPreviewBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        
+        // Handle system bars insets
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            val navigationBarHeight = systemBars.bottom
+            val density = resources.displayMetrics.density
+            
+            // Add padding to capture button container
+            val captureRing = binding.captureRing
+            val layoutParams = captureRing.layoutParams as androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
+            layoutParams.bottomMargin = (32 * density).toInt() + navigationBarHeight
+            captureRing.layoutParams = layoutParams
+            
+            // Add padding to back button for status bar
+            val backButton = binding.backButton
+            val backButtonParams = backButton.layoutParams as androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
+            backButtonParams.topMargin = (16 * density).toInt() + systemBars.top
+            backButton.layoutParams = backButtonParams
+            
+            insets
+        }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
@@ -57,12 +86,12 @@ class CameraPreviewActivity : AppCompatActivity() {
         }
 
         // Setup capture button
-        findViewById<ImageButton>(R.id.captureButton).setOnClickListener {
+        binding.captureButton.setOnClickListener {
             takePhoto()
         }
 
         // Setup back button
-        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
+        binding.backButton.setOnClickListener {
             finish()
         }
     }
@@ -76,7 +105,7 @@ class CameraPreviewActivity : AppCompatActivity() {
 
                 // Preview
                 val preview = Preview.Builder().build().also {
-                    it.setSurfaceProvider(findViewById<PreviewView>(R.id.previewView).surfaceProvider)
+                    it.setSurfaceProvider(binding.previewView.surfaceProvider)
                 }
 
                 // Image capture

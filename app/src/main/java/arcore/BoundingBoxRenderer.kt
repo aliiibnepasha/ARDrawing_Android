@@ -47,12 +47,12 @@ class BoundingBoxRenderer(private val context: Context, private val userBitmap: 
         -0.5f, 0.02f, 0.5f   // top-left-front
     )
 
-    // Texture quad vertices (centered within bounding box)
+    // Texture quad vertices (on the image plane, inside edges)
     private val textureQuadVertices = floatArrayOf(
-        -0.5f, 0.05f, -0.5f,  // bottom-left
-        0.5f, 0.05f, -0.5f,   // bottom-right
-        0.5f, 0.05f,  0.5f,   // top-right
-        -0.5f, 0.05f,  0.5f   // top-left
+        -0.5f, 0.0f, -0.5f,  // bottom-left
+        0.5f, 0.0f, -0.5f,   // bottom-right
+        0.5f, 0.0f,  0.5f,   // top-right
+        -0.5f, 0.0f,  0.5f   // top-left
     )
 
     // Texture coordinates (flipped for icons to match OpenGL coordinate system)
@@ -72,6 +72,14 @@ class BoundingBoxRenderer(private val context: Context, private val userBitmap: 
         // Vertical edges
         0, 4, 1, 5, 2, 6, 3, 7
     )
+
+    // Indices for drawing filled surface (bottom face as quad)
+    private val surfaceIndices = shortArrayOf(
+        0, 1, 2,  // First triangle
+        0, 2, 3   // Second triangle
+    )
+    
+    private lateinit var surfaceIndexBuffer: java.nio.ShortBuffer
 
     fun createOnGlThread() {
         // Create wireframe program
@@ -117,6 +125,14 @@ class BoundingBoxRenderer(private val context: Context, private val userBitmap: 
             .asShortBuffer()
             .apply {
                 put(boundingBoxIndices)
+                position(0)
+            }
+
+        surfaceIndexBuffer = ByteBuffer.allocateDirect(surfaceIndices.size * 2)
+            .order(ByteOrder.nativeOrder())
+            .asShortBuffer()
+            .apply {
+                put(surfaceIndices)
                 position(0)
             }
 
@@ -250,10 +266,10 @@ class BoundingBoxRenderer(private val context: Context, private val userBitmap: 
         android.opengl.Matrix.multiplyMM(mvMatrix, 0, viewMatrix, 0, modelMatrix, 0)
         android.opengl.Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvMatrix, 0)
 
-        // First, draw the scaled animal texture within the bounding box
-        drawAnimalTextureScaled(image, viewMatrix, projectionMatrix)
-
-        // Then, draw the wireframe bounding box on top
+        // Don't draw any image - let camera feed show through
+        // Image is only used as anchor/reference point
+        
+        // Draw wireframe edges to show the anchor area
         drawWireframeBoundingBox(mvpMatrix, image)
     }
 
@@ -318,6 +334,41 @@ class BoundingBoxRenderer(private val context: Context, private val userBitmap: 
         drawAnimalTexture(mvpMatrix)
     }
 
+    private fun drawFilledSurface(mvpMatrix: FloatArray, image: AugmentedImage) {
+        GLES20.glUseProgram(boundingBoxProgram)
+
+        // Enable blending for semi-transparent surface
+        GLES20.glEnable(GLES20.GL_BLEND)
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+
+        // Enable depth test for proper rendering
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
+        GLES20.glDepthFunc(GLES20.GL_LEQUAL)
+
+        // Set MVP matrix
+        GLES20.glUniformMatrix4fv(mvpMatrixParam, 1, false, mvpMatrix, 0)
+
+        // Set color for surface (semi-transparent white/light gray)
+        val surfaceColor = floatArrayOf(0.9f, 0.9f, 0.9f, 0.3f) // Light gray with transparency
+        GLES20.glUniform4fv(colorParam, 1, surfaceColor, 0)
+
+        // Enable vertex array
+        GLES20.glEnableVertexAttribArray(positionParam)
+
+        // Set vertex data (bottom face vertices: 0, 1, 2, 3)
+        vertexBuffer.position(0)
+        GLES20.glVertexAttribPointer(positionParam, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer)
+
+        // Draw filled surface as triangles
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, surfaceIndices.size, GLES20.GL_UNSIGNED_SHORT, surfaceIndexBuffer)
+
+        // Disable vertex array
+        GLES20.glDisableVertexAttribArray(positionParam)
+
+        // Disable depth test for wireframe overlay
+        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
+    }
+
     private fun drawWireframeBoundingBox(mvpMatrix: FloatArray, image: AugmentedImage) {
         GLES20.glUseProgram(boundingBoxProgram)
 
@@ -346,8 +397,8 @@ class BoundingBoxRenderer(private val context: Context, private val userBitmap: 
         vertexBuffer.position(0)
         GLES20.glVertexAttribPointer(positionParam, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer)
 
-        // Draw the bounding box lines
-        GLES20.glLineWidth(3.0f)
+        // Draw the bounding box lines (thicker for better visibility)
+        GLES20.glLineWidth(5.0f)
         GLES20.glDrawElements(GLES20.GL_LINES, boundingBoxIndices.size, GLES20.GL_UNSIGNED_SHORT, indexBuffer)
 
         // Disable vertex array

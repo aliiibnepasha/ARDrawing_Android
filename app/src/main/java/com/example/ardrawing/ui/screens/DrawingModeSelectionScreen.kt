@@ -101,6 +101,7 @@ fun DrawingModeSelectionScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(24.dp)
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
