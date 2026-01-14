@@ -72,7 +72,7 @@ fun CreateWithAIScreen(
         WaterWaveBackground()
         
         // 2. Foreground Content
-        Scaffold(
+    Scaffold(
             containerColor = Color.Transparent, // Transparent to show water background
         // Removed explicit contentWindowInsets override to let Scaffold handle defaults, 
         // but we need to pad the custom topBar manually.
@@ -246,7 +246,7 @@ fun CreateWithAIScreen(
             } else {
                 StepResult(prompt = promptText)
             }
-        }
+            }
         }
     }
 }

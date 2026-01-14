@@ -69,7 +69,7 @@ fun PhotoToSketchScreen(
         WaterWaveBackground()
         
         // 2. Foreground Content
-        Scaffold(
+    Scaffold(
             containerColor = Color.Transparent, // Transparent to show water background
         topBar = {
             Row(
@@ -212,7 +212,7 @@ fun PhotoToSketchScreen(
 
                 Spacer(modifier = Modifier.weight(1.3f))
             }
-        }
+            }
         }
     }
 }

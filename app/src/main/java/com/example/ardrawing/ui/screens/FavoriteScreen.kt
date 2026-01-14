@@ -28,12 +28,12 @@ fun FavoriteScreen() {
         WaterWaveBackground()
         
         // 2. Foreground Content
-        Scaffold(
+    Scaffold(
             containerColor = Color.Transparent, // Transparent to show water background
-            topBar = {
-                FavoriteHeader()
-            }
-        ) { paddingValues ->
+        topBar = {
+            FavoriteHeader()
+        }
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -61,7 +61,7 @@ fun FavoriteScreen() {
                     color = Color(0xFF6F7E95) // Grey text
                 )
             }
-        }
+            }
         }
     }
 }

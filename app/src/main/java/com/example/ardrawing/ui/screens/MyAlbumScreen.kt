@@ -43,30 +43,30 @@ fun MyAlbumScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
                     .statusBarsPadding()
                     .height(56.dp)
                     .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.back_arrow_ic),
-                    contentDescription = "Back",
-                    modifier = Modifier
-                        .size(32.dp)
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(R.drawable.back_arrow_ic),
+                contentDescription = "Back",
+                modifier = Modifier
+                    .size(32.dp)
                         .clickable { onBackClick() }
-                )
-                
-                Text(
-                    text = "My Album",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+            )
+
+            Text(
+                text = "My Album",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
+            )
                 
                 Spacer(modifier = Modifier.size(32.dp))
             }
@@ -88,11 +88,11 @@ fun MyAlbumScreen(
                         color = Color.Gray
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
+                Text(
                         text = "Upload photos from My Creative screen",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
                 }
             }
         } else {

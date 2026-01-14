@@ -65,7 +65,7 @@ fun TextToImageScreen(
         WaterWaveBackground()
         
         // 2. Foreground Content
-        Scaffold(
+    Scaffold(
             containerColor = Color.Transparent, // Transparent to show water background
         topBar = {
             TopHeader(
@@ -112,7 +112,7 @@ fun TextToImageScreen(
                 // RESULT STATE
                 ResultState(prompt = promptText)
             }
-        }
+            }
         }
     }
 }
@@ -139,7 +139,7 @@ private fun TopHeader(
             modifier = Modifier
                 .size(32.dp)
                 .clickable { onBackClick() }
-        )
+            )
         
         // Centered Title
         Text(

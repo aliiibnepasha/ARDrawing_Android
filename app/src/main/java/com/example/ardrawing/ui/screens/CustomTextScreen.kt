@@ -58,7 +58,7 @@ fun CustomTextScreen(
         WaterWaveBackground()
         
         // 2. Foreground Content
-        Scaffold(
+    Scaffold(
             containerColor = Color.Transparent, // Transparent to show water background
         topBar = {
             CustomTextTopBar(onBackClick = onBackClick)
@@ -106,10 +106,10 @@ fun CustomTextScreen(
                     value = customText,
                     onValueChange = { customText = it },
                     textStyle = TextStyle(
-                        fontSize = 32.sp,
-                        fontWeight = fonts[selectedFontIndex].weight,
-                        fontFamily = fonts[selectedFontIndex].family,
-                        fontStyle = fonts[selectedFontIndex].style,
+                    fontSize = 32.sp,
+                    fontWeight = fonts[selectedFontIndex].weight,
+                    fontFamily = fonts[selectedFontIndex].family,
+                    fontStyle = fonts[selectedFontIndex].style,
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     ),
@@ -168,9 +168,9 @@ fun CustomTextScreen(
                             lineHeight = 16.sp
                         )
                     }
+                    }
                 }
             }
-        }
         }
     }
 }
@@ -192,7 +192,7 @@ private fun CustomTextTopBar(onBackClick: () -> Unit) {
             modifier = Modifier
                 .size(32.dp)
                 .clickable { onBackClick() }
-        )
+            )
 
         // Centered Title
         Text(

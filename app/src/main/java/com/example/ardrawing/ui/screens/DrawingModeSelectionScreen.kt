@@ -72,7 +72,7 @@ fun DrawingModeSelectionScreen(
             description = "Put a paper over your phone's screen and follow the lines to trace your image with ease"
         )
     )
-    
+
     // Filter out AR mode if device doesn't support ARCore
     val modes = remember(isARCoreSupported) {
         if (isARCoreSupported) {
@@ -116,7 +116,7 @@ fun DrawingModeSelectionScreen(
                         .size(32.dp)
                         .align(Alignment.CenterStart)
                         .clickable(onClick = onBackClick)
-                )
+                    )
             }
         },
         bottomBar = {

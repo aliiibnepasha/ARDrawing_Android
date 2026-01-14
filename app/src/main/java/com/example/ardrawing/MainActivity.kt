@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
             ARDrawingTheme {
                 // Provide AuthManager via CompositionLocal
                 CompositionLocalProvider(LocalAuthManager provides authManager) {
-                    val navController = rememberNavController()
+                val navController = rememberNavController()
 
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
@@ -176,7 +176,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
-                }
+            }
             }
         }
     }

@@ -337,7 +337,7 @@ fun NavGraph(
                              } else {
                                  android.util.Log.e("NavGraph", "Failed to load lesson bitmap")
                                  LaunchActivity.selectedOverlayBitmap = null
-                             }
+            }
                         } else {
                              LaunchActivity.selectedOverlayBitmap = null
                         }

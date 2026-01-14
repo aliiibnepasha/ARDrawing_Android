@@ -59,7 +59,7 @@ fun HomeScreenNew(
     onAddIllustration: (String) -> Unit = {} // Simple ID (not used, URI stored in LaunchActivity)
 ) {
     var selectedTab by remember { mutableStateOf(0) }
-    
+
     val context = LocalContext.current
     
     // Gallery launcher for "Add your illustration"
@@ -78,32 +78,32 @@ fun HomeScreenNew(
         WaterWaveBackground()
 
         // 2. Foreground Content
-        Scaffold(
+    Scaffold(
             containerColor = Color.Transparent, // Transparent to show water background
-        ) { paddingValues ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 20.dp),
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 20.dp),
                 contentPadding = PaddingValues(bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                item { 
-                    HomeHeader(
-                        currentRoute = currentRoute,
-                        selectedTab = selectedTab
-                    ) 
-                }
-                item { 
-                    TabSwitcher(
-                        selectedTab = selectedTab,
-                        onTabSelected = { selectedTab = it }
-                    ) 
-                }
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            item { 
+                HomeHeader(
+                    currentRoute = currentRoute,
+                    selectedTab = selectedTab
+                ) 
+            }
+            item { 
+                TabSwitcher(
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it }
+                ) 
+            }
 
-                if (selectedTab == 0) {
-                    // Image Tab Content
+            if (selectedTab == 0) {
+                // Image Tab Content
                     item { 
                         IllustrationCard {
                             // Open gallery when clicked
@@ -111,13 +111,13 @@ fun HomeScreenNew(
                         }
                     }
                     item { ActionCardsRow(onPhotoToSketch, onAICreate, onExplore) }
-                    item { CategoriesSection(onCategoryClick = onCategoryClick) }
-                } else {
-                    // Text Tab Content
+                item { CategoriesSection(onCategoryClick = onCategoryClick) }
+            } else {
+                // Text Tab Content
                     item { TextTabContent(onTextToImage, onCustomText) }
-                }
-                
-                item { Spacer(modifier = Modifier.height(16.dp)) }
+            }
+            
+            item { Spacer(modifier = Modifier.height(16.dp)) }
             }
         }
     }
@@ -223,11 +223,11 @@ fun IllustrationCard(onClick: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(
-                painter = painterResource(id = R.drawable.add_illustration),
-                contentDescription = "Add illustration",
+                 Image(
+                     painter = painterResource(id = R.drawable.add_illustration),
+                     contentDescription = "Add illustration",
                 modifier = Modifier.size(32.dp)
-            )
+                 )
             Spacer(modifier = Modifier.height(16.dp))
             Text("Add your illustration", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF1E293B))
         }
@@ -515,10 +515,10 @@ fun TextActionCard(
     ) {
 
          Image(
-             painter = painterResource(id = iconRes),
-             contentDescription = null,
+                 painter = painterResource(id = iconRes),
+                 contentDescription = null,
              modifier = Modifier.size(40.dp)
-         )
+             )
 
          Column {
              Text(
