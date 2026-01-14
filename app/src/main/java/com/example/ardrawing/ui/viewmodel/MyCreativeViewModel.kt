@@ -16,7 +16,8 @@ data class MyCreativeUiState(
     val savedDrawings: List<SavedDrawing> = emptyList(),
     val selectedTab: TabType = TabType.ALL_MEDIA,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val uploadedImages: List<String> = emptyList() // List of image URIs
 )
 
 enum class TabType {
@@ -83,6 +84,16 @@ class MyCreativeViewModel(
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
         }
+    }
+    
+    fun addUploadedImage(imageUri: String) {
+        val currentImages = _uiState.value.uploadedImages.toMutableList()
+        currentImages.add(0, imageUri) // Add to beginning
+        _uiState.value = _uiState.value.copy(uploadedImages = currentImages)
+    }
+    
+    fun getUploadedImages(): List<String> {
+        return _uiState.value.uploadedImages
     }
     
     companion object {

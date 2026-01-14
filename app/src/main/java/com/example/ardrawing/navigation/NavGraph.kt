@@ -24,6 +24,7 @@ import com.example.ardrawing.ui.screens.LessonDrawingScreen
 import com.example.ardrawing.ui.screens.LessonPreviewScreen
 import com.example.ardrawing.ui.screens.LessonScreen
 import com.example.ardrawing.ui.screens.MyCreativeScreen
+import com.example.ardrawing.ui.screens.MyAlbumScreen
 import com.example.ardrawing.ui.screens.PaperTraceScreen
 import com.example.ardrawing.ui.screens.SettingsScreen
 import com.example.ardrawing.ui.screens.TemplateListScreen
@@ -69,6 +70,7 @@ sealed class Screen(val route: String) {
     }
     object PhotoToSketch : Screen("photo_to_sketch")
     object CreateWithAI : Screen("create_with_ai")
+    object MyAlbum : Screen("my_album")
 }
 
 @Composable
@@ -457,6 +459,26 @@ fun NavGraph(
                 onBackClick = { navController.popBackStack() },
                 onDrawingClick = { drawing ->
                     // TODO: Navigate to drawing detail if needed
+                },
+                onSeeAllAlbumClick = {
+                    navController.navigate(Screen.MyAlbum.route)
+                }
+            )
+        }
+        
+        composable(Screen.MyAlbum.route) {
+            val context = LocalContext.current
+            val database = AppDatabase.getDatabase(context)
+            val repository = SavedDrawingRepository(database.savedDrawingDao())
+            val viewModel: MyCreativeViewModel = viewModel(
+                factory = MyCreativeViewModel.provideFactory(repository)
+            )
+            
+            MyAlbumScreen(
+                viewModel = viewModel,
+                onBackClick = { navController.popBackStack() },
+                onImageClick = { imageUri ->
+                    // TODO: Handle image click (maybe navigate to full screen view)
                 }
             )
         }

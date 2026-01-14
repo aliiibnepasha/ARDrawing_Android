@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -20,11 +21,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,6 +41,7 @@ fun CustomTextScreen(
     onDrawClick: () -> Unit
 ) {
     var selectedFontIndex by remember { mutableStateOf(0) }
+    var customText by remember { mutableStateOf("XYXZSS") }
     // Mock fonts using system font families for now
     val fonts = listOf(
         FontItem("Augmented\nReality", FontFamily.Serif, FontWeight.Bold, FontStyle.Normal),
@@ -97,13 +102,23 @@ fun CustomTextScreen(
                     .dashedBorder(Color(0xFF4285F4), 20.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "XYXZSS", // Placeholder text from screenshot
-                    fontSize = 32.sp,
-                    fontWeight = fonts[selectedFontIndex].weight,
-                    fontFamily = fonts[selectedFontIndex].family,
-                    fontStyle = fonts[selectedFontIndex].style,
-                    color = Color.Black
+                BasicTextField(
+                    value = customText,
+                    onValueChange = { customText = it },
+                    textStyle = TextStyle(
+                        fontSize = 32.sp,
+                        fontWeight = fonts[selectedFontIndex].weight,
+                        fontFamily = fonts[selectedFontIndex].family,
+                        fontStyle = fonts[selectedFontIndex].style,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    ),
+                    cursorBrush = SolidColor(Color.Black),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    singleLine = false,
+                    maxLines = 3
                 )
             }
 

@@ -38,12 +38,19 @@ import com.example.ardrawing.R
 import com.example.ardrawing.data.local.entity.SavedDrawing
 import com.example.ardrawing.ui.viewmodel.MyCreativeViewModel
 import com.example.ardrawing.ui.components.WaterWaveBackground
+import com.example.ardrawing.utils.GalleryUtils
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import android.net.Uri
 
 @Composable
 fun MyCreativeScreen(
     viewModel: MyCreativeViewModel = viewModel(),
     onBackClick: () -> Unit,
-    onDrawingClick: (SavedDrawing) -> Unit = {}
+    onDrawingClick: (SavedDrawing) -> Unit = {},
+    onSeeAllAlbumClick: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
 
@@ -74,10 +81,17 @@ fun MyCreativeScreen(
             Spacer(modifier = Modifier.height(24.dp))
             
             // My Album Section
+            val galleryLauncher = GalleryUtils.rememberGalleryLauncher { uri ->
+                if (uri != null) {
+                    viewModel.addUploadedImage(uri.toString())
+                }
+            }
+            
             MyAlbumSection(
-                onSeeAllClick = { /* TODO */ },
-                onUploadClick = { /* TODO */ },
-                onDrawingClick = {}
+                uploadedImages = viewModel.uiState.collectAsState().value.uploadedImages,
+                onSeeAllClick = onSeeAllAlbumClick,
+                onUploadClick = { GalleryUtils.openGallery(galleryLauncher) },
+                onImageClick = { /* Will be handled in See All screen */ }
             )
             
             Spacer(modifier = Modifier.height(24.dp))
@@ -173,11 +187,11 @@ fun StatCard(
             .height(170.dp)
             .shadow(
                 elevation = 4.dp,
-                shape = RoundedCornerShape(22.dp),
+                shape = RoundedCornerShape(12.dp),
                 spotColor = Color(0x40000000),
                 ambientColor = Color(0x40000000)
             )
-            .clip(RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
     ) {
         // 🔺 Straight Diagonal Triangle (Top Left)
@@ -231,10 +245,13 @@ fun StatCard(
 
 @Composable
 fun MyAlbumSection(
+    uploadedImages: List<String>,
     onSeeAllClick: () -> Unit,
     onUploadClick: () -> Unit,
-    onDrawingClick: () -> Unit
+    onImageClick: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -248,13 +265,15 @@ fun MyAlbumSection(
                 color = Color.Black
             )
             
-            Text(
-                text = "See All",
-                fontSize = 14.sp,
-                color = Color(0xFF4285F4),
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.clickable { onSeeAllClick() }
-            )
+            if (uploadedImages.isNotEmpty()) {
+                Text(
+                    text = "See All",
+                    fontSize = 14.sp,
+                    color = Color(0xFF4285F4),
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.clickable { onSeeAllClick() }
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -273,7 +292,7 @@ fun MyAlbumSection(
                     .clickable { onUploadClick() }
                     .drawDashedBorder(
                         color = Color(0xFF4285F4),
-                        strokeWidth = 4.dp, // Thicker border
+                        strokeWidth = 4.dp,
                         cornerRadius = 16.dp
                     ),
                 contentAlignment = Alignment.Center
@@ -295,7 +314,7 @@ fun MyAlbumSection(
                             modifier = Modifier.size(24.dp)
                         )
                     }
-                     Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "Upload a photo\nof your drawing",
                         fontSize = 13.sp,
@@ -307,25 +326,46 @@ fun MyAlbumSection(
                 }
             }
             
-            // Example Drawing Card (Placeholder)
-            Card(
-                modifier = Modifier
-                    .weight(1f)
-                    .aspectRatio(1f)
-                    .clickable { onDrawingClick() },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.LightGray)
-            ) {
-                 Box(
-                   modifier = Modifier.fillMaxSize(),
-                   contentAlignment = Alignment.Center
+            // Show uploaded images or placeholder
+            if (uploadedImages.isNotEmpty()) {
+                // Show first uploaded image
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(1f)
+                        .clickable { onImageClick(uploadedImages[0]) },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
-                    Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Edit, // Placeholder
-                        contentDescription = null,
-                        tint = Color.Gray,
-                        modifier = Modifier.size(48.dp)
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(Uri.parse(uploadedImages[0]))
+                            .build(),
+                        contentDescription = "Uploaded Image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
                     )
+                }
+            } else {
+                // Placeholder when no images
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.LightGray)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.Edit,
+                            contentDescription = null,
+                            tint = Color.Gray,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
                 }
             }
         }
@@ -393,7 +433,7 @@ fun MoreItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFF5F5F5))
+            .background(Color.White)
             .clickable { onClick() }
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -409,7 +449,7 @@ fun MoreItem(
         Icon(
             imageVector = Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = Color.Gray
+            tint = Color(0xFF4DA3FF)
         )
     }
 }

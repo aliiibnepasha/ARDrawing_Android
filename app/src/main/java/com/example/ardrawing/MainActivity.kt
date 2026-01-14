@@ -4,14 +4,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.ardrawing.data.AuthManager
+import com.example.ardrawing.data.LocalAuthManager
 import com.example.ardrawing.data.repository.TemplateRepository
 import com.example.ardrawing.navigation.NavGraph
 import com.example.ardrawing.navigation.Screen
@@ -22,6 +27,7 @@ import com.google.ar.core.ArCoreApk
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import android.util.Log
 
 class MainActivity : ComponentActivity() {
@@ -33,8 +39,21 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Initialize AuthManager
+        val authManager = AuthManager(this)
+        
         // Check ARCore compatibility on app startup (only once)
         checkARCoreCompatibility()
+        
+        // Sign in anonymously on app start
+        lifecycleScope.launch {
+            val result = authManager.signInAnonymously()
+            result.onSuccess { userId ->
+                Log.d(TAG, "Anonymous sign-in successful: $userId")
+            }.onFailure { error ->
+                Log.e(TAG, "Anonymous sign-in failed: ${error.message}")
+            }
+        }
         
         // Set static navigation bar color (black) - never changes
         WindowCompat.setDecorFitsSystemWindows(window, true)
@@ -46,7 +65,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ARDrawingTheme {
-                val navController = rememberNavController()
+                // Provide AuthManager via CompositionLocal
+                CompositionLocalProvider(LocalAuthManager provides authManager) {
+                    val navController = rememberNavController()
 
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
@@ -154,6 +175,7 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+                }
                 }
             }
         }

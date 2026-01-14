@@ -227,7 +227,7 @@ fun PaperTraceScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = if (isPanelVisible) 200.dp else 60.dp)
+                        .padding(bottom = if (isPanelVisible) 220.dp else 60.dp)
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
