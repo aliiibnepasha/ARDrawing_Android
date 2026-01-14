@@ -102,15 +102,22 @@ private fun IconItem(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    Icon(
-        painter = painterResource(icon),
-        contentDescription = null,
-        tint = Color.Unspecified, // Use original drawable colors
+    Box(
         modifier = Modifier
-            .size(24.dp)
-            .clickable { onClick() }
-    )
+            .size(48.dp) // ✅ Touch target
+            .clip(CircleShape)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(24.dp) // ✅ Visual size stays same
+        )
+    }
 }
+
 @Composable
 private fun TopIndicator(selected: Boolean) {
     Box(

@@ -39,8 +39,9 @@ import com.example.ardrawing.data.utils.AssetUtils
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import com.example.ardrawing.ui.components.WaterWaveBackground
-
+import com.example.ardrawing.utils.GalleryUtils
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
+import com.example.ardrawing.LaunchActivity
 
 @Composable
 fun HomeScreenNew(
@@ -53,9 +54,23 @@ fun HomeScreenNew(
     onAICreate: () -> Unit = {},
     onTextToImage: () -> Unit = {},
     onCustomText: () -> Unit = {},
-    onProClick: () -> Unit = {}
+    onProClick: () -> Unit = {},
+    onExplore: () -> Unit = {},
+    onAddIllustration: (String) -> Unit = {} // Simple ID (not used, URI stored in LaunchActivity)
 ) {
     var selectedTab by remember { mutableStateOf(0) }
+    
+    val context = LocalContext.current
+    
+    // Gallery launcher for "Add your illustration"
+    val galleryLauncher = GalleryUtils.rememberGalleryLauncher { uri ->
+        if (uri != null) {
+            // Store URI in LaunchActivity to avoid route issues
+            LaunchActivity.galleryImageUri = uri.toString()
+            // Navigate with simple "gallery" ID
+            onAddIllustration("gallery")
+        }
+    }
 
     // Wrap with Box to put Water Animation behind everything
     Box(modifier = Modifier.fillMaxSize()) {
@@ -89,8 +104,13 @@ fun HomeScreenNew(
 
                 if (selectedTab == 0) {
                     // Image Tab Content
-                    item { IllustrationCard(onStartAR) }
-                    item { ActionCardsRow(onPhotoToSketch, onAICreate, onProClick) }
+                    item { 
+                        IllustrationCard {
+                            // Open gallery when clicked
+                            GalleryUtils.openGallery(galleryLauncher)
+                        }
+                    }
+                    item { ActionCardsRow(onPhotoToSketch, onAICreate, onExplore) }
                     item { CategoriesSection(onCategoryClick = onCategoryClick) }
                 } else {
                     // Text Tab Content
@@ -198,7 +218,7 @@ fun IllustrationCard(onClick: () -> Unit) {
             .drawBehind {
                 drawRoundRect(color = primaryColor, style = stroke, cornerRadius = CornerRadius(cornerRadius))
             }
-            // Removed .clickable() - card is now not clickable
+            .clickable(onClick = onClick) // Make it clickable to open gallery
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {

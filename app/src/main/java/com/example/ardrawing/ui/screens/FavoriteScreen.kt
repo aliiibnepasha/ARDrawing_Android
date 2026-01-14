@@ -18,15 +18,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ardrawing.R
+import com.example.ardrawing.ui.components.WaterWaveBackground
 
 @Composable
 fun FavoriteScreen() {
-    Scaffold(
-        containerColor = Color.White,
-        topBar = {
-            FavoriteHeader()
-        }
-    ) { paddingValues ->
+    // Wrap with Box to put Water Animation behind everything
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 1. Background Animation
+        WaterWaveBackground()
+        
+        // 2. Foreground Content
+        Scaffold(
+            containerColor = Color.Transparent, // Transparent to show water background
+            topBar = {
+                FavoriteHeader()
+            }
+        ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -54,6 +61,7 @@ fun FavoriteScreen() {
                     color = Color(0xFF6F7E95) // Grey text
                 )
             }
+        }
         }
     }
 }

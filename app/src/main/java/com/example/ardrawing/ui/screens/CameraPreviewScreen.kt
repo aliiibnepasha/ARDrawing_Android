@@ -46,6 +46,7 @@ import com.example.ardrawing.R
 import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.data.model.Lesson
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
+import android.net.Uri
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.launch
@@ -55,6 +56,7 @@ import kotlinx.coroutines.launch
 fun CameraPreviewScreen(
     template: DrawingTemplate? = null,
     lesson: Lesson? = null,
+    galleryImageUri: String? = null,
     onBackClick: () -> Unit
 ) {
 
@@ -197,7 +199,23 @@ fun CameraPreviewScreen(
                         }
                 ) {
                     // Actual Image
-                    if (lesson != null && currentStepIndex < lesson.steps.size) {
+                    if (galleryImageUri != null) {
+                        // Show gallery image
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(Uri.parse(galleryImageUri))
+                                .build(),
+                            contentDescription = "Gallery Image",
+                            modifier = Modifier
+                                .size(300.dp)
+                                .graphicsLayer {
+                                    rotationZ = imageRotation
+                                }
+                                .alpha(opacity)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Fit
+                        )
+                    } else if (lesson != null && currentStepIndex < lesson.steps.size) {
                          val step = lesson.steps[currentStepIndex]
                          AsyncImage(
                             model = ImageRequest.Builder(context)
@@ -302,54 +320,84 @@ fun CameraPreviewScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = if (isPanelVisible) 180.dp else 40.dp) // Auto-adjusts
+                        .padding(bottom = if (isPanelVisible) 200.dp else 60.dp)
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier
-                            .shadow(4.dp, RoundedCornerShape(12.dp))
-                            .background(Color.White, RoundedCornerShape(12.dp))
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        IconButton(
-                            onClick = { if (currentStepIndex > 0) currentStepIndex-- },
-                            enabled = currentStepIndex > 0,
-                            modifier = Modifier.size(32.dp)
+                        // Left Arrow Button
+                        Box(
+                            modifier = Modifier
+                                .width(48.dp)
+                                .height(56.dp)
+                                .shadow(2.dp, RoundedCornerShape(12.dp))
+                                .background(Color.White, RoundedCornerShape(12.dp))
+                                .clickable(enabled = currentStepIndex > 0) {
+                                    if (currentStepIndex > 0) currentStepIndex--
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ChevronLeft,
                                 contentDescription = "Previous",
-                                tint = if (currentStepIndex > 0) Color.Black else Color.Gray
+                                tint = if (currentStepIndex > 0) Color.Black else Color.Gray,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
 
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                             Text(
-                                "step",
-                                fontSize = 10.sp,
-                                color = Color.Gray,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                "${currentStepIndex + 1}/$totalSteps",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        // Central Step Card
+                        Box(
+                            modifier = Modifier
+                                .width(120.dp)
+                                .height(56.dp)
+                                .shadow(2.dp, RoundedCornerShape(12.dp))
+                                .background(Color.White, RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "step",
+                                    fontSize = 14.sp,
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "${currentStepIndex + 1}/$totalSteps",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
+                            }
                         }
 
-                        IconButton(
-                            onClick = { if (currentStepIndex < totalSteps - 1) currentStepIndex++ },
-                            enabled = currentStepIndex < totalSteps - 1,
-                            modifier = Modifier.size(32.dp)
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        // Right Arrow Button
+                        Box(
+                            modifier = Modifier
+                                .width(48.dp)
+                                .height(56.dp)
+                                .shadow(2.dp, RoundedCornerShape(12.dp))
+                                .background(Color.White, RoundedCornerShape(12.dp))
+                                .clickable(enabled = currentStepIndex < totalSteps - 1) {
+                                    if (currentStepIndex < totalSteps - 1) currentStepIndex++
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ChevronRight,
                                 contentDescription = "Next",
-                                tint = if (currentStepIndex < totalSteps - 1) Color.Black else Color.Gray
+                                tint = if (currentStepIndex < totalSteps - 1) Color.Black else Color.Gray,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                     }

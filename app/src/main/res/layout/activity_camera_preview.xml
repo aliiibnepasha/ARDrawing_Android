@@ -21,12 +21,12 @@
     <!-- Back Button -->
     <ImageButton
         android:id="@+id/backButton"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/round_button_background"
-        android:src="@drawable/ic_arrow_back_white"
+        android:src="@drawable/back_arrow_ic"
         android:scaleType="centerInside"
         android:contentDescription="Back"
         app:layout_constraintStart_toStartOf="parent"

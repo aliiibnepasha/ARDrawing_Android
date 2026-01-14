@@ -128,6 +128,16 @@ fun NavGraph(
 
                 onProClick = {
                     navController.navigate(Screen.Settings.route)
+                },
+                onExplore = {
+                    // Open Google in browser
+                    val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.google.com"))
+                    context.startActivity(intent)
+                },
+                onAddIllustration = { _ ->
+                    // Navigate to DrawingModeSelectionScreen with gallery image
+                    // URI is already stored in LaunchActivity.galleryImageUri
+                    navController.navigate(Screen.DrawingModeSelection.createRoute("gallery", "gallery"))
                 }
             )
         }
@@ -180,7 +190,12 @@ fun NavGraph(
                 onTemplateSelected = { template ->
                     navController.navigate(Screen.DrawingModeSelection.createRoute(template.id, "template"))
                 },
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onAddIllustration = { _ ->
+                    // Navigate to DrawingModeSelectionScreen with gallery image
+                    // URI is already stored in LaunchActivity.galleryImageUri
+                    navController.navigate(Screen.DrawingModeSelection.createRoute("gallery", "gallery"))
+                }
             )
         }
         
@@ -214,8 +229,58 @@ fun NavGraph(
             val lesson = if (type == "lesson") {
                 LessonRepository.getLessonById(context, id)
             } else null
-
-            if (template != null) {
+            
+            // Handle gallery image
+            if (type == "gallery") {
+                // Get URI from LaunchActivity (stored when gallery was opened)
+                val imageUriString = LaunchActivity.galleryImageUri
+                if (imageUriString == null) {
+                    android.util.Log.e("NavGraph", "Gallery image URI not found")
+                    android.widget.Toast.makeText(context, "Error loading image", android.widget.Toast.LENGTH_SHORT).show()
+                    navController.popBackStack()
+                    return@composable
+                }
+                
+                val imageUri = android.net.Uri.parse(imageUriString)
+                
+                // Load bitmap from gallery URI
+                val bitmap = try {
+                    val inputStream = context.contentResolver.openInputStream(imageUri)
+                    val bmp = android.graphics.BitmapFactory.decodeStream(inputStream)
+                    inputStream?.close()
+                    bmp
+                } catch (e: Exception) {
+                    android.util.Log.e("NavGraph", "Error loading gallery image: ${e.message}", e)
+                    android.widget.Toast.makeText(context, "Error loading image: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                    navController.popBackStack()
+                    return@composable
+                }
+                
+                if (bitmap != null) {
+                    // Set as selected overlay bitmap for AR
+                    LaunchActivity.selectedOverlayBitmap = bitmap
+                    android.util.Log.d("NavGraph", "Gallery image loaded: ${bitmap.width}x${bitmap.height}")
+                }
+                
+                DrawingModeSelectionScreen(
+                    template = null,
+                    lesson = null,
+                    onBackClick = { navController.popBackStack() },
+                    onDrawSketchClick = {
+                        // Navigate to camera preview with gallery image
+                        navController.navigate(Screen.CameraPreview.createRoute(id, "gallery"))
+                    },
+                    onTraceImageClick = {
+                        // Navigate to paper trace with gallery image
+                        navController.navigate(Screen.PaperTrace.createRoute(id, "gallery"))
+                    },
+                    onStartAR = {
+                        // Image is already set in LaunchActivity.selectedOverlayBitmap
+                        val intent = Intent(context, LaunchActivity::class.java)
+                        context.startActivity(intent)
+                    }
+                )
+            } else if (template != null) {
                 DrawingModeSelectionScreen(
                     template = template,
                     lesson = null,
@@ -294,12 +359,33 @@ fun NavGraph(
             val lesson = if (type == "lesson") {
                 LessonRepository.getLessonById(context, id)
             } else null
+            
+            // For gallery type, get URI from LaunchActivity
+            val galleryImageUri = if (type == "gallery") {
+                LaunchActivity.galleryImageUri
+            } else null
+            
+            // For gallery type, also load the image and set it for AR
+            if (type == "gallery" && galleryImageUri != null) {
+                try {
+                    val imageUri = android.net.Uri.parse(galleryImageUri)
+                    val inputStream = context.contentResolver.openInputStream(imageUri)
+                    val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+                    inputStream?.close()
+                    if (bitmap != null) {
+                        LaunchActivity.selectedOverlayBitmap = bitmap
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("NavGraph", "Error loading gallery image for camera: ${e.message}", e)
+                }
+            }
 
-            if (template != null || lesson != null) {
+            if (template != null || lesson != null || type == "gallery") {
                 CameraPreviewScreen(
                     template = template,
                     lesson = lesson,
-                    onBackClick = { navController.popBackStack() },
+                    galleryImageUri = galleryImageUri,
+                    onBackClick = { navController.popBackStack() }
                 )
             }
         }
@@ -317,10 +403,16 @@ fun NavGraph(
                 LessonRepository.getLessonById(context, id)
             } else null
             
-            if (template != null || lesson != null) {
+            // For gallery type, get URI from LaunchActivity
+            val galleryImageUri = if (type == "gallery") {
+                LaunchActivity.galleryImageUri
+            } else null
+            
+            if (template != null || lesson != null || type == "gallery") {
                 PaperTraceScreen(
                     template = template,
                     lesson = lesson,
+                    galleryImageUri = galleryImageUri,
                     onBackClick = { navController.popBackStack() }
                 )
             }
@@ -376,7 +468,7 @@ fun NavGraph(
                 }
             )
         }
-
+        
         composable(Screen.LessonPreview.route) { backStackEntry ->
             val context = LocalContext.current
             val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""

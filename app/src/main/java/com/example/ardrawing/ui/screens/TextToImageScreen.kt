@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ardrawing.R
+import com.example.ardrawing.ui.components.WaterWaveBackground
 import kotlinx.coroutines.delay
 
 @Composable
@@ -58,8 +59,14 @@ fun TextToImageScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Color.White,
+    // Wrap with Box to put Water Animation behind everything
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 1. Background Animation
+        WaterWaveBackground()
+        
+        // 2. Foreground Content
+        Scaffold(
+            containerColor = Color.Transparent, // Transparent to show water background
         topBar = {
             TopHeader(
                 title = "Text To Image",
@@ -106,6 +113,7 @@ fun TextToImageScreen(
                 ResultState(prompt = promptText)
             }
         }
+        }
     }
 }
 
@@ -125,21 +133,13 @@ private fun TopHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Back Button
-        Box(
+        Image(
+            painter = painterResource(R.drawable.back_arrow_ic),
+            contentDescription = "Back",
             modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF4285F4)) // Blue circle as per design
-                .clickable { onBackClick() },
-            contentAlignment = Alignment.Center
-        ) {
-             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
-                contentDescription = "Back",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-        }
+                .size(32.dp)
+                .clickable { onBackClick() }
+        )
         
         // Centered Title
         Text(

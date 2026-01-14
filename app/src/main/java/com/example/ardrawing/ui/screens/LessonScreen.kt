@@ -26,16 +26,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ardrawing.R
+import com.example.ardrawing.ui.components.WaterWaveBackground
 
 @Composable
 fun LessonScreen(
     onLessonClick: (String) -> Unit = {}
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
+    // Wrap with Box to put Water Animation behind everything
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 1. Background Animation
+        WaterWaveBackground()
+        
+        // 2. Foreground Content
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()

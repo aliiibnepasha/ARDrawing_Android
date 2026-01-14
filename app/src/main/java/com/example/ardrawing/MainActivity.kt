@@ -17,11 +17,24 @@ import com.example.ardrawing.navigation.NavGraph
 import com.example.ardrawing.navigation.Screen
 import com.example.ardrawing.ui.components.ARFloatingBottomBar
 import com.example.ardrawing.ui.theme.ARDrawingTheme
+import com.example.ardrawing.utils.ARCorePreferences
+import com.google.ar.core.ArCoreApk
+import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
+import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 import kotlinx.coroutines.delay
+import android.util.Log
 
 class MainActivity : ComponentActivity() {
+    
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Check ARCore compatibility on app startup (only once)
+        checkARCoreCompatibility()
         
         // Set static navigation bar color (black) - never changes
         WindowCompat.setDecorFitsSystemWindows(window, true)
@@ -143,6 +156,98 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+    
+    /**
+     * Check ARCore compatibility once at app startup and save to preferences
+     * This prevents checking on every launch and improves performance
+     */
+    private fun checkARCoreCompatibility() {
+        // Only check if we haven't checked before
+        // Note: If cached value is incorrect, user can clear app data to force re-check
+        if (ARCorePreferences.hasCheckedARCore(this)) {
+            val cachedStatus = ARCorePreferences.isARCoreSupported(this) ?: false
+            Log.d(TAG, "ARCore compatibility already checked (cached): $cachedStatus")
+            Log.d(TAG, "To force re-check, clear app data or uninstall/reinstall app")
+            return
+        }
+        
+        try {
+            // Check ARCore availability
+            val availability = ArCoreApk.getInstance().checkAvailability(this)
+            Log.d(TAG, "ARCore availability check result: $availability")
+            
+            // STRICT CHECK: Only mark as supported if ARCore is explicitly INSTALLED or needs update
+            // SUPPORTED_NOT_INSTALLED is not reliable - it might mean device is checking compatibility
+            val isSupported = when (availability) {
+                ArCoreApk.Availability.SUPPORTED_INSTALLED -> {
+                    // ARCore is installed and ready - device is definitely compatible
+                    Log.d(TAG, "ARCore is INSTALLED - device is compatible")
+                    true
+                }
+                ArCoreApk.Availability.SUPPORTED_APK_TOO_OLD -> {
+                    // ARCore is installed but needs update - device is compatible
+                    Log.d(TAG, "ARCore is installed but needs update - device is compatible")
+                    true
+                }
+                ArCoreApk.Availability.SUPPORTED_NOT_INSTALLED -> {
+                    // ARCore not installed - can't determine compatibility reliably
+                    // Try to actually verify by attempting to create a session
+                    Log.d(TAG, "ARCore not installed - attempting to verify compatibility by checking device capabilities")
+                    verifyCompatibilityByDeviceCheck()
+                }
+                ArCoreApk.Availability.UNSUPPORTED_DEVICE_NOT_CAPABLE -> {
+                    // Device is explicitly not compatible
+                    Log.d(TAG, "ARCore is NOT supported - device not capable")
+                    false
+                }
+                else -> {
+                    // Unknown or unsupported status (UNKNOWN_CHECKING, UNKNOWN_ERROR, UNKNOWN_TIMED_OUT, etc.)
+                    // Assume not supported to be safe - this includes any other UNSUPPORTED states
+                    Log.w(TAG, "ARCore availability unknown/unsupported: $availability - assuming NOT supported")
+                    false
+                }
+            }
+            
+            // Save the result to preferences
+            ARCorePreferences.setARCoreSupported(this, isSupported)
+            Log.d(TAG, "ARCore compatibility saved: $isSupported (availability was: $availability)")
+            
+        } catch (e: UnavailableDeviceNotCompatibleException) {
+            // Device not compatible
+            Log.d(TAG, "Device not compatible with ARCore (exception)")
+            ARCorePreferences.setARCoreSupported(this, false)
+        } catch (e: Exception) {
+            // Error checking, assume not supported to be safe
+            Log.e(TAG, "Error checking ARCore compatibility: ${e.message}", e)
+            ARCorePreferences.setARCoreSupported(this, false)
+        }
+    }
+    
+    /**
+     * Additional verification for devices where ARCore is not installed
+     * Checks device hardware capabilities directly
+     */
+    private fun verifyCompatibilityByDeviceCheck(): Boolean {
+        return try {
+            // Try to create a minimal AR session to verify compatibility
+            // This will throw an exception if device is truly incompatible
+            val session = com.google.ar.core.Session(this)
+            session.close()
+            Log.d(TAG, "Device capability check: Session created successfully - device is compatible")
+            true
+        } catch (e: com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException) {
+            Log.d(TAG, "Device capability check: Device is NOT compatible")
+            false
+        } catch (e: com.google.ar.core.exceptions.UnavailableException) {
+            // ARCore not installed or other issue - can't verify, assume not supported
+            Log.d(TAG, "Device capability check: ARCore unavailable - assuming NOT supported")
+            false
+        } catch (e: Exception) {
+            // Other errors - assume not supported to be safe
+            Log.w(TAG, "Device capability check: Error - ${e.message}, assuming NOT supported")
+            false
         }
     }
 }

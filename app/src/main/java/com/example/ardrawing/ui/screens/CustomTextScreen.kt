@@ -1,5 +1,6 @@
 package com.example.ardrawing.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,12 +21,15 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ardrawing.R
+import com.example.ardrawing.ui.components.WaterWaveBackground
 
 @Composable
 fun CustomTextScreen(
@@ -43,8 +47,14 @@ fun CustomTextScreen(
         FontItem("Augmented\nReality", FontFamily.Serif, FontWeight.Light, FontStyle.Italic)
     )
 
-    Scaffold(
-        containerColor = Color.White,
+    // Wrap with Box to put Water Animation behind everything
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 1. Background Animation
+        WaterWaveBackground()
+        
+        // 2. Foreground Content
+        Scaffold(
+            containerColor = Color.Transparent, // Transparent to show water background
         topBar = {
             CustomTextTopBar(onBackClick = onBackClick)
         },
@@ -146,6 +156,7 @@ fun CustomTextScreen(
                 }
             }
         }
+        }
     }
 }
 
@@ -160,21 +171,13 @@ private fun CustomTextTopBar(onBackClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Back Button
-        Box(
+        Image(
+            painter = painterResource(R.drawable.back_arrow_ic),
+            contentDescription = "Back",
             modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF4285F4))
-                .clickable { onBackClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-        }
+                .size(32.dp)
+                .clickable { onBackClick() }
+        )
 
         // Centered Title
         Text(

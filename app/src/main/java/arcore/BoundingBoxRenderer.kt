@@ -266,8 +266,8 @@ class BoundingBoxRenderer(private val context: Context, private val userBitmap: 
         android.opengl.Matrix.multiplyMM(mvMatrix, 0, viewMatrix, 0, modelMatrix, 0)
         android.opengl.Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvMatrix, 0)
 
-        // Don't draw any image - let camera feed show through
-        // Image is only used as anchor/reference point
+        // Draw the image inside the bounding box
+        drawAnimalTextureScaled(image, viewMatrix, projectionMatrix)
         
         // Draw wireframe edges to show the anchor area
         drawWireframeBoundingBox(mvpMatrix, image)

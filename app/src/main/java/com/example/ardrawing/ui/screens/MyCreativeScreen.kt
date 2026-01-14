@@ -37,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ardrawing.R
 import com.example.ardrawing.data.local.entity.SavedDrawing
 import com.example.ardrawing.ui.viewmodel.MyCreativeViewModel
+import com.example.ardrawing.ui.components.WaterWaveBackground
 
 @Composable
 fun MyCreativeScreen(
@@ -46,9 +47,15 @@ fun MyCreativeScreen(
 ) {
     val scrollState = rememberScrollState()
 
-    Scaffold(
-        containerColor = Color.White
-    ) { paddingValues ->
+    // Wrap with Box to put Water Animation behind everything
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 1. Background Animation
+        WaterWaveBackground()
+        
+        // 2. Foreground Content
+        Scaffold(
+            containerColor = Color.Transparent // Transparent to show water background
+        ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -83,6 +90,7 @@ fun MyCreativeScreen(
             
             // Add extra spacing at the bottom to avoid nav bar overlap
             Spacer(modifier = Modifier.height(80.dp))
+        }
         }
     }
 }

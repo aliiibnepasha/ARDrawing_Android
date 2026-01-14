@@ -57,6 +57,12 @@ class LaunchActivity : AppCompatActivity() {
             }
         }
     }
+    
+    override fun onBackPressed() {
+        super.onBackPressed()
+        // If user presses back before dialog is shown or after dismissing, finish activity
+        finish()
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -75,7 +81,15 @@ class LaunchActivity : AppCompatActivity() {
             .setPositiveButton("📸 Take Photo") { _, _ ->
                 startCameraPreview()
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton("Cancel") { _, _ ->
+                // User cancelled - go back to previous screen
+                finish()
+            }
+            .setOnCancelListener {
+                // User pressed back button on dialog - go back to previous screen
+                finish()
+            }
+            .setCancelable(true)
             .show()
     }
 
@@ -375,5 +389,7 @@ class LaunchActivity : AppCompatActivity() {
         var currentPhotoPath: String? = null
         // Bitmap to be displayed as overlay in AR (distinct from the tracked/captured bitmap)
         var selectedOverlayBitmap: Bitmap? = null
+        // Gallery image URI for navigation (stored temporarily to avoid route issues)
+        var galleryImageUri: String? = null
     }
 }

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.delay
 import com.example.ardrawing.R
+import com.example.ardrawing.ui.components.WaterWaveBackground
 
 @Composable
 fun PhotoToSketchScreen(
@@ -62,8 +63,14 @@ fun PhotoToSketchScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Color(0xFFF5F5F5),
+    // Wrap with Box to put Water Animation behind everything
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 1. Background Animation
+        WaterWaveBackground()
+        
+        // 2. Foreground Content
+        Scaffold(
+            containerColor = Color.Transparent, // Transparent to show water background
         topBar = {
             Row(
                 modifier = Modifier
@@ -205,6 +212,7 @@ fun PhotoToSketchScreen(
 
                 Spacer(modifier = Modifier.weight(1.3f))
             }
+        }
         }
     }
 }

@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +31,7 @@ import androidx.compose.ui.util.lerp
 import com.example.ardrawing.R
 import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.data.model.Lesson
+import com.example.ardrawing.utils.ARCorePreferences
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -43,8 +45,17 @@ fun DrawingModeSelectionScreen(
     onTraceImageClick: () -> Unit,
     onStartAR: () -> Unit = {}
 ) {
-    val titleName = template?.name ?: lesson?.name ?: ""
-    val modes = listOf(
+    val context = LocalContext.current
+    val titleName = template?.name ?: lesson?.name ?: "Your Image"
+    
+    // Check if ARCore is supported on this device
+    val isARCoreSupported = remember {
+        // Default to false if not checked yet (safe assumption)
+        ARCorePreferences.isARCoreSupported(context) ?: false
+    }
+    
+    // Filter modes based on ARCore support - hide AR mode if not supported
+    val allModes = listOf(
         DrawingMode(
             id = "ar",
             title = "Draw with AR",
@@ -61,8 +72,26 @@ fun DrawingModeSelectionScreen(
             description = "Put a paper over your phone's screen and follow the lines to trace your image with ease"
         )
     )
-
-    val pagerState = rememberPagerState(initialPage = 1) { modes.size }
+    
+    // Filter out AR mode if device doesn't support ARCore
+    val modes = remember(isARCoreSupported) {
+        if (isARCoreSupported) {
+            allModes
+        } else {
+            allModes.filter { it.id != "ar" }
+        }
+    }
+    
+    // Set initial page - if AR was removed, start at camera (index 0 or 1 depending on removal)
+    val initialPage = remember(isARCoreSupported) {
+        if (isARCoreSupported) {
+            1 // Camera mode (middle)
+        } else {
+            0 // Camera mode (first after AR removal)
+        }
+    }
+    
+    val pagerState = rememberPagerState(initialPage = initialPage) { modes.size }
     val scope = rememberCoroutineScope()
     var selectedModeId by remember { mutableStateOf("camera") }
 
@@ -84,8 +113,8 @@ fun DrawingModeSelectionScreen(
                     painter = painterResource(R.drawable.back_arrow_ic),
                     contentDescription = "Back",
                     modifier = Modifier
-                        .align(Alignment.CenterStart)
                         .size(32.dp)
+                        .align(Alignment.CenterStart)
                         .clickable(onClick = onBackClick)
                 )
             }
@@ -124,7 +153,7 @@ fun DrawingModeSelectionScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Select mode for $titleName",
+                text = "Select the drawing mode",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF1C1C1C),

@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ardrawing.R
+import com.example.ardrawing.ui.components.WaterWaveBackground
 import kotlinx.coroutines.delay
 
 @Composable
@@ -65,8 +66,14 @@ fun CreateWithAIScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Color.White,
+    // Wrap with Box to put Water Animation behind everything
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 1. Background Animation
+        WaterWaveBackground()
+        
+        // 2. Foreground Content
+        Scaffold(
+            containerColor = Color.Transparent, // Transparent to show water background
         // Removed explicit contentWindowInsets override to let Scaffold handle defaults, 
         // but we need to pad the custom topBar manually.
         topBar = {
@@ -167,6 +174,7 @@ fun CreateWithAIScreen(
                               (currentStep == 3 && promptText.isNotEmpty()),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.navigationBars) // Fix navigation bar overlap
                         .padding(20.dp)
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
@@ -194,6 +202,7 @@ fun CreateWithAIScreen(
                     onClick = onUseToDraw,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.navigationBars) // Fix navigation bar overlap
                         .padding(20.dp)
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
@@ -237,6 +246,7 @@ fun CreateWithAIScreen(
             } else {
                 StepResult(prompt = promptText)
             }
+        }
         }
     }
 }

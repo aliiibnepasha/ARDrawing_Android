@@ -114,7 +114,7 @@ class CropActivity : AppCompatActivity() {
 
     private fun getUCropOptions(): com.yalantis.ucrop.UCrop.Options {
         val options = com.yalantis.ucrop.UCrop.Options()
-        
+
         // UI Customization
         options.setHideBottomControls(false)
         options.setFreeStyleCropEnabled(true) // Allow free-form cropping
@@ -124,7 +124,7 @@ class CropActivity : AppCompatActivity() {
         options.setCropGridColor(android.graphics.Color.parseColor("#4285F4"))
         options.setCropGridStrokeWidth(2)
         options.setCropFrameStrokeWidth(3)
-        
+
         // Toolbar
         options.setToolbarTitle("Crop Your AR Object")
         options.setToolbarColor(android.graphics.Color.parseColor("#1C1C1C"))
@@ -161,8 +161,8 @@ class CropActivity : AppCompatActivity() {
                 finish()
             } else {
                 Log.d(TAG, "User cancelled cropping")
-                setResult(RESULT_CANCELED)
-                finish()
+            setResult(RESULT_CANCELED)
+            finish()
             }
         }
     }

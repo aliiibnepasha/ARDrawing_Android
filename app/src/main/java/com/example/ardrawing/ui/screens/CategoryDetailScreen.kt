@@ -32,16 +32,29 @@ import com.example.ardrawing.data.repository.CategoryRepository
 import com.example.ardrawing.ui.components.AppTopBar
 import com.example.ardrawing.ui.screens.TemplateItem
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
+import com.example.ardrawing.utils.GalleryUtils
+import com.example.ardrawing.LaunchActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryDetailScreen(
     categoryId: String,
     onTemplateSelected: (DrawingTemplate) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onAddIllustration: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val category = CategoryRepository.getCategoryById(context, categoryId)
+    
+    // Gallery launcher for "Add your illustration"
+    val galleryLauncher = GalleryUtils.rememberGalleryLauncher { uri ->
+        if (uri != null) {
+            // Store URI in LaunchActivity for later retrieval
+            LaunchActivity.galleryImageUri = uri.toString()
+            // Navigate to DrawingModeSelectionScreen with a generic ID for gallery
+            onAddIllustration("gallery")
+        }
+    }
     
     Scaffold(
         containerColor = Color.White,
@@ -56,21 +69,13 @@ fun CategoryDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Back Button
-                Box(
+                Image(
+                    painter = painterResource(R.drawable.back_arrow_ic),
+                    contentDescription = "Back",
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .background(Color(0xFFF5F5F5))
-                        .clickable { onBackClick() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    androidx.compose.material3.Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.ArrowBack, // Changed to Default.ArrowBack
-                        contentDescription = "Back",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                        .size(32.dp)
+                        .clickable { onBackClick() }
+                )
                 
                 // Centered Title
                 Text(
@@ -81,7 +86,6 @@ fun CategoryDetailScreen(
                     modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
-                
                 // Invisible spacer to balance the back button and keep title centered
                 Spacer(modifier = Modifier.size(40.dp))
             }
@@ -131,7 +135,7 @@ fun CategoryDetailScreen(
                 ) {
                     // 1. "Add your illustration" Card (First Item)
                     item {
-                        AddIllustrationCard()
+                        AddIllustrationCard(onClick = { GalleryUtils.openGallery(galleryLauncher) })
                     }
                     
                     // 2. Template Items
@@ -175,7 +179,7 @@ private fun CategoryTabItem(text: String, isSelected: Boolean) {
 }
 
 @Composable
-private fun AddIllustrationCard() {
+private fun AddIllustrationCard(onClick: () -> Unit) {
     val stroke = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
     
     Box(
@@ -193,8 +197,7 @@ private fun AddIllustrationCard() {
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(14.dp.toPx())
                 )
             }
-            // We can add clickable if needed, for now just UI as requested
-            // .clickable { ... } within the scope of "Add your illustration" functionality
+            .clickable(onClick = onClick)
             .padding(8.dp),
         contentAlignment = Alignment.Center
     ) {
