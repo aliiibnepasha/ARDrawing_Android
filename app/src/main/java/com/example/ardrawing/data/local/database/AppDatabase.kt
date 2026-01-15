@@ -4,17 +4,20 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.ardrawing.data.local.dao.FavoriteDao
 import com.example.ardrawing.data.local.dao.SavedDrawingDao
+import com.example.ardrawing.data.local.entity.Favorite
 import com.example.ardrawing.data.local.entity.SavedDrawing
 
 @Database(
-    entities = [SavedDrawing::class],
-    version = 1,
+    entities = [SavedDrawing::class, Favorite::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     
     abstract fun savedDrawingDao(): SavedDrawingDao
+    abstract fun favoriteDao(): FavoriteDao
     
     companion object {
         @Volatile

@@ -153,19 +153,27 @@ fun NavGraph(
         }
         
         composable(Screen.CreateWithAI.route) {
+            val context = LocalContext.current
             com.example.ardrawing.ui.screens.CreateWithAIScreen(
                  onBackClick = { navController.popBackStack() },
-                 onUseToDraw = {
-                     // TODO: Navigate to drawing canvas with generated image
+                 onUseToDraw = { bitmap ->
+                     // Save bitmap to LaunchActivity for overlay
+                     com.example.ardrawing.LaunchActivity.selectedOverlayBitmap = bitmap
+                     // Navigate to DrawingModeSelectionScreen with "create_with_ai" type
+                     navController.navigate(Screen.DrawingModeSelection.createRoute("create_with_ai", "create_with_ai"))
                  }
             )
         }
         
         composable("text_to_image") { // New Route
+             val context = LocalContext.current
              com.example.ardrawing.ui.screens.TextToImageScreen(
                  onBackClick = { navController.popBackStack() },
-                 onUseToDraw = {
-                     // TODO: Navigate to drawing canvas
+                 onUseToDraw = { bitmap ->
+                     // Save bitmap to LaunchActivity for overlay
+                     com.example.ardrawing.LaunchActivity.selectedOverlayBitmap = bitmap
+                     // Navigate to DrawingModeSelectionScreen with "text_to_image" type
+                     navController.navigate(Screen.DrawingModeSelection.createRoute("text_to_image", "text_to_image"))
                  }
              )
         }
@@ -177,10 +185,29 @@ fun NavGraph(
         
         // Kept for direct access from Home
         composable("ar_text") {
+            val context = LocalContext.current
             com.example.ardrawing.ui.screens.CustomTextScreen(
                 onBackClick = { navController.navigate(Screen.Home.route) }, 
                 onDrawClick = {
                     // TODO: Navigate to drawing with text
+                },
+                onDoneClick = { text, fontItem ->
+                    // Convert text to bitmap
+                    val textBitmap = com.example.ardrawing.utils.TextToBitmapUtil.textToBitmap(
+                        text = text,
+                        fontSize = 64f,
+                        fontFamily = fontItem.family,
+                        fontWeight = fontItem.weight,
+                        fontStyle = fontItem.style,
+                        textColor = androidx.compose.ui.graphics.Color.Black,
+                        backgroundColor = androidx.compose.ui.graphics.Color.Transparent
+                    )
+                    
+                    // Store bitmap for overlay
+                    com.example.ardrawing.LaunchActivity.selectedOverlayBitmap = textBitmap
+                    
+                    // Navigate to DrawingModeSelectionScreen with "text" type
+                    navController.navigate(Screen.DrawingModeSelection.createRoute("text", "text"))
                 }
             )
         }
@@ -232,8 +259,65 @@ fun NavGraph(
                 LessonRepository.getLessonById(context, id)
             } else null
             
-            // Handle gallery image
-            if (type == "gallery") {
+            // Handle create_with_ai type - bitmap is already stored in LaunchActivity.selectedOverlayBitmap
+            if (type == "create_with_ai") {
+                DrawingModeSelectionScreen(
+                    template = null,
+                    lesson = null,
+                    onBackClick = { navController.popBackStack() },
+                    onDrawSketchClick = {
+                        // Navigate to camera preview with generated image
+                        navController.navigate(Screen.CameraPreview.createRoute("create_with_ai", "create_with_ai"))
+                    },
+                    onTraceImageClick = {
+                        // Navigate to paper trace with generated image
+                        navController.navigate(Screen.PaperTrace.createRoute("create_with_ai", "create_with_ai"))
+                    },
+                    onStartAR = {
+                        // Image bitmap is already set in LaunchActivity.selectedOverlayBitmap
+                        val intent = Intent(context, LaunchActivity::class.java)
+                        context.startActivity(intent)
+                    }
+                )
+            } else if (type == "text_to_image") {
+                DrawingModeSelectionScreen(
+                    template = null,
+                    lesson = null,
+                    onBackClick = { navController.popBackStack() },
+                    onDrawSketchClick = {
+                        // Navigate to camera preview with generated image
+                        navController.navigate(Screen.CameraPreview.createRoute("text_to_image", "text_to_image"))
+                    },
+                    onTraceImageClick = {
+                        // Navigate to paper trace with generated image
+                        navController.navigate(Screen.PaperTrace.createRoute("text_to_image", "text_to_image"))
+                    },
+                    onStartAR = {
+                        // Image bitmap is already set in LaunchActivity.selectedOverlayBitmap
+                        val intent = Intent(context, LaunchActivity::class.java)
+                        context.startActivity(intent)
+                    }
+                )
+            } else if (type == "text") {
+                DrawingModeSelectionScreen(
+                    template = null,
+                    lesson = null,
+                    onBackClick = { navController.popBackStack() },
+                    onDrawSketchClick = {
+                        // Navigate to camera preview with text
+                        navController.navigate(Screen.CameraPreview.createRoute("text", "text"))
+                    },
+                    onTraceImageClick = {
+                        // Navigate to paper trace with text
+                        navController.navigate(Screen.PaperTrace.createRoute("text", "text"))
+                    },
+                    onStartAR = {
+                        // Text bitmap is already set in LaunchActivity.selectedOverlayBitmap
+                        val intent = Intent(context, LaunchActivity::class.java)
+                        context.startActivity(intent)
+                    }
+                )
+            } else if (type == "gallery") {
                 // Get URI from LaunchActivity (stored when gallery was opened)
                 val imageUriString = LaunchActivity.galleryImageUri
                 if (imageUriString == null) {
@@ -382,7 +466,7 @@ fun NavGraph(
                 }
             }
 
-            if (template != null || lesson != null || type == "gallery") {
+            if (template != null || lesson != null || type == "gallery" || type == "text" || type == "text_to_image" || type == "create_with_ai") {
                 CameraPreviewScreen(
                     template = template,
                     lesson = lesson,
@@ -410,7 +494,7 @@ fun NavGraph(
                 LaunchActivity.galleryImageUri
             } else null
             
-            if (template != null || lesson != null || type == "gallery") {
+            if (template != null || lesson != null || type == "gallery" || type == "text" || type == "text_to_image" || type == "create_with_ai") {
                 PaperTraceScreen(
                     template = template,
                     lesson = lesson,

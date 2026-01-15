@@ -6,6 +6,9 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    
+    <!-- Internet Permission for API calls -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- ARCore requires OpenGL ES 2.0 -->
     <!-- Set camera.ar to required=true so Play Store auto-installs ARCore -->

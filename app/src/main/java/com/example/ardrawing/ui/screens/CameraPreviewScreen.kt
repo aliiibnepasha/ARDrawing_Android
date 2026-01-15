@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -199,7 +200,23 @@ fun CameraPreviewScreen(
                         }
                 ) {
                     // Actual Image
-                    if (galleryImageUri != null) {
+                    // Check for overlay bitmap (from text, text_to_image, or gallery)
+                    val overlayBitmap = com.example.ardrawing.LaunchActivity.selectedOverlayBitmap
+                    if (overlayBitmap != null && template == null && lesson == null && galleryImageUri == null) {
+                        // Display overlay bitmap (text or generated image)
+                        androidx.compose.foundation.Image(
+                            bitmap = overlayBitmap.asImageBitmap(),
+                            contentDescription = "Overlay",
+                            modifier = Modifier
+                                .size(300.dp)
+                                .graphicsLayer {
+                                    rotationZ = imageRotation
+                                }
+                                .alpha(opacity)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Fit
+                        )
+                    } else if (galleryImageUri != null) {
                         // Show gallery image
                         AsyncImage(
                             model = ImageRequest.Builder(context)

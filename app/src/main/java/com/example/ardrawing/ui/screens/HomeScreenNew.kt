@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -466,12 +467,13 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color.White)
             ) {
-                 // Placeholder for the "Lilly Close-Up" image
-                 // Using a placeholder color and text since we don't have the exact image asset yet
-                 Box(
+                 // Daily Image
+                 Image(
+                     painter = painterResource(R.drawable.daily_img),
+                     contentDescription = "Today's Inspiration",
                      modifier = Modifier
-                         .fillMaxSize()
-                         .background(Color.LightGray)
+                         .fillMaxSize(),
+                     contentScale = ContentScale.Crop
                  )
                  
                 // Tag

@@ -38,7 +38,8 @@ import com.example.ardrawing.ui.components.WaterWaveBackground
 @Composable
 fun CustomTextScreen(
     onBackClick: () -> Unit,
-    onDrawClick: () -> Unit
+    onDrawClick: () -> Unit,
+    onDoneClick: (String, FontItem) -> Unit
 ) {
     var selectedFontIndex by remember { mutableStateOf(0) }
     var customText by remember { mutableStateOf("XYXZSS") }
@@ -61,7 +62,12 @@ fun CustomTextScreen(
     Scaffold(
             containerColor = Color.Transparent, // Transparent to show water background
         topBar = {
-            CustomTextTopBar(onBackClick = onBackClick)
+            CustomTextTopBar(
+                onBackClick = onBackClick,
+                onDoneClick = { 
+                    onDoneClick(customText, fonts[selectedFontIndex])
+                }
+            )
         },
         bottomBar = {
             Button(
@@ -176,7 +182,10 @@ fun CustomTextScreen(
 }
 
 @Composable
-private fun CustomTextTopBar(onBackClick: () -> Unit) {
+private fun CustomTextTopBar(
+    onBackClick: () -> Unit,
+    onDoneClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -210,7 +219,9 @@ private fun CustomTextTopBar(onBackClick: () -> Unit) {
             color = Color(0xFF4285F4),
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp,
-            modifier = Modifier.clickable { /* Done Action */ }
+            modifier = Modifier.clickable { 
+                onDoneClick()
+            }
         )
     }
 }

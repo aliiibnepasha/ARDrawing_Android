@@ -20,7 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -28,34 +30,76 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ardrawing.R
+import com.example.ardrawing.data.local.database.AppDatabase
+import com.example.ardrawing.data.repository.FavoriteRepository
+import com.example.ardrawing.data.repository.TextToImageRepository
 import com.example.ardrawing.ui.components.WaterWaveBackground
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun TextToImageScreen(
     onBackClick: () -> Unit,
-    onUseToDraw: () -> Unit
+    onUseToDraw: (android.graphics.Bitmap) -> Unit
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    
+    // Database setup
+    val database = remember { AppDatabase.getDatabase(context) }
+    val favoriteRepository = remember { FavoriteRepository(database.favoriteDao()) }
+    
+    // API Repository
+    val textToImageRepository = remember { TextToImageRepository() }
+    
     // State
     var promptText by remember { mutableStateOf("") }
     var isGenerating by remember { mutableStateOf(false) }
     var generatedImageVisible by remember { mutableStateOf(false) }
+    var isFavorite by remember { mutableStateOf(false) }
+    var generatedImageBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    // Check if current prompt is favorite
+    LaunchedEffect(promptText, generatedImageVisible) {
+        if (generatedImageVisible && promptText.isNotEmpty()) {
+            isFavorite = favoriteRepository.isFavorite(promptText)
+        }
+    }
 
     // Handle Back Press
     BackHandler {
         if (generatedImageVisible) {
             generatedImageVisible = false
+            errorMessage = null
         } else {
             onBackClick()
         }
     }
 
-    // Fake generation delay logic
-    LaunchedEffect(isGenerating) {
-        if (isGenerating) {
-            delay(2000) // Mock 2s generation
+    // Generate image when user clicks Generate button
+    fun generateImage() {
+        if (promptText.isBlank()) return
+        
+        scope.launch {
+            isGenerating = true
+            errorMessage = null
+            generatedImageBitmap = null
+            
+            val result = textToImageRepository.generateImage(
+                prompt = promptText.trim(),
+                aspectRatio = "1:1"
+            )
+            
             isGenerating = false
-            generatedImageVisible = true
+            
+            result.onSuccess { bitmap ->
+                generatedImageBitmap = bitmap
+                generatedImageVisible = true
+            }.onFailure { error ->
+                errorMessage = error.message ?: "Failed to generate image"
+                generatedImageVisible = false
+            }
         }
     }
 
@@ -88,9 +132,11 @@ fun TextToImageScreen(
                 isGenerating = isGenerating,
                 onClick = {
                     if (generatedImageVisible) {
-                        onUseToDraw()
+                        generatedImageBitmap?.let { bitmap ->
+                            onUseToDraw(bitmap)
+                        }
                     } else {
-                        isGenerating = true
+                        generateImage()
                     }
                 }
             )
@@ -104,13 +150,57 @@ fun TextToImageScreen(
         ) {
             if (!generatedImageVisible) {
                 // INPUT STATE
-                InputState(
-                    text = promptText,
-                    onTextChange = { promptText = it }
-                )
+                Column {
+                    InputState(
+                        text = promptText,
+                        onTextChange = { promptText = it }
+                    )
+                    
+                    // Error message display
+                    errorMessage?.let { error ->
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = error,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                }
             } else {
                 // RESULT STATE
-                ResultState(prompt = promptText)
+                ResultState(
+                    prompt = promptText,
+                    isFavorite = isFavorite,
+                    imageBitmap = generatedImageBitmap,
+                    onFavoriteClick = {
+                        scope.launch {
+                            if (generatedImageBitmap != null) {
+                                if (isFavorite) {
+                                    // Remove from favorites
+                                    favoriteRepository.deleteFavoriteByPrompt(promptText)
+                                    isFavorite = false
+                                } else {
+                                    // Save image and favorite
+                                    val imagePath = com.example.ardrawing.utils.FavoriteImageUtils.saveFavoriteImage(
+                                        generatedImageBitmap!!,
+                                        context,
+                                        promptText
+                                    )
+                                    if (imagePath != null) {
+                                        favoriteRepository.insertFavorite(
+                                            com.example.ardrawing.data.local.entity.Favorite(
+                                                prompt = promptText,
+                                                imagePath = imagePath
+                                            )
+                                        )
+                                        isFavorite = true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                )
             }
             }
         }
@@ -152,19 +242,17 @@ private fun TopHeader(
         )
         
         // Right Side (Spacer or Done)
-        Box(
-            modifier = Modifier.size(40.dp), 
-            contentAlignment = Alignment.CenterEnd
-        ) {
-            if (showDone) {
-                Text(
-                    text = "Done",
-                    color = Color(0xFF4285F4), // Blue
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.clickable { onDoneClick() }
-                )
-            }
+        if (showDone) {
+            Text(
+                text = "Done",
+                color = Color(0xFF4285F4), // Blue
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                maxLines = 1,
+                modifier = Modifier.clickable { onDoneClick() }
+            )
+        } else {
+            Spacer(modifier = Modifier.width(40.dp))
         }
     }
 }
@@ -254,7 +342,12 @@ private fun InputState(
 }
 
 @Composable
-private fun ResultState(prompt: String) {
+private fun ResultState(
+    prompt: String,
+    isFavorite: Boolean = false,
+    imageBitmap: android.graphics.Bitmap? = null,
+    onFavoriteClick: () -> Unit = {}
+) {
     Column(modifier = Modifier.padding(top = 20.dp)) {
         Text(
             text = prompt,
@@ -274,15 +367,22 @@ private fun ResultState(prompt: String) {
                 .background(Color.White)
                 .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(20.dp))
         ) {
-            // Mock Image 
-            Image(
-                painter = painterResource(R.drawable.create_with_ai), 
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
-                contentScale = ContentScale.Fit
-            )
+            // Generated Image or Mock Image
+            if (imageBitmap != null) {
+                androidx.compose.foundation.Image(
+                    bitmap = imageBitmap.asImageBitmap(),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Image(
+                    painter = painterResource(R.drawable.create_with_ai), 
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
             
             // Icons Overlay
             Box(
@@ -290,24 +390,17 @@ private fun ResultState(prompt: String) {
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                // Heart Icon (Top Left)
-                Icon(
-                    imageVector = Icons.Default.FavoriteBorder,
-                    contentDescription = "Like",
-                    tint = Color(0xFF4285F4),
+                // Heart Icon (Top Left) - Favorite Button
+                Image(
+                    painter = painterResource(
+                        if (isFavorite) R.drawable.my_fav_blue_ic 
+                        else R.drawable.my_fav_unfill
+                    ),
+                    contentDescription = "Favorite",
                     modifier = Modifier
                         .size(24.dp)
                         .align(Alignment.TopStart)
-                )
-                
-                // Refresh Icon (Top Right)
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Regenerate",
-                    tint = Color(0xFF4285F4),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.TopEnd)
+                        .clickable { onFavoriteClick() }
                 )
             }
         }

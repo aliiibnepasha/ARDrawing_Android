@@ -33,15 +33,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.asImageBitmap
 import com.example.ardrawing.R
+import com.example.ardrawing.data.local.database.AppDatabase
+import com.example.ardrawing.data.repository.FavoriteRepository
+import com.example.ardrawing.data.utils.AssetUtils
 import com.example.ardrawing.ui.components.WaterWaveBackground
+import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 
 @Composable
 fun CreateWithAIScreen(
     onBackClick: () -> Unit,
-    onUseToDraw: () -> Unit
+    onUseToDraw: (android.graphics.Bitmap) -> Unit
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    
+    // Database setup
+    val database = remember { AppDatabase.getDatabase(context) }
+    val favoriteRepository = remember { FavoriteRepository(database.favoriteDao()) }
+    
     var currentStep by remember { mutableStateOf(1) }
     val totalSteps = 3 // Style, Difficulty, Prompt. The Result is a separate state/screen logically.
 
@@ -53,6 +68,35 @@ fun CreateWithAIScreen(
     // Result State
     var isGenerating by remember { mutableStateOf(false) }
     var generatedImageVisible by remember { mutableStateOf(false) }
+    var generatedImageBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    var isFavorite by remember { mutableStateOf(false) }
+    
+    // Check if current prompt is favorite
+    LaunchedEffect(promptText, generatedImageVisible) {
+        if (generatedImageVisible && promptText.isNotEmpty()) {
+            isFavorite = favoriteRepository.isFavorite(promptText)
+        }
+    }
+    
+    // Generate mock bitmap for the image (in real app, this would come from AI generation)
+    LaunchedEffect(generatedImageVisible) {
+        if (generatedImageVisible && generatedImageBitmap == null) {
+            // Create a high-quality mock bitmap from the drawable
+            val drawable = context.resources.getDrawable(R.drawable.create_with_ai, null)
+            // Use larger size for better quality
+            val width = (context.resources.displayMetrics.widthPixels * 0.9).toInt()
+            val height = width // Square
+            val bitmap = android.graphics.Bitmap.createBitmap(
+                width,
+                height,
+                android.graphics.Bitmap.Config.ARGB_8888
+            )
+            val canvas = android.graphics.Canvas(bitmap)
+            drawable.setBounds(0, 0, width, height)
+            drawable.draw(canvas)
+            generatedImageBitmap = bitmap
+        }
+    }
 
     // Handle Back Press
     BackHandler {
@@ -152,9 +196,14 @@ fun CreateWithAIScreen(
                     
                     Spacer(modifier = Modifier.weight(1f))
                     
-                    TextButton(onClick = { /* Done action */ }) {
-                         Text("Done", color = Color(0xFF4285F4), fontWeight = FontWeight.Bold)
-                    }
+                    Text(
+                        text = "Done",
+                        color = Color(0xFF4285F4),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        maxLines = 1,
+                        modifier = Modifier.clickable { /* Done action */ }
+                    )
                 }
             }
         },
@@ -199,7 +248,12 @@ fun CreateWithAIScreen(
                 }
             } else {
                 Button(
-                    onClick = onUseToDraw,
+                    onClick = {
+                        generatedImageBitmap?.let { bitmap ->
+                            onUseToDraw(bitmap)
+                        }
+                    },
+                    enabled = generatedImageBitmap != null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.navigationBars) // Fix navigation bar overlap
@@ -244,7 +298,37 @@ fun CreateWithAIScreen(
                     )
                 }
             } else {
-                StepResult(prompt = promptText)
+                StepResult(
+                    prompt = promptText,
+                    imageBitmap = generatedImageBitmap,
+                    isFavorite = isFavorite,
+                    onFavoriteClick = {
+                        scope.launch {
+                            if (generatedImageBitmap != null) {
+                                // Save image and favorite
+                                val imagePath = com.example.ardrawing.utils.FavoriteImageUtils.saveFavoriteImage(
+                                    generatedImageBitmap!!,
+                                    context,
+                                    promptText
+                                )
+                                if (imagePath != null) {
+                                    favoriteRepository.insertFavorite(
+                                        com.example.ardrawing.data.local.entity.Favorite(
+                                            prompt = promptText,
+                                            imagePath = imagePath,
+                                            type = "create_with_ai"
+                                        )
+                                    )
+                                    isFavorite = true
+                                }
+                            } else {
+                                // Toggle favorite (remove if exists)
+                                favoriteRepository.deleteFavoriteByPrompt(promptText)
+                                isFavorite = false
+                            }
+                        }
+                    }
+                )
             }
             }
         }
@@ -257,6 +341,15 @@ fun StepChooseStyle(
     selectedStyle: String?,
     onStyleSelected: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    
+    // Load style images from assets/styles folder
+    val styleImages = remember {
+        AssetUtils.listImageFiles(context, "styles").sorted()
+    }
+    
+    val styleNames = listOf("Anime", "People", "Game", "Pencil", "Cute", "Aesthetic")
+    
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Text(
             text = "Choose style",
@@ -266,14 +359,14 @@ fun StepChooseStyle(
         )
         Spacer(modifier = Modifier.height(20.dp))
 
-        val styles = listOf(
-            StyleItem("Anime", R.drawable.home_avtr), // Placeholders
-            StyleItem("People", R.drawable.text_avtr),
-            StyleItem("Game", R.drawable.photo_to_sketch),
-            StyleItem("Pencil", R.drawable.magic_pen),
-            StyleItem("Cute", R.drawable.text_icon), // Rabbit-ish?
-            StyleItem("Aesthetic", R.drawable.create_with_ai)
-        )
+        val styles = remember(styleImages) {
+            styleImages.take(6).mapIndexed { index, imageFile ->
+                StyleItem(
+                    name = styleNames.getOrElse(index) { "Style ${index + 1}" },
+                    assetPath = "styles/$imageFile"
+                )
+            }
+        }
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -295,7 +388,7 @@ fun StepChooseStyle(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
-                        painter = painterResource(style.iconRes),
+                        painter = rememberAssetImagePainter(style.assetPath),
                         contentDescription = style.name,
                         modifier = Modifier
                             .size(60.dp)
@@ -315,7 +408,7 @@ fun StepChooseStyle(
     }
 }
 
-data class StyleItem(val name: String, val iconRes: Int)
+data class StyleItem(val name: String, val assetPath: String)
 
 // ================= STEP 2: SELECT DIFFICULTY =================
 @Composable
@@ -323,6 +416,15 @@ fun StepSelectDifficulty(
     selectedDifficulty: String?,
     onDifficultySelected: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    
+    // Load level images from assets/levels folder
+    val levelImages = remember {
+        AssetUtils.listImageFiles(context, "levels").sorted()
+    }
+    
+    val levels = listOf("Easy", "Intermediate", "PRO", "Color", "Color PRO")
+    
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Text(
             text = "Select difficulty level",
@@ -332,11 +434,13 @@ fun StepSelectDifficulty(
         )
         Spacer(modifier = Modifier.height(20.dp))
 
-        val levels = listOf("Easy", "Intermediate", "PRO", "Color", "Color PRO")
-
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            levels.forEach { level ->
+            levels.forEachIndexed { index, level ->
                 val isSelected = selectedDifficulty == level
+                val levelImagePath = if (index < levelImages.size) {
+                    "levels/${levelImages[index]}"
+                } else null
+                
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -352,12 +456,23 @@ fun StepSelectDifficulty(
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Placeholder Icon
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .background(Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
-                    )
+                    // Level Image
+                    if (levelImagePath != null) {
+                        Image(
+                            painter = rememberAssetImagePainter(levelImagePath),
+                            contentDescription = level,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(4.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
+                        )
+                    }
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
                         text = level,
@@ -417,7 +532,12 @@ fun StepDescribeImage(
 
 // ================= STEP 4: RESULT =================
 @Composable
-fun StepResult(prompt: String) {
+fun StepResult(
+    prompt: String,
+    imageBitmap: android.graphics.Bitmap? = null,
+    isFavorite: Boolean = false,
+    onFavoriteClick: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .padding(horizontal = 20.dp)
@@ -438,28 +558,40 @@ fun StepResult(prompt: String) {
                 .background(Color.White)
                 .border(1.dp, Color(0xFFEEEEEE), RoundedCornerShape(24.dp))
         ) {
-             // Mock Result Image (Rabbit placeholder or similar)
-             // Using create_with_ai for now as it's an vector/image
+            // Generated Image or Mock Image
+            if (imageBitmap != null) {
+                androidx.compose.foundation.Image(
+                    bitmap = imageBitmap.asImageBitmap(),
+                    contentDescription = "Generated Image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
              Image(
-                 painter = painterResource(R.drawable.create_with_ai), // Using available asset
+                    painter = painterResource(R.drawable.create_with_ai),
                  contentDescription = "Generated Image",
-                 modifier = Modifier
-                     .align(Alignment.Center)
-                     .size(200.dp),
-                 contentScale = ContentScale.Fit
-             )
-
-            // Retry Icon
-            IconButton(
-                onClick = { /* Retry */ },
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            
+            // Icons Overlay
+            Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(12.dp)
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                 Icon(
-                     imageVector = Icons.Default.Refresh,
-                     contentDescription = "Regenerate",
-                     tint = Color(0xFF4285F4)
+                // Favorite Icon (Top Left)
+                Image(
+                    painter = painterResource(
+                        if (isFavorite) R.drawable.my_fav_blue_ic 
+                        else R.drawable.my_fav_unfill
+                    ),
+                    contentDescription = "Favorite",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.TopStart)
+                        .clickable { onFavoriteClick() }
                  )
             }
         }
