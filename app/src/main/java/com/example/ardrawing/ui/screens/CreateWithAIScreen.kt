@@ -60,7 +60,7 @@ fun CreateWithAIScreen(
     var currentStep by remember { mutableStateOf(1) }
     val totalSteps = 3 // Style, Difficulty, Prompt. The Result is a separate state/screen logically.
 
-    // Selections
+    // Selections - Will be set to first style by default in StepChooseStyle
     var selectedStyle by remember { mutableStateOf<String?>(null) }
     var selectedDifficulty by remember { mutableStateOf<String?>("Easy") }
     var promptText by remember { mutableStateOf("") }
@@ -350,6 +350,22 @@ fun StepChooseStyle(
     
     val styleNames = listOf("Anime", "People", "Game", "Pencil", "Cute", "Aesthetic")
     
+    val styles = remember(styleImages) {
+        styleImages.take(6).mapIndexed { index, imageFile ->
+            StyleItem(
+                name = styleNames.getOrElse(index) { "Style ${index + 1}" },
+                assetPath = "styles/$imageFile"
+            )
+        }
+    }
+    
+    // Set first style as default if nothing is selected
+    LaunchedEffect(styles) {
+        if (selectedStyle == null && styles.isNotEmpty()) {
+            onStyleSelected(styles.first().name)
+        }
+    }
+    
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Text(
             text = "Choose style",
@@ -358,15 +374,6 @@ fun StepChooseStyle(
             color = Color.Black
         )
         Spacer(modifier = Modifier.height(20.dp))
-
-        val styles = remember(styleImages) {
-            styleImages.take(6).mapIndexed { index, imageFile ->
-                StyleItem(
-                    name = styleNames.getOrElse(index) { "Style ${index + 1}" },
-                    assetPath = "styles/$imageFile"
-                )
-            }
-        }
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -378,22 +385,27 @@ fun StepChooseStyle(
                 Column(
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            color = Color.White, // All cards have white background
+                            shape = RoundedCornerShape(12.dp)
+                        )
                         .border(
                             width = if (isSelected) 2.dp else 0.dp,
                             color = if (isSelected) Color(0xFF4285F4) else Color.Transparent,
                             shape = RoundedCornerShape(12.dp)
                         )
                         .clickable { onStyleSelected(style.name) }
-                        .padding(8.dp),
+                        .padding(12.dp), // Increased padding to prevent image cut-off
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // Image with proper sizing - no background
                     Image(
                         painter = rememberAssetImagePainter(style.assetPath),
                         contentDescription = style.name,
                         modifier = Modifier
-                            .size(60.dp)
-                            .clip(RoundedCornerShape(12.dp)),
-                        contentScale = ContentScale.Crop
+                            .size(80.dp) // Bigger image size
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Fit // Use Fit to show full image without cut-off
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -467,11 +479,11 @@ fun StepSelectDifficulty(
                             contentScale = ContentScale.Crop
                         )
                     } else {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .background(Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
-                        )
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
+                    )
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(

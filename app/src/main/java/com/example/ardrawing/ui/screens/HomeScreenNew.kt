@@ -288,17 +288,19 @@ fun ActionCard(title: String, buttonText: String, iconRes: Int, onClick: () -> U
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
-            color = Color.Black
+            color = Color.Black,
+             lineHeight = 14.sp
+
         )
         
         Button(
             onClick = onClick,
             contentPadding = PaddingValues(0.dp),
-            modifier = Modifier.fillMaxWidth().height(32.dp),
+            modifier = Modifier.fillMaxWidth().height(28.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4))
         ) {
-            Text(buttonText, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            Text(buttonText, fontSize = 11.sp, fontWeight = FontWeight.Medium)
         }
     }
 }

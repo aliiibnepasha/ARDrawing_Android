@@ -11,7 +11,9 @@ import java.util.concurrent.TimeUnit
  */
 object FalApiClient {
     
-    private val loggingInterceptor = HttpLoggingInterceptor().apply {
+    private val loggingInterceptor = HttpLoggingInterceptor { message ->
+        android.util.Log.d("FalApiClient", message)
+    }.apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
     

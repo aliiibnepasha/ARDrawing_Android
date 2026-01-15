@@ -25,20 +25,32 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import com.example.ardrawing.R
+import com.example.ardrawing.data.repository.TextToImageRepository
 import com.example.ardrawing.ui.components.WaterWaveBackground
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.asImageBitmap
 
 @Composable
 fun PhotoToSketchScreen(
     onBackClick: () -> Unit,
-    onPhotoSelected: (Uri) -> Unit // Callback when preparation is done
+    onSketchGenerated: (Bitmap) -> Unit // Callback when sketch is generated
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val textToImageRepository = remember { TextToImageRepository() }
+    
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-    var isPreparing by remember { mutableStateOf(false) }
+    var isGenerating by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var generatedSketchBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     // Launcher for picking an image
     val launcher = rememberLauncherForActivityResult(
@@ -46,21 +58,67 @@ fun PhotoToSketchScreen(
     ) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri = uri
-            isPreparing = true
+            isGenerating = true
+            errorMessage = null
+            generatedSketchBitmap = null
+            
+            // Start generating sketch immediately when image is selected
+            scope.launch {
+                val result = textToImageRepository.convertPhotoToSketch(context, uri)
+                isGenerating = false
+                
+                result.onSuccess { bitmap ->
+                    generatedSketchBitmap = bitmap
+                    // Don't auto-navigate - let user see the result first
+                }.onFailure { error ->
+                    // Always show user-friendly message, ignore technical error details
+                    errorMessage = "Failed to generate sketch"
+                }
+            }
         }
     }
-
-    // Mock preparation delay
-    LaunchedEffect(isPreparing) {
-        if (isPreparing) {
-            delay(3000) // Simulate generic "preparation" logic
-            // In a real app, you might do processing here
-            // For now, we stay on "Preparing..." until user action or just show it for a bit?
-            // The prompt says "Preparing...", implied it leads somewhere. 
-            // For this UI demo, I'll keep it in "Preparing" state or invoke callback?
-            // I'll keep it in 'Preparing' state to match the second screenshot. 
-            // The user can implement the transition to the next screen (Sketch Preview) later.
-        }
+    
+    // Show progress dialog when generating
+    if (isGenerating) {
+        AlertDialog(
+            onDismissRequest = { /* Don't allow dismiss while generating */ },
+            title = {
+                Text(
+                    text = "Generating Sketch",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+            },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                ) {
+                    CircularProgressIndicator(
+                        color = Color(0xFF4285F4),
+                        modifier = Modifier.size(48.dp),
+                        strokeWidth = 4.dp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Converting your photo to sketch...",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "This may take a few seconds",
+                        fontSize = 12.sp,
+                        color = Color.Gray.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            },
+            confirmButton = {},
+            containerColor = Color.White,
+            shape = RoundedCornerShape(20.dp)
+        )
     }
 
     // Wrap with Box to put Water Animation behind everything
@@ -99,7 +157,7 @@ fun PhotoToSketchScreen(
             
             Spacer(modifier = Modifier.height(20.dp))
 
-            if (!isPreparing || selectedImageUri == null) {
+            if (selectedImageUri == null) {
                 // ================= INSTRUCTION STATE =================
                 Text(
                     text = "Upload a face photo",
@@ -156,9 +214,104 @@ fun PhotoToSketchScreen(
                 Spacer(modifier = Modifier.height(40.dp))
 
             } else {
-                // ================= PREPARING STATE =================
+                // ================= RESULT/ERROR STATE =================
                 Spacer(modifier = Modifier.weight(1f))
 
+                if (errorMessage != null) {
+                    // ================= ERROR STATE =================
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        // Error Icon
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFFEBEE))
+                                .padding(24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Cancel,
+                                contentDescription = "Error",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(72.dp)
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        Text(
+                            text = "Failed to Generate Sketch",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        Text(
+                            text = errorMessage!!,
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 32.dp)
+                        )
+                        
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        // Retry Button
+                        Button(
+                            onClick = {
+                                selectedImageUri?.let { uri ->
+                                    isGenerating = true
+                                    errorMessage = null
+                                    scope.launch {
+                                        val result = textToImageRepository.convertPhotoToSketch(context, uri)
+                                        isGenerating = false
+                                        result.onSuccess { bitmap ->
+                                            generatedSketchBitmap = bitmap
+                                        }.onFailure { error ->
+                                            errorMessage = error.message ?: "Failed to generate sketch"
+                                        }
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 32.dp)
+                                .height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4))
+                        ) {
+                            Text(
+                                text = "Try Again",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Back Button
+                        TextButton(
+                            onClick = {
+                                selectedImageUri = null
+                                errorMessage = null
+                                generatedSketchBitmap = null
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Choose Different Photo",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                } else {
+                    // ================= SUCCESS STATE =================
                 Box(contentAlignment = Alignment.Center) {
                     // Main Image Container with Blue Border
                     Box(
@@ -169,6 +322,18 @@ fun PhotoToSketchScreen(
                             .border(BorderStroke(4.dp, Color(0xFF4285F4)), RoundedCornerShape(24.dp))
                             .padding(8.dp) // Inner padding between border and image
                     ) {
+                            if (generatedSketchBitmap != null) {
+                                // Show generated sketch
+                                Image(
+                                    bitmap = generatedSketchBitmap!!.asImageBitmap(),
+                                    contentDescription = "Generated Sketch",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(16.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                // Show original image
                         Image(
                             painter = rememberAsyncImagePainter(selectedImageUri),
                             contentDescription = "Selected Photo",
@@ -177,10 +342,11 @@ fun PhotoToSketchScreen(
                                 .clip(RoundedCornerShape(16.dp)),
                             contentScale = ContentScale.Crop
                         )
+                            }
                     }
 
                     // Sparkle Icon (Top Right Overlay)
-                    // We place it outside the bordered box slightly
+                        if (generatedSketchBitmap != null) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
@@ -190,25 +356,56 @@ fun PhotoToSketchScreen(
                             .border(BorderStroke(1.dp, Color(0xFFE0E0E0)), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                         // Using AutoAwesome as a placeholder for the specific sparkle asset
-                         // In a real scenario, export the SVG/XML from the design
                          Icon(
-                             imageVector = Icons.Default.AutoAwesome,
-                             contentDescription = "Magic",
-                             tint = Color(0xFF4285F4),
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = "Success",
+                                    tint = Color(0xFF4CAF50),
                              modifier = Modifier.size(24.dp)
                          )
+                            }
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                    if (generatedSketchBitmap != null) {
                 Text(
-                    text = "Preparing...",
+                            text = "Sketch Generated Successfully!",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF4285F4)
                 )
+                        
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        // Use To Draw Button
+                        Button(
+                            onClick = {
+                                generatedSketchBitmap?.let { bitmap ->
+                                    onSketchGenerated(bitmap)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4))
+                        ) {
+                            Text(
+                                text = "Use To Draw",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Processing...",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF4285F4)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.weight(1.3f))
             }

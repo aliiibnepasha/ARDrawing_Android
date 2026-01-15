@@ -12,8 +12,9 @@ object FalApiConfig {
     
     // API Key - Replace with your actual key
     // For production, consider using BuildConfig or secure storage
-    const val API_KEY = "YOUR_FAL_API_KEY_HERE"
+    const val API_KEY = "b6dc623b-fd52-4139-8feb-fa9b147c707e:22e3202a35ce1768484da5184b2da7d8"
     
-    // Model endpoint
-    const val MODEL_ENDPOINT = "fal-ai/nano-banana"
+    // Model endpoints
+    const val TEXT_TO_IMAGE = "fal-ai/nano-banana"
+    const val IMAGE_TO_IMAGE = "fal-ai/nano-banana/edit"
 }

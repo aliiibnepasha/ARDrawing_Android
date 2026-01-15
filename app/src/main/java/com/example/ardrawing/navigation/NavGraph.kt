@@ -146,8 +146,11 @@ fun NavGraph(
         composable(Screen.PhotoToSketch.route) {
             com.example.ardrawing.ui.screens.PhotoToSketchScreen(
                 onBackClick = { navController.popBackStack() },
-                onPhotoSelected = { uri ->
-                   // TODO: Handle photo selection (navigate to next step)
+                onSketchGenerated = { bitmap ->
+                    // Save bitmap to LaunchActivity for overlay
+                    com.example.ardrawing.LaunchActivity.selectedOverlayBitmap = bitmap
+                    // Navigate to DrawingModeSelectionScreen with "photo_to_sketch" type
+                    navController.navigate(Screen.DrawingModeSelection.createRoute("photo_to_sketch", "photo_to_sketch"))
                 }
             )
         }
@@ -291,6 +294,25 @@ fun NavGraph(
                     onTraceImageClick = {
                         // Navigate to paper trace with generated image
                         navController.navigate(Screen.PaperTrace.createRoute("text_to_image", "text_to_image"))
+                    },
+                    onStartAR = {
+                        // Image bitmap is already set in LaunchActivity.selectedOverlayBitmap
+                        val intent = Intent(context, LaunchActivity::class.java)
+                        context.startActivity(intent)
+                    }
+                )
+            } else if (type == "photo_to_sketch") {
+                DrawingModeSelectionScreen(
+                    template = null,
+                    lesson = null,
+                    onBackClick = { navController.popBackStack() },
+                    onDrawSketchClick = {
+                        // Navigate to camera preview with generated sketch
+                        navController.navigate(Screen.CameraPreview.createRoute("photo_to_sketch", "photo_to_sketch"))
+                    },
+                    onTraceImageClick = {
+                        // Navigate to paper trace with generated sketch
+                        navController.navigate(Screen.PaperTrace.createRoute("photo_to_sketch", "photo_to_sketch"))
                     },
                     onStartAR = {
                         // Image bitmap is already set in LaunchActivity.selectedOverlayBitmap
@@ -466,7 +488,7 @@ fun NavGraph(
                 }
             }
 
-            if (template != null || lesson != null || type == "gallery" || type == "text" || type == "text_to_image" || type == "create_with_ai") {
+            if (template != null || lesson != null || type == "gallery" || type == "text" || type == "text_to_image" || type == "create_with_ai" || type == "photo_to_sketch") {
                 CameraPreviewScreen(
                     template = template,
                     lesson = lesson,
@@ -494,7 +516,7 @@ fun NavGraph(
                 LaunchActivity.galleryImageUri
             } else null
             
-            if (template != null || lesson != null || type == "gallery" || type == "text" || type == "text_to_image" || type == "create_with_ai") {
+            if (template != null || lesson != null || type == "gallery" || type == "text" || type == "text_to_image" || type == "create_with_ai" || type == "photo_to_sketch") {
                 PaperTraceScreen(
                     template = template,
                     lesson = lesson,

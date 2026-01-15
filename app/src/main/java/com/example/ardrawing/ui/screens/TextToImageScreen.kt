@@ -97,7 +97,8 @@ fun TextToImageScreen(
                 generatedImageBitmap = bitmap
                 generatedImageVisible = true
             }.onFailure { error ->
-                errorMessage = error.message ?: "Failed to generate image"
+                // Always show user-friendly message, ignore technical error details
+                errorMessage = "Failed to generate image"
                 generatedImageVisible = false
             }
         }
