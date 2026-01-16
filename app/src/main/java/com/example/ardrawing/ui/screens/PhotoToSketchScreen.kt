@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -95,7 +96,7 @@ fun PhotoToSketchScreen(
                     modifier = Modifier.padding(vertical = 16.dp)
                 ) {
                     CircularProgressIndicator(
-                        color = Color(0xFF4285F4),
+                        color = colorResource(R.color.app_blue),
                         modifier = Modifier.size(48.dp),
                         strokeWidth = 4.dp
                     )
@@ -203,7 +204,7 @@ fun PhotoToSketchScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4))
+                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.app_blue))
                 ) {
                     Text(
                         text = "Upload Photo",
@@ -283,7 +284,7 @@ fun PhotoToSketchScreen(
                                 .padding(horizontal = 32.dp)
                                 .height(56.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4))
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.app_blue))
                         ) {
                             Text(
                                 text = "Try Again",
@@ -319,7 +320,7 @@ fun PhotoToSketchScreen(
                             .size(300.dp) // Square container
                             .clip(RoundedCornerShape(24.dp))
                             .background(Color.White)
-                            .border(BorderStroke(4.dp, Color(0xFF4285F4)), RoundedCornerShape(24.dp))
+                            .border(BorderStroke(4.dp, colorResource(R.color.app_blue)), RoundedCornerShape(24.dp))
                             .padding(8.dp) // Inner padding between border and image
                     ) {
                             if (generatedSketchBitmap != null) {
@@ -373,7 +374,7 @@ fun PhotoToSketchScreen(
                             text = "Sketch Generated Successfully!",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF4285F4)
+                    color = colorResource(R.color.app_blue)
                 )
                         
                         Spacer(modifier = Modifier.height(32.dp))
@@ -389,7 +390,7 @@ fun PhotoToSketchScreen(
                                 .fillMaxWidth()
                                 .height(56.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4))
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.app_blue))
                         ) {
                             Text(
                                 text = "Use To Draw",
@@ -402,7 +403,7 @@ fun PhotoToSketchScreen(
                             text = "Processing...",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF4285F4)
+                            color = colorResource(R.color.app_blue)
                         )
                     }
                 }

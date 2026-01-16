@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -246,7 +247,7 @@ private fun TopHeader(
         if (showDone) {
             Text(
                 text = "Done",
-                color = Color(0xFF4285F4), // Blue
+                color = colorResource(R.color.app_blue), // Blue
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 maxLines = 1,
@@ -274,8 +275,8 @@ private fun BottomButton(
             .height(56.dp),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF4285F4),
-            disabledContainerColor = Color(0xFF4285F4).copy(alpha = 0.5f)
+            containerColor = colorResource(R.color.app_blue),
+            disabledContainerColor = colorResource(R.color.app_blue).copy(alpha = 0.5f)
         ),
         elevation = ButtonDefaults.buttonElevation(0.dp)
     ) {
@@ -335,7 +336,7 @@ private fun InputState(
                     fontSize = 15.sp,
                     color = Color.Black
                 ),
-                cursorBrush = SolidColor(Color(0xFF4285F4)),
+                cursorBrush = SolidColor(colorResource(R.color.app_blue)),
                 modifier = Modifier.fillMaxWidth()
             )
         }

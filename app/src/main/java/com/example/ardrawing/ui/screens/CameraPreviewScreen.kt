@@ -36,6 +36,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -169,7 +170,7 @@ fun CameraPreviewScreen(
                         text = "Done",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF4285F4)
+                        color = colorResource(R.color.app_blue)
                     )
                 }
             }
@@ -466,8 +467,8 @@ fun CameraPreviewScreen(
                                     .weight(1f)
                                     .padding(horizontal = 12.dp),
                                 colors = SliderDefaults.colors(
-                                    thumbColor = Color(0xFF4285F4),
-                                    activeTrackColor = Color(0xFF4285F4),
+                                    thumbColor = colorResource(R.color.app_blue),
+                                    activeTrackColor = colorResource(R.color.app_blue),
                                     inactiveTrackColor = Color.White.copy(alpha = 0.3f)
                                 )
                             )
@@ -550,7 +551,7 @@ private fun ZoomChip(
     isDarkTheme: Boolean = false
 ) {
     val backgroundColor = if (selected) {
-        Color(0xFF4285F4)
+        colorResource(R.color.app_blue)
     } else {
         Color.White
     }

@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -269,7 +270,7 @@ fun MyAlbumSection(
                 Text(
                     text = "See All",
                     fontSize = 14.sp,
-                    color = Color(0xFF4285F4),
+                    color = colorResource(R.color.app_blue),
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.clickable { onSeeAllClick() }
                 )
@@ -291,7 +292,7 @@ fun MyAlbumSection(
                     .background(Color(0xFFF0F4FF))
                     .clickable { onUploadClick() }
                     .drawDashedBorder(
-                        color = Color(0xFF4285F4),
+                        color = colorResource(R.color.app_blue),
                         strokeWidth = 4.dp,
                         cornerRadius = 16.dp
                     ),
@@ -310,7 +311,7 @@ fun MyAlbumSection(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Upload",
-                            tint = Color(0xFF4285F4),
+                            tint = colorResource(R.color.app_blue),
                             modifier = Modifier.size(24.dp)
                         )
                     }

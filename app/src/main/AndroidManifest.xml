@@ -28,23 +28,27 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ARDrawing">
 
-
         <activity
             android:name=".LaunchActivity"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.ARDrawing" />
         <activity
             android:name=".LabelActivity"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.ARDrawing" />
         <activity
             android:name=".CropActivity"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.ARDrawing" />
 
         <!-- UCrop built-in activity for cropping UI -->
         <activity
+            android:windowSoftInputMode="adjustResize"
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.ARDrawing" />
         <activity
+            android:windowSoftInputMode="adjustResize"
             android:name=".CameraPreviewActivity"
             android:theme="@style/Theme.ARDrawing"
             android:screenOrientation="portrait" />
@@ -54,6 +58,7 @@
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.ARDrawing"
+            android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

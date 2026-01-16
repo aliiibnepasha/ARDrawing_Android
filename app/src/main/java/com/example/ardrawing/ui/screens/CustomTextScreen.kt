@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -78,7 +79,7 @@ fun CustomTextScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4285F4)
+                    containerColor = colorResource(R.color.app_blue)
                 )
             ) {
                 Text(
@@ -105,7 +106,7 @@ fun CustomTextScreen(
                     .height(180.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(Color(0xFFF8FBFF))
-                    .dashedBorder(Color(0xFF4285F4), 20.dp),
+                    .dashedBorder(colorResource(R.color.app_blue), 20.dp),
                 contentAlignment = Alignment.Center
             ) {
                 BasicTextField(
@@ -156,7 +157,7 @@ fun CustomTextScreen(
                             .background(if (isSelected) Color.White else Color(0xFFF9F9F9))
                             .border(
                                 width = if (isSelected) 2.dp else 0.dp,
-                                color = if (isSelected) Color(0xFF4285F4) else Color.Transparent,
+                                color = if (isSelected) colorResource(R.color.app_blue) else Color.Transparent,
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .clickable { selectedFontIndex = index }
@@ -216,7 +217,7 @@ private fun CustomTextTopBar(
         // Done Button
         Text(
             text = "Done",
-            color = Color(0xFF4285F4),
+            color = colorResource(R.color.app_blue),
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp,
             modifier = Modifier.clickable { 

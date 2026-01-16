@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -357,7 +358,7 @@ fun PaperTraceScreen(
                         text = "Done",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF4285F4)
+                        color = colorResource(R.color.app_blue)
                     )
                 }
             }
@@ -408,8 +409,8 @@ fun PaperTraceScreen(
                                     .weight(1f)
                                     .padding(horizontal = 12.dp),
                                 colors = SliderDefaults.colors(
-                                    thumbColor = Color(0xFF4285F4),
-                                    activeTrackColor = Color(0xFF4285F4),
+                                    thumbColor = colorResource(R.color.app_blue),
+                                    activeTrackColor = colorResource(R.color.app_blue),
                                     inactiveTrackColor = Color(0xFFE0E0E0)
                                 )
                             )
@@ -491,7 +492,7 @@ private fun ZoomChip(
     isDarkTheme: Boolean
 ) {
     val backgroundColor = if (selected) {
-        Color(0xFF4285F4)
+        colorResource(R.color.app_blue)
     } else {
         if (isDarkTheme) Color.White else Color.Black // Using Black for light theme inactive? Original was Color.Black for text and White for bg?
         // Wait, original: if selected Blue else (if dark White else Black)

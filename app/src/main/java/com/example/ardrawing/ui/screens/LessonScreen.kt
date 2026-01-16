@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -222,7 +223,7 @@ private fun FreeLessonCard() {
                     Button(
                         onClick = { /* TODO */ },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4285F4)
+                            containerColor = colorResource(R.color.app_blue)
                         ),
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(0.dp),
@@ -306,7 +307,7 @@ private fun LessonItemCard(
                 Icon(
                     imageVector = Icons.Outlined.FavoriteBorder,
                     contentDescription = null,
-                    tint = Color(0xFF4285F4),
+                    tint = colorResource(R.color.app_blue),
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .size(22.dp) // Smaller icon
@@ -351,7 +352,7 @@ private fun LessonItemCard(
                                 .height(14.dp)
                                 .clip(RoundedCornerShape(4.dp))
                                 .background(
-                                    if (index < level) Color(0xFF4285F4) else Color(0xFFD3E3FD)
+                                    if (index < level) colorResource(R.color.app_blue) else Color(0xFFD3E3FD)
                                 )
                         )
                     }
@@ -371,7 +372,7 @@ private fun LessonItemCard(
                     text = "$steps",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF4285F4)
+                    color = colorResource(R.color.app_blue)
                 )
             }
         }

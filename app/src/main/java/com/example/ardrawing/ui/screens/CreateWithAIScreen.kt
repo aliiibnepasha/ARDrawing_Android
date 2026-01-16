@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import com.example.ardrawing.R
 import com.example.ardrawing.data.local.database.AppDatabase
 import com.example.ardrawing.data.repository.FavoriteRepository
+import com.example.ardrawing.data.repository.TextToImageRepository
 import com.example.ardrawing.data.utils.AssetUtils
 import com.example.ardrawing.ui.components.WaterWaveBackground
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
@@ -57,6 +59,9 @@ fun CreateWithAIScreen(
     val database = remember { AppDatabase.getDatabase(context) }
     val favoriteRepository = remember { FavoriteRepository(database.favoriteDao()) }
     
+    // API Repository
+    val textToImageRepository = remember { TextToImageRepository() }
+    
     var currentStep by remember { mutableStateOf(1) }
     val totalSteps = 3 // Style, Difficulty, Prompt. The Result is a separate state/screen logically.
 
@@ -70,6 +75,7 @@ fun CreateWithAIScreen(
     var generatedImageVisible by remember { mutableStateOf(false) }
     var generatedImageBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
     var isFavorite by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     
     // Check if current prompt is favorite
     LaunchedEffect(promptText, generatedImageVisible) {
@@ -78,23 +84,30 @@ fun CreateWithAIScreen(
         }
     }
     
-    // Generate mock bitmap for the image (in real app, this would come from AI generation)
-    LaunchedEffect(generatedImageVisible) {
-        if (generatedImageVisible && generatedImageBitmap == null) {
-            // Create a high-quality mock bitmap from the drawable
-            val drawable = context.resources.getDrawable(R.drawable.create_with_ai, null)
-            // Use larger size for better quality
-            val width = (context.resources.displayMetrics.widthPixels * 0.9).toInt()
-            val height = width // Square
-            val bitmap = android.graphics.Bitmap.createBitmap(
-                width,
-                height,
-                android.graphics.Bitmap.Config.ARGB_8888
+    // Generate image using API when user clicks Generate button
+    fun generateImage() {
+        if (promptText.isBlank()) return
+        
+        scope.launch {
+            isGenerating = true
+            errorMessage = null
+            generatedImageBitmap = null
+            
+            val result = textToImageRepository.generateImage(
+                prompt = promptText.trim(),
+                aspectRatio = "1:1"
             )
-            val canvas = android.graphics.Canvas(bitmap)
-            drawable.setBounds(0, 0, width, height)
-            drawable.draw(canvas)
-            generatedImageBitmap = bitmap
+            
+            isGenerating = false
+            
+            result.onSuccess { bitmap ->
+                generatedImageBitmap = bitmap
+                generatedImageVisible = true
+            }.onFailure { error ->
+                // Always show user-friendly message, ignore technical error details
+                errorMessage = "Failed to generate image"
+                generatedImageVisible = false
+            }
         }
     }
 
@@ -159,7 +172,7 @@ fun CreateWithAIScreen(
                                         .weight(1f)
                                         .height(6.dp)
                                         .clip(RoundedCornerShape(3.dp))
-                                        .background(if (isActive) Color(0xFF4285F4) else Color(0xFFE0E0E0))
+                                        .background(if (isActive) colorResource(R.color.app_blue) else Color(0xFFE0E0E0))
                                 )
                             }
                         }
@@ -198,7 +211,7 @@ fun CreateWithAIScreen(
                     
                     Text(
                         text = "Done",
-                        color = Color(0xFF4285F4),
+                        color = colorResource(R.color.app_blue),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         maxLines = 1,
@@ -214,8 +227,8 @@ fun CreateWithAIScreen(
                         if (currentStep < totalSteps) {
                             currentStep++
                         } else {
-                            // Generate Action
-                            isGenerating = true
+                            // Generate Action - Call API
+                            generateImage()
                         }
                     },
                     enabled = (currentStep == 1 && selectedStyle != null) || 
@@ -228,8 +241,8 @@ fun CreateWithAIScreen(
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4285F4),
-                        disabledContainerColor = Color(0xFF4285F4).copy(alpha = 0.5f)
+                        containerColor = colorResource(R.color.app_blue),
+                        disabledContainerColor = colorResource(R.color.app_blue).copy(alpha = 0.5f)
                     )
                 ) {
                     if (isGenerating) {
@@ -260,7 +273,7 @@ fun CreateWithAIScreen(
                         .padding(20.dp)
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4))
+                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.app_blue))
                 ) {
                     Text("Use To Draw", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
@@ -268,15 +281,6 @@ fun CreateWithAIScreen(
         }
     ) { paddingValues ->
         
-        // Fake generation delay logic
-        LaunchedEffect(isGenerating) {
-            if (isGenerating) {
-                delay(2000)
-                isGenerating = false
-                generatedImageVisible = true
-            }
-        }
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -292,10 +296,23 @@ fun CreateWithAIScreen(
                         selectedDifficulty = selectedDifficulty,
                         onDifficultySelected = { selectedDifficulty = it }
                     )
-                    3 -> StepDescribeImage(
-                        text = promptText,
-                        onTextChange = { promptText = it }
-                    )
+                    3 -> Column {
+                        StepDescribeImage(
+                            text = promptText,
+                            onTextChange = { promptText = it }
+                        )
+                        
+                        // Error message display
+                        errorMessage?.let { error ->
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = error,
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(horizontal = 20.dp)
+                            )
+                        }
+                    }
                 }
             } else {
                 StepResult(
@@ -305,26 +322,28 @@ fun CreateWithAIScreen(
                     onFavoriteClick = {
                         scope.launch {
                             if (generatedImageBitmap != null) {
-                                // Save image and favorite
-                                val imagePath = com.example.ardrawing.utils.FavoriteImageUtils.saveFavoriteImage(
-                                    generatedImageBitmap!!,
-                                    context,
-                                    promptText
-                                )
-                                if (imagePath != null) {
-                                    favoriteRepository.insertFavorite(
-                                        com.example.ardrawing.data.local.entity.Favorite(
-                                            prompt = promptText,
-                                            imagePath = imagePath,
-                                            type = "create_with_ai"
-                                        )
+                                if (isFavorite) {
+                                    // Remove from favorites
+                                    favoriteRepository.deleteFavoriteByPrompt(promptText)
+                                    isFavorite = false
+                                } else {
+                                    // Save image and favorite
+                                    val imagePath = com.example.ardrawing.utils.FavoriteImageUtils.saveFavoriteImage(
+                                        generatedImageBitmap!!,
+                                        context,
+                                        promptText
                                     )
-                                    isFavorite = true
+                                    if (imagePath != null) {
+                                        favoriteRepository.insertFavorite(
+                                            com.example.ardrawing.data.local.entity.Favorite(
+                                                prompt = promptText,
+                                                imagePath = imagePath,
+                                                type = "create_with_ai"
+                                            )
+                                        )
+                                        isFavorite = true
+                                    }
                                 }
-                            } else {
-                                // Toggle favorite (remove if exists)
-                                favoriteRepository.deleteFavoriteByPrompt(promptText)
-                                isFavorite = false
                             }
                         }
                     }
@@ -391,7 +410,7 @@ fun StepChooseStyle(
                         )
                         .border(
                             width = if (isSelected) 2.dp else 0.dp,
-                            color = if (isSelected) Color(0xFF4285F4) else Color.Transparent,
+                            color = if (isSelected) colorResource(R.color.app_blue) else Color.Transparent,
                             shape = RoundedCornerShape(12.dp)
                         )
                         .clickable { onStyleSelected(style.name) }
@@ -460,7 +479,7 @@ fun StepSelectDifficulty(
                         .clip(RoundedCornerShape(12.dp))
                         .border(
                             width = if (isSelected) 2.dp else 1.dp,
-                            color = if (isSelected) Color(0xFF4285F4) else Color(0xFFEEEEEE),
+                            color = if (isSelected) colorResource(R.color.app_blue) else Color(0xFFEEEEEE),
                             shape = RoundedCornerShape(12.dp)
                         )
                         .background(if (isSelected) Color(0xFFF5F9FF) else Color(0xFFF8F8F8))
@@ -490,7 +509,7 @@ fun StepSelectDifficulty(
                         text = level,
                         fontSize = 16.sp,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                        color = if (isSelected) Color(0xFF4285F4) else Color.Black
+                        color = if (isSelected) colorResource(R.color.app_blue) else Color.Black
                     )
                 }
             }
@@ -535,7 +554,7 @@ fun StepDescribeImage(
                     fontSize = 16.sp,
                     color = Color.Black
                 ),
-                cursorBrush = SolidColor(Color(0xFF4285F4)),
+                cursorBrush = SolidColor(colorResource(R.color.app_blue)),
                 modifier = Modifier.fillMaxSize()
             )
         }

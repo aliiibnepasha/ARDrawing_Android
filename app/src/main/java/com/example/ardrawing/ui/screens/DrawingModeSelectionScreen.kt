@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -135,7 +136,7 @@ fun DrawingModeSelectionScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4285F4)
+                    containerColor = colorResource(R.color.app_blue)
                 )
             ) {
                 Text(
@@ -223,7 +224,7 @@ fun DrawingModeCard(
             .clickable(onClick = onClick)
             .border(
                 width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) Color(0xFF4285F4) else Color.Transparent,
+                color = if (isSelected) colorResource(R.color.app_blue) else Color.Transparent,
                 shape = RoundedCornerShape(24.dp)
             ),
         shape = RoundedCornerShape(24.dp),
@@ -257,12 +258,12 @@ fun DrawingModeCard(
                         .padding(12.dp)
                         .size(24.dp)
                         .background(
-                            color = if (isSelected) Color(0xFF4285F4) else Color.Transparent,
+                            color = if (isSelected) colorResource(R.color.app_blue) else Color.Transparent,
                             shape = CircleShape
                         )
                         .border(
                             width = 1.5.dp,
-                            color = if (isSelected) Color.Transparent else Color(0xFF4285F4),
+                            color = if (isSelected) Color.Transparent else colorResource(R.color.app_blue),
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center

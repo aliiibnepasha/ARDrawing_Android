@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -157,7 +158,7 @@ private fun CategoryTabItem(text: String, isSelected: Boolean) {
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFF4285F4)) // Blue
+                .background(colorResource(R.color.app_blue)) // Blue
                 .padding(horizontal = 16.dp, vertical = 6.dp)
         ) {
             Text(
@@ -181,6 +182,7 @@ private fun CategoryTabItem(text: String, isSelected: Boolean) {
 @Composable
 private fun AddIllustrationCard(onClick: () -> Unit) {
     val stroke = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+    val borderColor = colorResource(R.color.app_blue)
     
     Box(
         modifier = Modifier
@@ -189,7 +191,7 @@ private fun AddIllustrationCard(onClick: () -> Unit) {
             .background(Color(0xFFF8FBFF)) // Very light blue bg
             .drawBehind {
                 drawRoundRect(
-                    color = androidx.compose.ui.graphics.Color(0xFF4285F4),
+                    color = borderColor,
                     style = androidx.compose.ui.graphics.drawscope.Stroke(
                         width = 2.dp.toPx(),
                         pathEffect = stroke

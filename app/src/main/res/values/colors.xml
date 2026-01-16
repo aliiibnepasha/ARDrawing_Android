@@ -10,5 +10,6 @@
     <color name="card_bg">#F8F9FB</color>
     <color name="card_color_blue">#EAF4FF</color>
     <color name="main_bg">#F8FBFF</color>
+    <color name="app_blue">#4DA3FF</color>
 
 </resources>

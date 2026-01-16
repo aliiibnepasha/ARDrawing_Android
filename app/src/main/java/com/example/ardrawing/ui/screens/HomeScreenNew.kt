@@ -189,7 +189,7 @@ fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit, modifier: 
         modifier = modifier
             .fillMaxHeight()
             .clip(RoundedCornerShape(12.dp))
-            .background(if (isSelected) Color(0xFF4285F4) else Color.Transparent)
+            .background(if (isSelected) colorResource(R.color.app_blue) else Color.Transparent)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -208,7 +208,7 @@ fun IllustrationCard(onClick: () -> Unit) {
     val strokeWidth = with(density) { 2.dp.toPx() }
     val cornerRadius = with(density) { 24.dp.toPx() }
     val stroke = Stroke(width = strokeWidth, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
-    val primaryColor = Color(0xFF4285F4)
+    val primaryColor = colorResource(R.color.app_blue)
     
     Box(
         modifier = Modifier
@@ -273,7 +273,7 @@ fun ActionCard(title: String, buttonText: String, iconRes: Int, onClick: () -> U
             .clip(RoundedCornerShape(20.dp))
             .background(Color.White)
             .clickable(onClick = onClick)
-            .padding(12.dp),
+            .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
@@ -298,7 +298,7 @@ fun ActionCard(title: String, buttonText: String, iconRes: Int, onClick: () -> U
             contentPadding = PaddingValues(0.dp),
             modifier = Modifier.fillMaxWidth().height(28.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4))
+            colors = ButtonDefaults.buttonColors(colorResource(R.color.app_blue))
         ) {
             Text(buttonText, fontSize = 11.sp, fontWeight = FontWeight.Medium)
         }
@@ -382,7 +382,7 @@ fun CategoryItemNew(name: String, folderName: String, onClick: () -> Unit, modif
             Icon(
                 imageVector = Icons.Default.KeyboardArrowRight,
                 contentDescription = null,
-                tint = Color(0xFF4285F4),
+                tint = colorResource(R.color.app_blue),
                 modifier = Modifier
                     .size(30.dp)
                     .align(Alignment.End)
@@ -432,7 +432,7 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
                 iconRes = R.drawable.magic_pen, // Placeholder
                 backgroundColor = Color.White,
                 iconBackgroundColor = Color(0xFFE3F2FD), // Light Blue
-                iconTint = Color(0xFF4285F4),
+                iconTint = colorResource(R.color.app_blue),
                 modifier = Modifier
                     .weight(1f)
                     .clickable { onTextToImage() }
@@ -444,7 +444,7 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
                 iconRes = R.drawable.text_icon, // Placeholder
                 backgroundColor = Color.White,
                 iconBackgroundColor = Color(0xFFE3F2FD),
-                iconTint = Color(0xFF4285F4),
+                iconTint = colorResource(R.color.app_blue),
                 modifier = Modifier
                     .weight(1f)
                     .clickable { onCustomText() }
@@ -483,7 +483,7 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .clip(RoundedCornerShape(topEnd = 16.dp)) // Design: Tab style
-                        .background(Color(0xFF4285F4))
+                        .background(colorResource(R.color.app_blue))
                         .padding(horizontal = 20.dp, vertical = 8.dp)
                 ) {
                     Text(

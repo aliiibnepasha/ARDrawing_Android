@@ -172,10 +172,10 @@ private fun FavoriteImageCard(
                 painter = painterResource(R.drawable.my_fav_blue_ic),
                 contentDescription = "Favorite",
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(32.dp)
                     .align(Alignment.TopEnd)
                     .padding(8.dp)
-                    .clickable { onDeleteClick() }
+                    //.clickable { onDeleteClick() }
             )
         }
     }
