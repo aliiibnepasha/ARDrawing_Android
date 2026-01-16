@@ -9,7 +9,6 @@ class FavoriteRepository(
 ) {
     
     fun getAllFavorites(): Flow<List<Favorite>> = favoriteDao.getAllFavorites()
-    
     suspend fun getFavoriteByPrompt(prompt: String): Favorite? = favoriteDao.getFavoriteByPrompt(prompt)
     
     suspend fun isFavorite(prompt: String): Boolean = favoriteDao.isFavorite(prompt)
