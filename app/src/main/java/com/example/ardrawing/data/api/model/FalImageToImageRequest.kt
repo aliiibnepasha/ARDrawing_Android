@@ -8,7 +8,6 @@ import com.google.gson.annotations.SerializedName
 data class FalImageToImageRequest(
     @SerializedName("prompt")
     val prompt: String,
-    
     @SerializedName("image_urls")
     val imageUrls: List<String>, // FAL.ai expects image_urls as array
     
