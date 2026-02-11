@@ -75,9 +75,7 @@ class CameraPreviewActivity : AppCompatActivity() {
             
             insets
         }
-
         cameraExecutor = Executors.newSingleThreadExecutor()
-
         // Check camera permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             startCamera()

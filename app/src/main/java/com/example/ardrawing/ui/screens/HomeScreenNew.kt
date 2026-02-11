@@ -18,6 +18,9 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +47,8 @@ import com.example.ardrawing.utils.GalleryUtils
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 import com.example.ardrawing.LaunchActivity
 
+val AppBlue = Color(0xFF4DA3FF)
+
 @Composable
 fun HomeScreenNew(
     currentRoute: String? = null,
@@ -59,10 +64,9 @@ fun HomeScreenNew(
     onExplore: () -> Unit = {},
     onAddIllustration: (String) -> Unit = {} // Simple ID (not used, URI stored in LaunchActivity)
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val coroutineScope = rememberCoroutineScope()
 
-    val context = LocalContext.current
-    
     // Gallery launcher for "Add your illustration"
     val galleryLauncher = GalleryUtils.rememberGalleryLauncher { uri ->
         if (uri != null) {
@@ -82,45 +86,60 @@ fun HomeScreenNew(
     Scaffold(
             containerColor = Color.Transparent, // Transparent to show water background
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 20.dp),
-                contentPadding = PaddingValues(bottom = 100.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(horizontal = 20.dp)
         ) {
-            item { 
-                HomeHeader(
-                    currentRoute = currentRoute,
-                    selectedTab = selectedTab
-                ) 
-            }
-            item { 
-                TabSwitcher(
-                    selectedTab = selectedTab,
-                    onTabSelected = { selectedTab = it }
-                ) 
-            }
+            HomeHeader(
+                currentRoute = currentRoute,
+                selectedTab = pagerState.currentPage
+            )
 
-            if (selectedTab == 0) {
-                // Image Tab Content
-                    item { 
-                        IllustrationCard {
-                            // Open gallery when clicked
-                            GalleryUtils.openGallery(galleryLauncher)
-                        }
+            Spacer(modifier = Modifier.height(24.dp))
+
+            TabSwitcher(
+                selectedTab = pagerState.currentPage,
+                onTabSelected = { index ->
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(index)
                     }
-                    item { ActionCardsRow(onPhotoToSketch, onAICreate, onExplore) }
-                item { CategoriesSection(onCategoryClick = onCategoryClick) }
-            } else {
-                // Text Tab Content
-                    item { TextTabContent(onTextToImage, onCustomText) }
-            }
-            
-            item { Spacer(modifier = Modifier.height(16.dp)) }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f),
+                pageSpacing = 16.dp
+            ) { page ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 100.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    if (page == 0) {
+                        // Image Tab Content
+                        item {
+                            IllustrationCard {
+                                // Open gallery when clicked
+                                GalleryUtils.openGallery(galleryLauncher)
+                            }
+                        }
+                        item { ActionCardsRow(onPhotoToSketch, onAICreate, onExplore) }
+                        item { CategoriesSection(onCategoryClick = onCategoryClick) }
+                    } else {
+                        // Text Tab Content
+                        item { TextTabContent(onTextToImage, onCustomText) }
+                    }
+                    
+                    item { Spacer(modifier = Modifier.height(16.dp)) }
+                }
             }
         }
+    }
     }
 }
 
@@ -146,7 +165,7 @@ fun HomeHeader(currentRoute: String? = null, selectedTab: Int = 0) {
             Text(
                 text = "Welcome to",
                 fontSize = 14.sp,
-                color = Color.Gray
+                color = Color.Black
             )
             Text(
                 text = "Augmented Reality",
@@ -163,7 +182,7 @@ fun TabSwitcher(selectedTab: Int, onTabSelected: (Int) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .height(40.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
             .padding(4.dp)
@@ -189,7 +208,7 @@ fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit, modifier: 
         modifier = modifier
             .fillMaxHeight()
             .clip(RoundedCornerShape(12.dp))
-            .background(if (isSelected) colorResource(R.color.app_blue) else Color.Transparent)
+            .background(if (isSelected) AppBlue else Color.Transparent)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -208,7 +227,7 @@ fun IllustrationCard(onClick: () -> Unit) {
     val strokeWidth = with(density) { 2.dp.toPx() }
     val cornerRadius = with(density) { 24.dp.toPx() }
     val stroke = Stroke(width = strokeWidth, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
-    val primaryColor = colorResource(R.color.app_blue)
+    val primaryColor = AppBlue
     
     Box(
         modifier = Modifier
@@ -220,17 +239,17 @@ fun IllustrationCard(onClick: () -> Unit) {
                 drawRoundRect(color = primaryColor, style = stroke, cornerRadius = CornerRadius(cornerRadius))
             }
             .clickable(onClick = onClick) // Make it clickable to open gallery
-            .padding(16.dp),
+            .padding(12.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                  Image(
                      painter = painterResource(id = R.drawable.add_illustration),
                      contentDescription = "Add illustration",
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(40.dp)
                  )
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Add your illustration", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFF1E293B))
+            Text("Add your illustration", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = Color(0xFF1E293B))
         }
     }
 }
@@ -239,7 +258,7 @@ fun IllustrationCard(onClick: () -> Unit) {
 fun ActionCardsRow(onPhotoToSketch: () -> Unit, onAICreate: () -> Unit, onExplore: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         ActionCard(
             title = "Photo to\nsketch",
@@ -266,41 +285,64 @@ fun ActionCardsRow(onPhotoToSketch: () -> Unit, onAICreate: () -> Unit, onExplor
 }
 
 @Composable
-fun ActionCard(title: String, buttonText: String, iconRes: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ActionCard(
+    title: String,
+    buttonText: String,
+    iconRes: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .height(150.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
-            .clickable(onClick = onClick)
-            .padding(8.dp),
+            .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
+        // Icon + title
+        Column(
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(32.dp)
+            )
 
-             Image(
-                 painter = painterResource(id = iconRes),
-                 contentDescription = null,
-                 modifier = Modifier.size(32.dp)
-             )
-        Text(
-            title, 
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-            color = Color.Black,
-             lineHeight = 14.sp
+            Spacer(modifier = Modifier.height(12.dp))
 
-        )
-        
+            Text(
+                title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                color = Color.Black,
+                lineHeight = 16.sp,
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
+        }
+
+        // Button
         Button(
             onClick = onClick,
             contentPadding = PaddingValues(0.dp),
-            modifier = Modifier.fillMaxWidth().height(28.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(colorResource(R.color.app_blue))
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 12.dp)
+                .height(24.dp),
+            shape = RoundedCornerShape(100), // Pill shape
+            colors = ButtonDefaults.buttonColors(containerColor = AppBlue)
         ) {
-            Text(buttonText, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+            Text(
+                buttonText,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }
@@ -310,8 +352,8 @@ fun CategoriesSection(onCategoryClick: (String) -> Unit) {
     val context = LocalContext.current
 
     Column {
-        Text("Categories", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(20.dp))
+        Text("Categories", fontSize = 20.sp, fontWeight = FontWeight.Medium)
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Load categories from assets/categories folder
         val categoryFolders = AssetUtils.listFolders(context, "categories")
@@ -369,50 +411,70 @@ fun CategoryItemNew(name: String, folderName: String, onClick: () -> Unit, modif
 
     Box(
         modifier = modifier
+            .height(160.dp)
             .clip(RoundedCornerShape(20.dp))
             .background(Color.White)
             .clickable { onClick() }
-            .padding(12.dp)
     ) {
+        // Content Column
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-            // Arrow above the image
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
-                contentDescription = null,
-                tint = colorResource(R.color.app_blue),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.Start
+        ) {
+            // Image Area (takes available space)
+            Box(
                 modifier = Modifier
-                    .size(30.dp)
-                    .align(Alignment.End)
-            )
-
-            if (firstImagePath != null) {
-                Image(
-                    painter = rememberAssetImagePainter(firstImagePath),
-                    contentDescription = name,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .clip(RoundedCornerShape(16.dp))
-                )
-            } else {
-                // Fallback if no images found
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.LightGray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No Image", fontSize = 12.sp, color = Color.Gray)
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                if (firstImagePath != null) {
+                    Image(
+                        painter = rememberAssetImagePainter(firstImagePath),
+                        contentDescription = name,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 8.dp), // Space for text
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    // Fallback
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.LightGray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No Image", fontSize = 10.sp, color = Color.Gray)
+                    }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(name, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color.Black)
+
+            // Text at bottom
+            Text(
+                text = name,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                color = Color.Black,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
+
+        // Arrow Top Right (Overlay)
+        Icon(
+            painter = painterResource(id = R.drawable.move_forward),
+            contentDescription = null,
+            tint = AppBlue,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(12.dp)
+                .size(14.dp)
+        )
     }
 }
 
@@ -424,7 +486,7 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
         // Two Cards Row
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             TextActionCard(
                 title = "Write text to\ncreate image",
@@ -432,7 +494,7 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
                 iconRes = R.drawable.magic_pen, // Placeholder
                 backgroundColor = Color.White,
                 iconBackgroundColor = Color(0xFFE3F2FD), // Light Blue
-                iconTint = colorResource(R.color.app_blue),
+                iconTint = AppBlue,
                 modifier = Modifier
                     .weight(1f)
                     .clickable { onTextToImage() }
@@ -444,7 +506,7 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
                 iconRes = R.drawable.text_icon, // Placeholder
                 backgroundColor = Color.White,
                 iconBackgroundColor = Color(0xFFE3F2FD),
-                iconTint = colorResource(R.color.app_blue),
+                iconTint = AppBlue,
                 modifier = Modifier
                     .weight(1f)
                     .clickable { onCustomText() }
@@ -483,8 +545,8 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .clip(RoundedCornerShape(topEnd = 16.dp)) // Design: Tab style
-                        .background(colorResource(R.color.app_blue))
-                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                        .background(AppBlue)
+                        .padding(horizontal = 30.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = "Lilly Close-Up",

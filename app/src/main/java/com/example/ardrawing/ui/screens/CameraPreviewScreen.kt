@@ -52,6 +52,7 @@ import android.net.Uri
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.launch
+import com.example.ardrawing.ui.components.OpacityAndZoomControls
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -440,90 +441,14 @@ fun CameraPreviewScreen(
                             )
                             .padding(top = 24.dp, bottom = 32.dp, start = 20.dp, end = 20.dp)
                     ) {
-                        Text(
-                            text = "Opacity",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
+                        OpacityAndZoomControls(
+                            opacity = opacity,
+                            onOpacityChange = { opacity = it },
+                            imageScale = imageScale,
+                            onScaleChange = { imageScale = it },
+                            onGalleryClick = { /* TODO: Gallery */ },
+                            isDarkTheme = true
                         )
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Slider
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.mask),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            
-                            Slider(
-                                value = opacity,
-                                onValueChange = { opacity = it },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 12.dp),
-                                colors = SliderDefaults.colors(
-                                    thumbColor = colorResource(R.color.app_blue),
-                                    activeTrackColor = colorResource(R.color.app_blue),
-                                    inactiveTrackColor = Color.White.copy(alpha = 0.3f)
-                                )
-                            )
-                            
-                            Text(
-                                text = "${(opacity * 100).toInt()}%",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.White
-                            )
-                            
-                            Spacer(modifier = Modifier.width(16.dp))
-                            
-                            // Gallery Icon
-                             IconButton(
-                                onClick = { /* TODO: Gallery */ },
-                                modifier = Modifier.size(24.dp)
-                            ) {
-                                 Icon(
-                                    painter = painterResource(R.drawable.galllery),
-                                    contentDescription = "Gallery",
-                                     tint = Color.White
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-                        
-                        // Zoom Presets
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            ZoomChip(
-                                text = "0.5x", 
-                                onClick = { imageScale = 0.5f }, 
-                                selected = imageScale == 0.5f,
-                                isDarkTheme = true
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            ZoomChip(
-                                text = "1.0x", 
-                                onClick = { imageScale = 1.0f }, 
-                                selected = imageScale == 1.0f,
-                                isDarkTheme = true
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            ZoomChip(
-                                text = "2.0x", 
-                                onClick = { imageScale = 2.0f }, 
-                                selected = imageScale == 2.0f,
-                                isDarkTheme = true
-                            )
-                        }
                     }
                 }
 
@@ -539,43 +464,5 @@ fun CameraPreviewScreen(
                 )
             }
         }
-    }
-}
-
-
-@Composable
-private fun ZoomChip(
-    text: String,
-    onClick: () -> Unit,
-    selected: Boolean,
-    isDarkTheme: Boolean = false
-) {
-    val backgroundColor = if (selected) {
-        colorResource(R.color.app_blue)
-    } else {
-        Color.White
-    }
-    
-    val textColor = if (selected) {
-        Color.White
-    } else {
-        Color.Black
-    }
-
-    Box(
-        modifier = Modifier
-            .height(28.dp)
-            .width(50.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(backgroundColor)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            color = textColor,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold
-        )
     }
 }

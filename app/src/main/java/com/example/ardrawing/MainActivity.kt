@@ -29,6 +29,7 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 
 class MainActivity : ComponentActivity() {
     
@@ -126,7 +127,7 @@ class MainActivity : ComponentActivity() {
                     )
                     
                     // Animated visibility for bottom bar
-                    androidx.compose.animation.AnimatedVisibility(
+                    AnimatedVisibility(
                         visible = shouldShowBottomNav && isNavigationReady,
                         enter = androidx.compose.animation.slideInVertically(
                             initialOffsetY = { it }

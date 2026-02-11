@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
@@ -41,6 +42,7 @@ import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.data.model.Lesson
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 import android.net.Uri
+import com.example.ardrawing.ui.components.OpacityAndZoomControls
 
 @Composable
 fun PaperTraceScreen(
@@ -382,101 +384,26 @@ fun PaperTraceScreen(
                             )
                             .padding(top = 24.dp, bottom = 32.dp, start = 20.dp, end = 20.dp)
                     ) {
-                        Text(
-                            text = "Opacity",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.Black
+                        OpacityAndZoomControls(
+                            opacity = opacity,
+                            onOpacityChange = { opacity = it },
+                            imageScale = imageScale,
+                            onScaleChange = { imageScale = it },
+                            onGalleryClick = { /* TODO: Gallery */ },
+                            isDarkTheme = false
                         )
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Slider
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.mask),
-                                contentDescription = null,
-                                tint = Color.Black,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            
-                            Slider(
-                                value = opacity,
-                                onValueChange = { opacity = it },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 12.dp),
-                                colors = SliderDefaults.colors(
-                                    thumbColor = colorResource(R.color.app_blue),
-                                    activeTrackColor = colorResource(R.color.app_blue),
-                                    inactiveTrackColor = Color(0xFFE0E0E0)
-                                )
-                            )
-                            
-                            Text(
-                                text = "${(opacity * 100).toInt()}%",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black
-                            )
-                            
-                            Spacer(modifier = Modifier.width(16.dp))
-                            
-                            // Gallery Icon
-                             IconButton(
-                                onClick = { /* TODO: Gallery */ },
-                                modifier = Modifier.size(24.dp)
-                            ) {
-                                 Icon(
-                                    painter = painterResource(R.drawable.galllery),
-                                    contentDescription = "Gallery",
-                                    tint = Color.Black
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-                        
-                        // Zoom Presets
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            ZoomChip(
-                                text = "0.5x", 
-                                onClick = { imageScale = 0.5f }, 
-                                selected = imageScale == 0.5f,
-                                isDarkTheme = false
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            ZoomChip(
-                                text = "1.0x", 
-                                onClick = { imageScale = 1.0f }, 
-                                selected = imageScale == 1.0f,
-                                isDarkTheme = false
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            ZoomChip(
-                                text = "2.0x", 
-                                onClick = { imageScale = 2.0f }, 
-                                selected = imageScale == 2.0f,
-                                isDarkTheme = false
-                            )
-                        }
                     }
                 }
 
                 // Toggle Button
                 Image(
-                    painter = painterResource(if (isPanelVisible) R.drawable.arrow_below else R.drawable.arrow_up),
+                    painter = painterResource(R.drawable.paper_updown),
                     contentDescription = "Toggle",
                     modifier = Modifier
                         .align(if (isPanelVisible) Alignment.TopCenter else Alignment.BottomCenter)
                         .offset(y = if (isPanelVisible) (-18).dp else (-12).dp)
                         .size(36.dp)
+                        .rotate(if (isPanelVisible) 180f else 0f)
                         .clickable { isPanelVisible = !isPanelVisible }
                 )
             }
@@ -484,42 +411,4 @@ fun PaperTraceScreen(
     }
 }
 
-@Composable
-private fun ZoomChip(
-    text: String,
-    onClick: () -> Unit,
-    selected: Boolean,
-    isDarkTheme: Boolean
-) {
-    val backgroundColor = if (selected) {
-        colorResource(R.color.app_blue)
-    } else {
-        if (isDarkTheme) Color.White else Color.Black // Using Black for light theme inactive? Original was Color.Black for text and White for bg?
-        // Wait, original: if selected Blue else (if dark White else Black)
-        // Let's stick to standard behavior: Blue if selected, otherwise Grey/Black for text
-        Color(0xFFF0F0F0) // Light grey background for unselected in Light Theme
-    }
-    
-    val textColor = if (selected) {
-        Color.White
-    } else {
-        Color.Black
-    }
 
-    Box(
-        modifier = Modifier
-            .height(28.dp)
-            .width(50.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(backgroundColor)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            color = textColor,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}

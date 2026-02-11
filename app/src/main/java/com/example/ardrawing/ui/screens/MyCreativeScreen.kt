@@ -302,24 +302,19 @@ fun MyAlbumSection(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(Color(0xFFE0E9FC), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
+
                         Icon(
-                            imageVector = Icons.Default.Add,
+                            painter = painterResource(R.drawable.add_illustration),
                             contentDescription = "Upload",
                             tint = colorResource(R.color.app_blue),
                             modifier = Modifier.size(24.dp)
                         )
-                    }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "Upload a photo\nof your drawing",
                         fontSize = 13.sp,
                         color = Color.Black,
+                        fontWeight = FontWeight.SemiBold,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         lineHeight = 18.sp,
                         modifier = Modifier.padding(horizontal = 8.dp)
