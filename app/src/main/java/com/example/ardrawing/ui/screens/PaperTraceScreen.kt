@@ -73,8 +73,8 @@ fun PaperTraceScreen(
     val totalSteps = lesson?.steps?.size ?: 0
 
     Scaffold(
-        containerColor = Color.White,
-        contentWindowInsets = WindowInsets.systemBars // Handle Status Bar and Navigation Bar
+        containerColor = Color(0xFFF8FBFF), // User requested #F8FBFF
+        contentWindowInsets = WindowInsets.navigationBars // Only handle Navigation Bar, we handle Status Bar
     ) { padding ->
 
         Box(
@@ -112,7 +112,7 @@ fun PaperTraceScreen(
                     val overlayBitmap = com.example.ardrawing.LaunchActivity.selectedOverlayBitmap
                     if (overlayBitmap != null && template == null && lesson == null && galleryImageUri == null) {
                         // Display overlay bitmap (text or generated image)
-                        androidx.compose.foundation.Image(
+                        Image(
                             bitmap = overlayBitmap.asImageBitmap(),
                             contentDescription = "Overlay",
                             modifier = Modifier
@@ -173,6 +173,8 @@ fun PaperTraceScreen(
                     }
 
                     // Overlay Controls
+                    val controlScale = if (imageScale > 0) 1f / imageScale else 1f
+
                     if (!isLocked) {
                         // Top Right: Lock
                         Image(
@@ -182,6 +184,10 @@ fun PaperTraceScreen(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .offset(x = 12.dp, y = (-12).dp)
+                                .graphicsLayer {
+                                    scaleX = controlScale
+                                    scaleY = controlScale
+                                }
                                 .size(32.dp)
                                 .clickable { isLocked = !isLocked }
                         )
@@ -198,6 +204,10 @@ fun PaperTraceScreen(
                                 contentDescription = "Rotate Left",
                                 colorFilter = ColorFilter.tint(Color.Black),
                                 modifier = Modifier
+                                    .graphicsLayer {
+                                        scaleX = controlScale
+                                        scaleY = controlScale
+                                    }
                                     .size(32.dp)
                                     .clickable { imageRotation -= 90f }
                             )
@@ -206,6 +216,10 @@ fun PaperTraceScreen(
                                 contentDescription = "Rotate Right",
                                 colorFilter = ColorFilter.tint(Color.Black),
                                 modifier = Modifier
+                                    .graphicsLayer {
+                                        scaleX = controlScale
+                                        scaleY = controlScale
+                                    }
                                     .size(32.dp)
                                     .clickable { imageRotation += 90f }
                             )
@@ -219,6 +233,10 @@ fun PaperTraceScreen(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .offset(x = 12.dp, y = 12.dp)
+                                .graphicsLayer {
+                                    scaleX = controlScale
+                                    scaleY = controlScale
+                                }
                                 .size(32.dp)
                                 .clickable { 
                                     imageScale = 1f 
@@ -235,6 +253,10 @@ fun PaperTraceScreen(
                              modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .offset(x = 12.dp, y = (-12).dp)
+                                .graphicsLayer {
+                                    scaleX = controlScale
+                                    scaleY = controlScale
+                                }
                                 .size(32.dp)
                                 .clickable { isLocked = !isLocked }
                         )
@@ -332,19 +354,25 @@ fun PaperTraceScreen(
             }
 
             /* ================= TOP BAR ================= */
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.TopCenter)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .background(
+                        color = Color.White,
+                        shape = RoundedCornerShape(bottomStart = 1.dp, bottomEnd = 1.dp)
+                    )
+                    .statusBarsPadding()
+                    .height(80.dp) // Maintain consistent height
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(R.drawable.back_arrow_ic),
                     contentDescription = "Back",
                     modifier = Modifier
                         .size(32.dp)
+                        .align(Alignment.CenterStart)
                         .clickable(onClick = onBackClick)
                 )
 
@@ -352,10 +380,14 @@ fun PaperTraceScreen(
                     text = "Screen",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = Color.Black,
+                    modifier = Modifier.align(Alignment.Center)
                 )
 
-                TextButton(onClick = onBackClick) {
+                TextButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
                     Text(
                         text = "Done",
                         fontSize = 16.sp,
