@@ -1,30 +1,25 @@
 package com.example.ardrawing.data.repository
 
-import android.content.Context
+import com.example.ardrawing.data.local.dao.MyAlbumDao
+import com.example.ardrawing.data.local.entity.MyAlbumImage
+import kotlinx.coroutines.flow.Flow
 
-/**
- * Simple local storage for user's uploaded album images.
- * Stores a set of URI strings in SharedPreferences.
- */
-object MyAlbumRepository {
+class MyAlbumRepository(
+    private val myAlbumDao: MyAlbumDao
+) {
+    fun getAllImages(): Flow<List<MyAlbumImage>> = myAlbumDao.getAllImages()
 
-    private const val PREFS_NAME = "my_album_prefs"
-    private const val KEY_URIS = "album_uris"
-
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
-    fun getImages(context: Context): List<String> {
-        val set = prefs(context).getStringSet(KEY_URIS, emptySet()) ?: emptySet()
-        // Keep order stable by sorting by string (simple, deterministic)
-        return set.toList().sorted()
+    suspend fun addImage(uriString: String) {
+        val image = MyAlbumImage(uri = uriString)
+        myAlbumDao.insertImage(image)
     }
 
-    fun addImage(context: Context, uriString: String) {
-        val prefs = prefs(context)
-        val current = prefs.getStringSet(KEY_URIS, emptySet())?.toMutableSet() ?: mutableSetOf()
-        current.add(uriString)
-        prefs.edit().putStringSet(KEY_URIS, current).apply()
+    suspend fun deleteImage(image: MyAlbumImage) {
+        myAlbumDao.deleteImage(image)
+    }
+
+    suspend fun deleteAllImages() {
+        myAlbumDao.deleteAllImages()
     }
 }
 

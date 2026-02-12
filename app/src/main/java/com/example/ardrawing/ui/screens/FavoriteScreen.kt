@@ -31,12 +31,11 @@ import androidx.compose.ui.unit.sp
 import com.example.ardrawing.R
 import com.example.ardrawing.data.local.database.AppDatabase
 import com.example.ardrawing.data.repository.FavoriteRepository
-import com.example.ardrawing.ui.components.WaterWaveBackground
 import com.example.ardrawing.utils.FavoriteImageUtils
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
-import android.graphics.BitmapFactory
 import com.example.ardrawing.ui.components.ProfileHeader
+import com.example.ardrawing.ui.components.WaterWaveBackground
 
 @Composable
 fun FavoriteScreen() {
@@ -52,63 +51,63 @@ fun FavoriteScreen() {
 
     // Wrap with Box to put Water Animation behind everything
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Background Animation removed (now global in MainActivity)
-        // WaterWaveBackground()
+        // 1. Background Animation
+        WaterWaveBackground()
 
         // 2. Foreground Content
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
+            // ProfileHeader (Same for both states, placed at top of column)
+            ProfileHeader(
+                avatarRes = R.drawable.text_avtr,
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = 8.dp)
+                    .padding(horizontal = 20.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(10.dp))
+
             if (favorites.isEmpty()) {
                 // Empty State
-                Column(
-                    modifier = Modifier.fillMaxSize()
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    // ProfileHeader removed here (now global in MainActivity)
-
-                    Box(
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            // Sad Face Icon
-                            Icon(
-                                imageVector = Icons.Outlined.SentimentDissatisfied,
-                                contentDescription = null,
-                                tint = Color(0xFFA0C1F8), // Light blue tint
-                                modifier = Modifier.size(64.dp)
-                            )
+                        // Sad Face Icon
+                        Icon(
+                            imageVector = Icons.Outlined.SentimentDissatisfied,
+                            contentDescription = null,
+                            tint = Color(0xFFA0C1F8), // Light blue tint
+                            modifier = Modifier.size(64.dp)
+                        )
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                            Text(
-                                text = "No Favorites Added",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color(0xFF6F7E95) // Grey text
-                            )
-                        }
+                        Text(
+                            text = "No Favorites Added",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF6F7E95) // Grey text
+                        )
                     }
                 }
             } else {
                 // Favorites Grid
-                Column(
-                    modifier = Modifier.fillMaxSize()
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp), // Updated from 16.dp to 20.dp
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(top = 0.dp, bottom = 80.dp) // Reset top padding
                 ) {
-                    // ProfileHeader removed here (now global in MainActivity)
-
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(bottom = 80.dp) // Added padding for bottom nav
-                    ) {
                         items(favorites) { favorite ->
                             FavoriteImageCard(
                                 favorite = favorite,
@@ -125,7 +124,6 @@ fun FavoriteScreen() {
                 }
             }
         }
-    }
 }
 
 @Composable

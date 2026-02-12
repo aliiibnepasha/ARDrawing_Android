@@ -9,7 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ardrawing.data.local.database.AppDatabase
-import com.example.ardrawing.data.model.DrawingTemplate
+import com.example.ardrawing.data.repository.MyAlbumRepository
 import com.example.ardrawing.data.repository.SavedDrawingRepository
 import com.example.ardrawing.data.repository.LessonRepository
 import com.example.ardrawing.ui.viewmodel.ARViewModel
@@ -71,6 +71,7 @@ sealed class Screen(val route: String) {
     object PhotoToSketch : Screen("photo_to_sketch")
     object CreateWithAI : Screen("create_with_ai")
     object MyAlbum : Screen("my_album")
+    object SelectLanguage : Screen("select_language")
 }
 
 @Composable
@@ -92,7 +93,6 @@ fun NavGraph(
 
             HomeScreenNew(
                 currentRoute = currentTabRoute,
-                onAvatarChange = onAvatarChange,
                 onTemplateSelected = { template ->
                     navController.navigate(
                         Screen.DrawingModeSelection.createRoute(template.id, "template")
@@ -555,11 +555,11 @@ fun NavGraph(
         }
         
         composable(Screen.MyCreative.route) {
-            val context = LocalContext.current
             val database = AppDatabase.getDatabase(context)
             val repository = SavedDrawingRepository(database.savedDrawingDao())
+            val albumRepository = MyAlbumRepository(database.myAlbumDao())
             val viewModel: MyCreativeViewModel = viewModel(
-                factory = MyCreativeViewModel.provideFactory(repository)
+                factory = MyCreativeViewModel.provideFactory(repository, albumRepository)
             )
             
             MyCreativeScreen(
@@ -570,16 +570,19 @@ fun NavGraph(
                 },
                 onSeeAllAlbumClick = {
                     navController.navigate(Screen.MyAlbum.route)
+                },
+                onSelectLanguageClick = {
+                    navController.navigate(Screen.SelectLanguage.route)
                 }
             )
         }
         
         composable(Screen.MyAlbum.route) {
-            val context = LocalContext.current
             val database = AppDatabase.getDatabase(context)
             val repository = SavedDrawingRepository(database.savedDrawingDao())
+            val albumRepository = MyAlbumRepository(database.myAlbumDao())
             val viewModel: MyCreativeViewModel = viewModel(
-                factory = MyCreativeViewModel.provideFactory(repository)
+                factory = MyCreativeViewModel.provideFactory(repository, albumRepository)
             )
             
             MyAlbumScreen(
@@ -687,6 +690,14 @@ fun NavGraph(
         composable(Screen.Settings.route) {
             SettingsScreen(
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.SelectLanguage.route) {
+            com.example.ardrawing.ui.screens.LanguageScreen(
+                onDoneClick = { _ ->
+                    navController.popBackStack()
+                }
             )
         }
     }

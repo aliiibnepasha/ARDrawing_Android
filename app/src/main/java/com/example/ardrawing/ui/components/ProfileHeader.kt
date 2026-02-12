@@ -25,7 +25,7 @@ fun ProfileHeader(
     title: String = "Augmented Reality",
     avatarSize: Dp = 50.dp,
     titleSize: TextUnit = 20.sp,
-    subtitleColor: Color = Color.Gray,
+    subtitleColor: Color = Color.Black,
     titleColor: Color = Color.Black
 ) {
     Row(
@@ -52,7 +52,7 @@ fun ProfileHeader(
             Text(
                 text = title,
                 fontSize = titleSize,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 color = titleColor
             )
         }

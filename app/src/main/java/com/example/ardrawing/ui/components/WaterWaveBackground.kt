@@ -60,8 +60,8 @@ fun WaterWaveBackground() {
             val width = size.width
             val height = size.height
 
-            // 🌊 Water level reacts to surge
-            val baseWaterLevel = height * 0.14f - surge * 28f
+            // 🌊 Water level starts from top (small offset)
+            val baseWaterLevel = height * 0.02f - surge * 20f
 
             drawSeaWave(
                 width = width,

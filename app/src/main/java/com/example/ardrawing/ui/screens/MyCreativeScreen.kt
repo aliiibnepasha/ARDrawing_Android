@@ -39,13 +39,14 @@ import com.example.ardrawing.R
 import com.example.ardrawing.data.local.entity.SavedDrawing
 import com.example.ardrawing.ui.viewmodel.MyCreativeViewModel
 import com.example.ardrawing.ui.components.WaterWaveBackground
+import com.example.ardrawing.ui.components.ProfileHeader
 import com.example.ardrawing.utils.GalleryUtils
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import android.net.Uri
-import com.example.ardrawing.ui.components.ProfileHeader
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun MyCreativeScreen(
@@ -61,20 +62,30 @@ fun MyCreativeScreen(
 
     // Wrap with Box to put Water Animation behind everything
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Background Animation removed (now global in MainActivity)
-        // WaterWaveBackground()
+        // 1. Background Animation
+        WaterWaveBackground()
 
         // 2. Foreground Content
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Fixed Header removed (now global in MainActivity)
+            // ProfileHeader
+            ProfileHeader(
+                avatarRes = R.drawable.home_avtr,
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = 8.dp)
+                    .padding(horizontal = 20.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(10.dp))
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .padding(bottom = 16.dp) // Only bottom padding here
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 16.dp)
             ) {
 
                 // Spacer removed to fix "too low" issue
@@ -119,12 +130,12 @@ fun MyCreativeScreen(
 fun StatsRow() {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         StatCard(
             modifier = Modifier.weight(1f),
             cornerColor = Color(0xFF8E44AD),
-            icon = Icons.Default.Edit,
+            icon = R.drawable.blue_brush,
             title = "Drawn",
             value = "02"
         )
@@ -132,7 +143,7 @@ fun StatsRow() {
         StatCard(
             modifier = Modifier.weight(1f),
             cornerColor = Color(0xFFF5B041),
-            icon = Icons.Default.AccessTime,
+            icon = R.drawable.clock,
             title = "Time",
             value = "22s"
         )
@@ -140,7 +151,7 @@ fun StatsRow() {
         StatCard(
             modifier = Modifier.weight(1f),
             cornerColor = Color(0xFF7DCEA0),
-            icon = Icons.Default.School,
+            icon = R.drawable.teacher_blue,
             title = "Lessons",
             value = "02"
         )
@@ -152,13 +163,13 @@ fun StatsRow() {
 fun StatCard(
     modifier: Modifier = Modifier,
     cornerColor: Color,
-    icon: ImageVector,
+    icon: Int,
     title: String,
     value: String
 ) {
     Box(
         modifier = modifier
-            .height(170.dp)
+            .height(140.dp)
             .shadow(
                 elevation = 4.dp,
                 shape = RoundedCornerShape(12.dp),
@@ -181,12 +192,12 @@ fun StatCard(
 
         // 🔹 Icon - Positioned in the Top-Left Triangle
         Icon(
-            imageVector = icon,
+            painter = painterResource(icon),
             contentDescription = null,
             tint = Color.White,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(top = 18.dp, start = 18.dp)
+                .padding(top = 12.dp, start = 12.dp)
                 .size(28.dp)
         )
 
@@ -207,8 +218,8 @@ fun StatCard(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = value,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
                 color = Color(0xFF111827) // Gray-900
             )
         }
@@ -235,7 +246,7 @@ fun MyAlbumSection(
             Text(
                 text = "My Album",
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 color = Color.Black
             )
             
@@ -275,25 +286,20 @@ fun MyAlbumSection(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(Color(0xFFE0E9FC), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
+
                         Icon(
-                            imageVector = Icons.Default.Add,
+                            painter = painterResource(R.drawable.add_illustration),
                             contentDescription = "Upload",
                             tint = colorResource(R.color.app_blue),
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(30.dp)
                         )
-                    }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "Upload a photo\nof your drawing",
                         fontSize = 13.sp,
                         color = Color.Black,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
                         lineHeight = 18.sp,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
@@ -302,7 +308,7 @@ fun MyAlbumSection(
             
             // Show uploaded images or placeholder
             if (uploadedImages.isNotEmpty()) {
-                // Show first uploaded image
+                // Show ONLY the latest uploaded image (at index 0)
                 Card(
                     modifier = Modifier
                         .weight(1f)
@@ -313,7 +319,7 @@ fun MyAlbumSection(
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(context)
-                            .data(Uri.parse(uploadedImages[0]))
+                            .data(android.net.Uri.parse(uploadedImages[0]))
                             .build(),
                         contentDescription = "Uploaded Image",
                         modifier = Modifier.fillMaxSize(),
@@ -379,7 +385,7 @@ fun MoreSection(
         Text(
             text = "More",
             fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Medium,
             color = Color.Black
         )
         
@@ -395,6 +401,8 @@ fun MoreSection(
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
+                Spacer(modifier = Modifier.height(8.dp))
+
                 MoreItem(
                     text = "Select Language",
                     onClick = onSelectLanguageClick
@@ -409,6 +417,9 @@ fun MoreSection(
                     text = "Privacy Policy",
                     onClick = onPrivacyPolicyClick
                 )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
             }
         }
     }
@@ -425,7 +436,7 @@ fun MoreItem(
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
             .clickable { onClick() }
-            .padding(16.dp),
+            .padding(12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

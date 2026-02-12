@@ -45,49 +45,33 @@ fun ARFloatingBottomBar(
                 .background(Color.White, RoundedCornerShape(36.dp))
                 .clip(RoundedCornerShape(36.dp))
         ) {
-
-            // ===== TOP SELECTION INDICATOR ROW =====
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 40.dp) // Adjusted padding for better alignment
-                    .align(Alignment.TopCenter),
-                horizontalArrangement = Arrangement.SpaceBetween // Changed to SpaceBetween
-            ) {
-                TopIndicator(selected = currentRoute == "home")
-                TopIndicator(selected = currentRoute == "lesson_list")
-                TopIndicator(selected = currentRoute == "favorite")
-                TopIndicator(selected = currentRoute == "my_creative")
-            }
-
-            // ===== ICON ROW =====
+            // ===== UNITARY NAVIGATION ROW =====
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 36.dp), // Matched padding logic
-                horizontalArrangement = Arrangement.SpaceBetween, // Changed to SpaceBetween
+                    .padding(horizontal = 24.dp), 
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
-                IconItem(
+                NavBarItem(
                     icon = if (currentRoute == "home") R.drawable.blue_brush else R.drawable.brush,
                     selected = currentRoute == "home",
                     onClick = { onItemClick("home") }
                 )
 
-                IconItem(
+                NavBarItem(
                     icon = if (currentRoute == "lesson_list") R.drawable.teacher_blue else R.drawable.teacher,
                     selected = currentRoute == "lesson_list",
                     onClick = { onItemClick("lesson_list") }
                 )
 
-                IconItem(
+                NavBarItem(
                     icon = if (currentRoute == "favorite") R.drawable.fav_heart else R.drawable.fav_ic,
                     selected = currentRoute == "favorite",
                     onClick = { onItemClick("favorite") }
                 )
 
-                IconItem(
+                NavBarItem(
                     icon = if (currentRoute == "my_creative") R.drawable.profile_blue else R.drawable.profile,
                     selected = currentRoute == "my_creative",
                     onClick = { onItemClick("my_creative") }
@@ -96,38 +80,44 @@ fun ARFloatingBottomBar(
         }
     }
 }
+
 @Composable
-private fun IconItem(
+private fun NavBarItem(
     icon: Int,
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    Box(
+    Column(
         modifier = Modifier
-            .size(48.dp) // ✅ Touch target
-            .clip(CircleShape)
+            .width(64.dp) 
+            .fillMaxHeight()
             .clickable { onClick() },
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top 
     ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = Color.Unspecified,
-            modifier = Modifier.size(24.dp) // ✅ Visual size stays same
+        // TOP INDICATOR
+        Box(
+            modifier = Modifier
+                .width(30.dp)
+                .height(5.dp)
+                .clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp))
+                .background(
+                    if (selected) Color(0xFF4DA3FF) else Color.Transparent
+                )
         )
-    }
-}
-
-@Composable
-private fun TopIndicator(selected: Boolean) {
-    Box(
-        modifier = Modifier
-            .width(24.dp) // Slightly wider indicator
-            .height(3.dp)
-            .clip(RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
-            .background(
-                if (selected) Color(0xFF4DA3FF) else Color.Transparent // Updated blue color
+        
+        // ICON
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier.size(24.dp)
             )
-    )
+        }
+    }
 }
 

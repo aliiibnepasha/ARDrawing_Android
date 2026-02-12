@@ -7,17 +7,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,13 +55,11 @@ fun HomeScreenNew(
     onCustomText: () -> Unit = {},
     onProClick: () -> Unit = {},
     onExplore: () -> Unit = {},
-    onAddIllustration: (String) -> Unit = {}, // Simple ID (not used, URI stored in LaunchActivity)
-    onAvatarChange: (Int) -> Unit = {}
+    onAddIllustration: (String) -> Unit = {} // Simple ID (not used, URI stored in LaunchActivity)
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val coroutineScope = rememberCoroutineScope()
 
-    val context = LocalContext.current
-    
     // Gallery launcher for "Add your illustration"
     val galleryLauncher = GalleryUtils.rememberGalleryLauncher { uri ->
         if (uri != null) {
@@ -77,53 +70,66 @@ fun HomeScreenNew(
         }
     }
 
-    // Effect to notify global header about initial avatar and changes
-    LaunchedEffect(selectedTab) {
-        onAvatarChange(if (selectedTab == 1) R.drawable.text_avtr else R.drawable.home_avtr)
-    }
-
     // Wrap with Box to put Water Animation behind everything
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Background Animation removed (now global in MainActivity)
-        // WaterWaveBackground()
+        // 1. Background Animation
+        WaterWaveBackground()
 
         // 2. Foreground Content
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp)
-        ) {
-            // ProfileHeader removed here (now global in MainActivity)
-            // Spacer removed to allow content to sit correctly below the global header
-            
-            TabSwitcher(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+        Scaffold(
+            containerColor = Color.Transparent, // Transparent to show water background
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 20.dp)
             ) {
-                if (selectedTab == 0) {
-                    // Image Tab Content
-                    item {
-                        IllustrationCard {
-                            // Open gallery when clicked
-                            GalleryUtils.openGallery(galleryLauncher)
+                ProfileHeader(
+                    avatarRes = if (pagerState.currentPage == 1) R.drawable.text_avtr else R.drawable.home_avtr
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                TabSwitcher(
+                    selectedTab = pagerState.currentPage,
+                    onTabSelected = { index ->
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(index)
                         }
                     }
-                    item { ActionCardsRow(onPhotoToSketch, onAICreate, onExplore) }
-                    item { CategoriesSection(onCategoryClick = onCategoryClick) }
-                } else {
-                    // Text Tab Content
-                    item { TextTabContent(onTextToImage, onCustomText) }
-                }
+                )
 
-                item { Spacer(modifier = Modifier.height(16.dp)) }
+                Spacer(modifier = Modifier.height(24.dp))
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.weight(1f),
+                    pageSpacing = 16.dp
+                ) { page ->
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 100.dp),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        if (page == 0) {
+                            // Image Tab Content
+                            item {
+                                IllustrationCard {
+                                    // Open gallery when clicked
+                                    GalleryUtils.openGallery(galleryLauncher)
+                                }
+                            }
+                            item { ActionCardsRow(onPhotoToSketch, onAICreate, onExplore) }
+                            item { CategoriesSection(onCategoryClick = onCategoryClick) }
+                        } else {
+                            // Text Tab Content
+                            item { TextTabContent(onTextToImage, onCustomText) }
+                        }
+
+                        item { Spacer(modifier = Modifier.height(16.dp)) }
+                    }
+                }
             }
         }
     }
@@ -136,7 +142,7 @@ fun TabSwitcher(selectedTab: Int, onTabSelected: (Int) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .height(40.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
             .padding(4.dp)
@@ -182,7 +188,7 @@ fun IllustrationCard(onClick: () -> Unit) {
     val cornerRadius = with(density) { 24.dp.toPx() }
     val stroke = Stroke(width = strokeWidth, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
     val primaryColor = AppBlue
-    
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -197,11 +203,11 @@ fun IllustrationCard(onClick: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                 Image(
-                     painter = painterResource(id = R.drawable.add_illustration),
-                     contentDescription = "Add illustration",
+            Image(
+                painter = painterResource(id = R.drawable.add_illustration),
+                contentDescription = "Add illustration",
                 modifier = Modifier.size(40.dp)
-                 )
+            )
             Spacer(modifier = Modifier.height(16.dp))
             Text("Add your illustration", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = Color(0xFF1E293B))
         }
@@ -221,14 +227,14 @@ fun ActionCardsRow(onPhotoToSketch: () -> Unit, onAICreate: () -> Unit, onExplor
             onClick = onPhotoToSketch,
             modifier = Modifier.weight(1f)
         )
-         ActionCard(
+        ActionCard(
             title = "Create\nwith AI",
             buttonText = "Start",
             iconRes = R.drawable.create_with_ai,
             onClick = onAICreate,
             modifier = Modifier.weight(1f)
         )
-         ActionCard(
+        ActionCard(
             title = "Explore\nfrom web",
             buttonText = "Browse",
             iconRes = R.drawable.explore_from_web,
@@ -306,8 +312,8 @@ fun CategoriesSection(onCategoryClick: (String) -> Unit) {
     val context = LocalContext.current
 
     Column {
-        Text("Categories", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(20.dp))
+        Text("Categories", fontSize = 20.sp, fontWeight = FontWeight.Medium)
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Load categories from assets/categories folder
         val categoryFolders = AssetUtils.listFolders(context, "categories")
@@ -330,7 +336,7 @@ fun CategoriesSection(onCategoryClick: (String) -> Unit) {
             val mappedCategoryId = categoryMapping[folderName] ?: folderName
             Triple(displayName, folderName, mappedCategoryId)
         }
-        
+
         categories.chunked(2).forEach { rowItems ->
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 rowItems.forEach { (name, folderName, mappedCategoryId) ->
@@ -440,7 +446,7 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
         // Two Cards Row
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             TextActionCard(
                 title = "Write text to\ncreate image",
@@ -453,7 +459,7 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
                     .weight(1f)
                     .clickable { onTextToImage() }
             )
-            
+
             TextActionCard(
                 title = "Create custom\ntext to draw",
                 subtitle = "Generate Art",
@@ -485,22 +491,22 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color.White)
             ) {
-                 // Daily Image
-                 Image(
-                     painter = painterResource(R.drawable.daily_img),
-                     contentDescription = "Today's Inspiration",
-                     modifier = Modifier
-                         .fillMaxSize(),
-                     contentScale = ContentScale.Crop
-                 )
-                 
+                // Daily Image
+                Image(
+                    painter = painterResource(R.drawable.daily_img),
+                    contentDescription = "Today's Inspiration",
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+
                 // Tag
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .clip(RoundedCornerShape(topEnd = 16.dp)) // Design: Tab style
                         .background(AppBlue)
-                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                        .padding(horizontal = 30.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = "Lilly Close-Up",
@@ -524,7 +530,7 @@ fun TextActionCard(
     iconTint: Color,
     modifier: Modifier = Modifier
 ) {
-     Column(
+    Column(
         modifier = modifier
             .height(160.dp)
             .clip(RoundedCornerShape(20.dp))
@@ -534,34 +540,26 @@ fun TextActionCard(
         horizontalAlignment = Alignment.Start
     ) {
 
-         Image(
-                 painter = painterResource(id = iconRes),
-                 contentDescription = null,
-             modifier = Modifier.size(40.dp)
-             )
+        Image(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            modifier = Modifier.size(40.dp)
+        )
 
-         Column {
-             Text(
-                 text = title,
-                 fontSize = 15.sp, // Slightly increased size
-                 fontWeight = FontWeight.SemiBold, // Reduced from Bold
-                 color = Color(0xFF1C1C1C), // Slightly softer black
-                 lineHeight = 22.sp 
-             )
-             Spacer(modifier = Modifier.height(4.dp))
-             Text(
-                 text = subtitle,
-                 fontSize = 12.sp,
-                 color = Color(0xFF7D7D7D) // Softer gray
-             )
-         }
+        Column {
+            Text(
+                text = title,
+                fontSize = 15.sp, // Slightly increased size
+                fontWeight = FontWeight.SemiBold, // Reduced from Bold
+                color = Color(0xFF1C1C1C), // Slightly softer black
+                lineHeight = 22.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = subtitle,
+                fontSize = 12.sp,
+                color = Color(0xFF7D7D7D) // Softer gray
+            )
+        }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenNewPreview() {
-    HomeScreenNew(
-        onCategoryClick = {}
-    )
 }

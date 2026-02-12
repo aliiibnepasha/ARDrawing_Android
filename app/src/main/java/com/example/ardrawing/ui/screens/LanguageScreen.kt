@@ -21,7 +21,6 @@ import com.example.ardrawing.R
 data class Language(
     val code: String,
     val name: String,
-    val originalName: String,
     val flagEmoji: String
 )
 
@@ -32,26 +31,24 @@ fun LanguageScreen(
     // List of languages requested
     val languages = remember {
         listOf(
-            Language("es", "Spanish", "Español", "🇪🇸"),
-            Language("fr", "French", "Français", "🇫🇷"), // Francias -> Français
-            Language("ko", "Korean", "한국어", "🇰🇷"),
-            Language("en", "English", "English", "🇺🇸"),
-            Language("de", "German", "Deutsch", "🇩🇪"),
-            Language("th", "Thailand", "ไทย", "🇹🇭"),
-            Language("pt", "Portuguese", "Português", "🇵🇹"),
-            Language("pl", "Polish", "Polski", "🇵🇱"),
-            Language("nl", "Dutch", "Nederlands", "🇳🇱"),
-            Language("tl", "Filipino", "Filipino", "🇵🇭"),
-            Language("id", "Indonesian", "Bahasa Indonesia", "🇮🇩"), // Indoesian -> Indonesian
-            Language("ja", "Japanese", "日本語", "🇯🇵"),
-            Language("sv", "Swedish", "Svenska", "🇸🇪"),
-            Language("it", "Italian", "Italiano", "🇮🇹"),
-            Language("ms", "Malay", "Bahasa Melayu", "🇲🇾"),
-            Language("tr", "Turkish", "Türkçe", "🇹🇷"),
-            Language("zh", "Chinese", "中文", "🇨🇳"),
-            Language("el", "Greek", "Ελληνικά", "🇬🇷"),
-            Language("vi", "Vietnamese", "Tiếng Việt", "🇻🇳"),
-            Language("ar", "Arabic", "العربية", "🇦🇪")
+            Language("es", "Spanish", "🇪🇸"),
+            Language("fr", "French", "🇫🇷"),
+            Language("ko", "Korean", "🇰🇷"),
+            Language("en", "English", "🇺🇸"),
+            Language("de", "German", "🇩🇪"),
+            Language("pt", "Portuguese", "🇵🇹"),
+            Language("pl", "Polish", "🇵🇱"),
+            Language("nl", "Dutch", "🇳🇱"),
+            Language("tl", "Filipino", "🇵🇭"),
+            Language("id", "Indonesian", "🇮🇩"),
+            Language("ja", "Japanese", "🇯🇵"),
+            Language("it", "Italian", "🇮🇹"),
+            Language("ms", "Malay", "🇲🇾"),
+            Language("tr", "Turkish", "🇹🇷"),
+            Language("zh", "Chinese", "🇨🇳"),
+            Language("el", "Greek", "🇬🇷"),
+            Language("vi", "Vietnamese", "🇻🇳"),
+            Language("ar", "Arabic", "🇦🇪")
         )
     }
 
@@ -62,6 +59,7 @@ fun LanguageScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .statusBarsPadding()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -141,7 +139,7 @@ fun LanguageItem(
         
         // Language Text
         Text(
-            text = "${language.name} (${language.originalName})",
+            text = language.name,
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
             color = textColor

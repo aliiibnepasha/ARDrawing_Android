@@ -36,12 +36,21 @@ fun LessonScreen(
 ) {
     // Wrap with Box to put Water Animation behind everything
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Background Animation removed (now global in MainActivity)
-        // WaterWaveBackground()
+        // 1. Background Animation
+        WaterWaveBackground()
         
         // 2. Foreground Content
         Column(modifier = Modifier.fillMaxSize()) {
-            // Fixed Header removed (now global in MainActivity)
+            // ProfileHeader
+            ProfileHeader(
+                avatarRes = R.drawable.home_avtr,
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = 8.dp)
+                    .padding(horizontal = 20.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(10.dp))
 
             LazyColumn(
                 modifier = Modifier
@@ -127,7 +136,7 @@ private fun FreeLessonCard() {
                         brush = Brush.horizontalGradient(
                             colors = listOf(
                                 Color(0xFF8FD866),
-                                Color(0xFF67C240)
+                                Color(0xFF83D55D)
                             )
                         )
                     )
@@ -165,7 +174,7 @@ private fun FreeLessonCard() {
                 Text(
                     text = "Free Lesson",
                     color = Color.White,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp, // Reduced font
                     letterSpacing = 0.5.sp
                 )
@@ -198,8 +207,8 @@ private fun FreeLessonCard() {
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(0.dp),
                         modifier = Modifier
-                            .weight(1f)
-                            .height(30.dp)
+                            .width(80.dp)
+                            .height(40.dp)
                     ) {
                         Text(
                             "Start", 
@@ -275,7 +284,7 @@ private fun LessonItemCard(
 
                 // Heart Icon
                 Icon(
-                    imageVector = Icons.Outlined.FavoriteBorder,
+                    painter = painterResource(R.drawable.my_fav_unfill),
                     contentDescription = null,
                     tint = colorResource(R.color.app_blue),
                     modifier = Modifier
@@ -416,7 +425,7 @@ private fun CourseBanner() {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
-                        .background(Color(0xFFF9AB26))
+                        .background(Color(0xFFFAC344))
                         .padding(horizontal = 10.dp, vertical = 3.dp)
                 ) {
                     Text(

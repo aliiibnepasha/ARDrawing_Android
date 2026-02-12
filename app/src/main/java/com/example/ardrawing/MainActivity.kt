@@ -17,22 +17,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.ardrawing.data.AuthManager
 import com.example.ardrawing.data.LocalAuthManager
-import com.example.ardrawing.data.repository.TemplateRepository
 import com.example.ardrawing.navigation.NavGraph
 import com.example.ardrawing.navigation.Screen
 import com.example.ardrawing.ui.components.ARFloatingBottomBar
-import com.example.ardrawing.ui.components.ProfileHeader
-import com.example.ardrawing.ui.components.WaterWaveBackground
 import com.example.ardrawing.ui.theme.ARDrawingTheme
 import com.example.ardrawing.utils.ARCorePreferences
 import com.google.ar.core.ArCoreApk
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
-import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import android.util.Log
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 class MainActivity : ComponentActivity() {
     
@@ -42,13 +35,13 @@ class MainActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // Initialize AuthManager
         val authManager = AuthManager(this)
-        
+
         // Check ARCore compatibility on app startup (only once)
         checkARCoreCompatibility()
-        
+
         // Sign in anonymously on app start
         lifecycleScope.launch {
             val result = authManager.signInAnonymously()
@@ -58,161 +51,158 @@ class MainActivity : ComponentActivity() {
                 Log.e(TAG, "Anonymous sign-in failed: ${error.message}")
             }
         }
-        
+
         // Set static navigation bar color (black) - never changes
         WindowCompat.setDecorFitsSystemWindows(window, true)
         window.navigationBarColor = android.graphics.Color.BLACK
         window.statusBarColor = android.graphics.Color.BLACK
         // Fix for black glitch during navigation transitions
         window.setBackgroundDrawableResource(R.color.main_bg)
-        
+
         enableEdgeToEdge()
         setContent {
             ARDrawingTheme {
                 // Provide AuthManager via CompositionLocal
                 CompositionLocalProvider(LocalAuthManager provides authManager) {
-                val navController = rememberNavController()
+                    val navController = rememberNavController()
 
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
-                
-                // Track if navigation is ready to show bottom bar
-                var isNavigationReady by remember { mutableStateOf(false) }
-                
-                // Track current avatar specifically for Global ProfileHeader
-                var currentAvatarRes by remember { mutableIntStateOf(R.drawable.home_avtr) }
-                
-                // Define routes that should show the bottom bar
-                val bottomBarRoutes = listOf(
-                    Screen.Home.route,
-                    Screen.LessonList.route,
-                    Screen.MyCreative.route,
-                    "favorite"
-                )
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentRoute = navBackStackEntry?.destination?.route
 
-                // Effect to handle bottom bar visibility delay
-                LaunchedEffect(currentRoute) {
-                     if (currentRoute in bottomBarRoutes) {
-                        // If we are already on a bottom bar route and switching to another, show immediately
-                        // (We need to capture the previous state effectively, but for now assuming if we are in valid route)
-                         // Ideally we check internal state, but here we can just check if we want to show it.
-                        
-                         // To prevent "late" appearance when coming BACK from detail screen:
-                         // We delay ONLY if the previous state wasn't one of the main tabs.
-                         // Since we can't easily access "previousRoute" directly from the state without tracking it manually:
-                         
-                         // We'll use a simple heuristic:
-                         // Always delay slightly to match screen transition (300ms is default compose nav transition)
-                         // UNLESS we know for sure it's a tab switch.
-                         
-                         // For simplicity and robustness to fix the specific "pop in" issue:
-                         delay(300) 
-                         isNavigationReady = true
-                     } else {
-                         isNavigationReady = false
-                     }
-                }
+                    // Track if navigation is ready to show bottom bar
+                    var isNavigationReady by remember { mutableStateOf(false) }
 
-                // Determine which bottom nav item should be selected based on current route
-                val selectedRoute = when {
-                    currentRoute == Screen.Home.route -> "home"
-                    currentRoute == Screen.LessonList.route -> "lesson_list"
-                    currentRoute == Screen.MyCreative.route -> "my_creative"
-                    currentRoute == "favorite" -> "favorite"
-                    else -> null // Don't highlight any tab for other routes
-                }
-                
-                // Show bottom nav ONLY on: Home, Lesson, AR Text, My
-                val shouldShowBottomNav = currentRoute in bottomBarRoutes
+                    // Track current avatar specifically for Global ProfileHeader
+                    var currentAvatarRes by remember { mutableIntStateOf(R.drawable.home_avtr) }
 
-                Column(modifier = Modifier.fillMaxSize()) {
-                    // Global ProfileHeader Area
-                    if (shouldShowBottomNav) {
-                        androidx.compose.material3.Surface(
-                            color = androidx.compose.ui.graphics.Color.White,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            ProfileHeader(
-                                avatarRes = currentAvatarRes,
-                                modifier = Modifier
-                                    .statusBarsPadding()
-                                    .padding(top = 8.dp, bottom = 0.dp) // Bottom padding removed for wave alignment
-                                    .padding(horizontal = 20.dp)
-                            )
+                    // Track Splash Screen visibility
+                    var showSplash by remember { mutableStateOf(true) }
+
+                    // Define routes that should show the bottom bar
+                    val bottomBarRoutes = listOf(
+                        Screen.Home.route,
+                        Screen.LessonList.route,
+                        Screen.MyCreative.route,
+                        "favorite"
+                    )
+
+                    // Effect to handle bottom bar visibility delay
+                    LaunchedEffect(currentRoute) {
+                        if (currentRoute in bottomBarRoutes) {
+                            // If we are already on a bottom bar route and switching to another, show immediately
+                            // (We need to capture the previous state effectively, but for now assuming if we are in valid route)
+                            // Ideally we check internal state, but here we can just check if we want to show it.
+
+                            // To prevent "late" appearance when coming BACK from detail screen:
+                            // We delay ONLY if the previous state wasn't one of the main tabs.
+                            // Since we can't easily access "previousRoute" directly from the state without tracking it manually:
+
+                            // We'll use a simple heuristic:
+                            // Always delay slightly to match screen transition (300ms is default compose nav transition)
+                            // UNLESS we know for sure it's a tab switch.
+
+                            // For simplicity and robustness to fix the specific "pop in" issue:
+                            delay(300)
+                            isNavigationReady = true
+                        } else {
+                            isNavigationReady = false
                         }
-                        
-                        // Added 10dp top margin for all main screens
-                        Spacer(modifier = Modifier.height(10.dp))
                     }
 
-                    Box(modifier = Modifier.weight(1f)) {
-                        // Global WaterBackground starts exactly here
-                        if (shouldShowBottomNav) {
-                            WaterWaveBackground()
-                        }
-                        
-                        NavGraph(
-                            navController = navController,
-                            currentTabRoute = selectedRoute,
-                            modifier = Modifier.fillMaxSize(),
-                            onAvatarChange = { resId -> currentAvatarRes = resId }
-                        )
-                        
-                        // Animated visibility for bottom bar stays inside the Box
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = shouldShowBottomNav && isNavigationReady,
-                            enter = androidx.compose.animation.slideInVertically(
-                                initialOffsetY = { it }
-                            ) + androidx.compose.animation.fadeIn(),
-                            exit = androidx.compose.animation.slideOutVertically(
-                                targetOffsetY = { it }
-                            ) + androidx.compose.animation.fadeOut(),
-                            modifier = Modifier.align(Alignment.BottomCenter)
-                        ) {
-                            ARFloatingBottomBar(
-                                currentRoute = selectedRoute,
-                                onItemClick = { route ->
-                                    // ... logic stays the same ...
-                                    when (route) {
-                                        "home" -> {
-                                            if (currentRoute != Screen.Home.route) {
-                                                navController.navigate(Screen.Home.route) {
-                                                    popUpTo(Screen.Home.route) { inclusive = true }
+                    // Splash Screen Timer
+                    LaunchedEffect(Unit) {
+                        delay(8000)
+                        showSplash = false
+                    }
+
+                    // Determine which bottom nav item should be selected based on current route
+                    val selectedRoute = when {
+                        currentRoute == Screen.Home.route -> "home"
+                        currentRoute == Screen.LessonList.route -> "lesson_list"
+                        currentRoute == Screen.MyCreative.route -> "my_creative"
+                        currentRoute == "favorite" -> "favorite"
+                        else -> null // Don't highlight any tab for other routes
+                    }
+
+                    // Show bottom nav ONLY on: Home, Lesson, AR Text, My
+                    val shouldShowBottomNav = currentRoute in bottomBarRoutes
+
+                    if (showSplash) {
+                        com.example.ardrawing.ui.screens.SplashScreen()
+                    } else {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            // Content Area (Screens will handle their own backgrounds/headers)
+                            NavGraph(
+                                navController = navController,
+                                currentTabRoute = selectedRoute,
+                                modifier = Modifier.fillMaxSize(),
+                                onAvatarChange = { resId -> currentAvatarRes = resId }
+                            )
+
+                            // Global Floating Bottom Bar
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = shouldShowBottomNav && isNavigationReady,
+                                enter = androidx.compose.animation.slideInVertically(
+                                    initialOffsetY = { it }
+                                ) + androidx.compose.animation.fadeIn(),
+                                exit = androidx.compose.animation.slideOutVertically(
+                                    targetOffsetY = { it }
+                                ) + androidx.compose.animation.fadeOut(),
+                                modifier = Modifier.align(Alignment.BottomCenter)
+                            ) {
+                                ARFloatingBottomBar(
+                                    currentRoute = selectedRoute,
+                                    onItemClick = { route ->
+                                        when (route) {
+                                            "home" -> {
+                                                if (currentRoute != Screen.Home.route) {
+                                                    navController.navigate(Screen.Home.route) {
+                                                        popUpTo(Screen.Home.route) {
+                                                            inclusive = true
+                                                        }
+                                                    }
                                                 }
                                             }
-                                        }
-                                        "lesson_list" -> {
-                                            if (currentRoute != Screen.LessonList.route) {
-                                                navController.navigate(Screen.LessonList.route) {
-                                                    popUpTo(Screen.Home.route) { inclusive = false }
+
+                                            "lesson_list" -> {
+                                                if (currentRoute != Screen.LessonList.route) {
+                                                    navController.navigate(Screen.LessonList.route) {
+                                                        popUpTo(Screen.Home.route) {
+                                                            inclusive = false
+                                                        }
+                                                    }
                                                 }
                                             }
-                                        }
-                                        "favorite" -> {
-                                            if (currentRoute != "favorite") {
-                                                navController.navigate("favorite") {
-                                                    popUpTo(Screen.Home.route) { inclusive = false }
+
+                                            "favorite" -> {
+                                                if (currentRoute != "favorite") {
+                                                    navController.navigate("favorite") {
+                                                        popUpTo(Screen.Home.route) {
+                                                            inclusive = false
+                                                        }
+                                                    }
                                                 }
                                             }
-                                        }
-                                        "my_creative" -> {
-                                            if (currentRoute != Screen.MyCreative.route) {
-                                                navController.navigate(Screen.MyCreative.route) {
-                                                    popUpTo(Screen.Home.route) { inclusive = false }
+
+                                            "my_creative" -> {
+                                                if (currentRoute != Screen.MyCreative.route) {
+                                                    navController.navigate(Screen.MyCreative.route) {
+                                                        popUpTo(Screen.Home.route) {
+                                                            inclusive = false
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }
             }
-            }
         }
     }
-    
     /**
      * Check ARCore compatibility once at app startup and save to preferences
      * This prevents checking on every launch and improves performance
@@ -289,7 +279,10 @@ class MainActivity : ComponentActivity() {
             // This will throw an exception if device is truly incompatible
             val session = com.google.ar.core.Session(this)
             session.close()
-            Log.d(TAG, "Device capability check: Session created successfully - device is compatible")
+            Log.d(
+                TAG,
+                "Device capability check: Session created successfully - device is compatible"
+            )
             true
         } catch (e: com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException) {
             Log.d(TAG, "Device capability check: Device is NOT compatible")

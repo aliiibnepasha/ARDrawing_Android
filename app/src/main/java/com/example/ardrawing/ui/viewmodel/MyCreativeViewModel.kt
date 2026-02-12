@@ -26,7 +26,8 @@ enum class TabType {
 }
 
 class MyCreativeViewModel(
-    private val repository: SavedDrawingRepository
+    private val repository: SavedDrawingRepository,
+    private val albumRepository: MyAlbumRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(MyCreativeUiState())
@@ -34,6 +35,7 @@ class MyCreativeViewModel(
     
     init {
         loadDrawings()
+        loadAlbumImages()
     }
     
     private fun loadDrawings() {
@@ -57,6 +59,16 @@ class MyCreativeViewModel(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = e.message
+                )
+            }
+        }
+    }
+
+    private fun loadAlbumImages() {
+        viewModelScope.launch {
+            albumRepository.getAllImages().collect { images ->
+                _uiState.value = _uiState.value.copy(
+                    uploadedImages = images.map { it.uri }
                 )
             }
         }
@@ -87,9 +99,13 @@ class MyCreativeViewModel(
     }
     
     fun addUploadedImage(imageUri: String) {
-        val currentImages = _uiState.value.uploadedImages.toMutableList()
-        currentImages.add(0, imageUri) // Add to beginning
-        _uiState.value = _uiState.value.copy(uploadedImages = currentImages)
+        viewModelScope.launch {
+            try {
+                albumRepository.addImage(imageUri)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
     }
     
     fun getUploadedImages(): List<String> {
@@ -97,11 +113,14 @@ class MyCreativeViewModel(
     }
     
     companion object {
-        fun provideFactory(repository: SavedDrawingRepository): ViewModelProvider.Factory {
+        fun provideFactory(
+            repository: SavedDrawingRepository,
+            albumRepository: MyAlbumRepository
+        ): ViewModelProvider.Factory {
             return object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return MyCreativeViewModel(repository) as T
+                    return MyCreativeViewModel(repository, albumRepository) as T
                 }
             }
         }
