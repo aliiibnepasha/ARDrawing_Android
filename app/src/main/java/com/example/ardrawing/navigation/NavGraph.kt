@@ -79,7 +79,8 @@ fun NavGraph(
     modifier: Modifier = Modifier,
     startDestination: String = Screen.Home.route,
     currentTabRoute: String? = null,
-    arViewModel: ARViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    arViewModel: ARViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    onAvatarChange: (Int) -> Unit = {}
 ) {
     NavHost(
         navController = navController,
@@ -91,6 +92,7 @@ fun NavGraph(
 
             HomeScreenNew(
                 currentRoute = currentTabRoute,
+                onAvatarChange = onAvatarChange,
                 onTemplateSelected = { template ->
                     navController.navigate(
                         Screen.DrawingModeSelection.createRoute(template.id, "template")

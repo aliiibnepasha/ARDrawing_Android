@@ -18,9 +18,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +43,7 @@ import com.example.ardrawing.ui.components.WaterWaveBackground
 import com.example.ardrawing.utils.GalleryUtils
 import com.example.ardrawing.ui.utils.rememberAssetImagePainter
 import com.example.ardrawing.LaunchActivity
+import com.example.ardrawing.ui.components.ProfileHeader
 
 val AppBlue = Color(0xFF4DA3FF)
 
@@ -62,11 +60,13 @@ fun HomeScreenNew(
     onCustomText: () -> Unit = {},
     onProClick: () -> Unit = {},
     onExplore: () -> Unit = {},
-    onAddIllustration: (String) -> Unit = {} // Simple ID (not used, URI stored in LaunchActivity)
+    onAddIllustration: (String) -> Unit = {}, // Simple ID (not used, URI stored in LaunchActivity)
+    onAvatarChange: (Int) -> Unit = {}
 ) {
-    val pagerState = rememberPagerState(pageCount = { 2 })
-    val coroutineScope = rememberCoroutineScope()
+    var selectedTab by remember { mutableStateOf(0) }
 
+    val context = LocalContext.current
+    
     // Gallery launcher for "Add your illustration"
     val galleryLauncher = GalleryUtils.rememberGalleryLauncher { uri ->
         if (uri != null) {
@@ -77,112 +77,66 @@ fun HomeScreenNew(
         }
     }
 
+    // Effect to notify global header about initial avatar and changes
+    LaunchedEffect(selectedTab) {
+        onAvatarChange(if (selectedTab == 1) R.drawable.text_avtr else R.drawable.home_avtr)
+    }
+
     // Wrap with Box to put Water Animation behind everything
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Background Animation
-        WaterWaveBackground()
+        // 1. Background Animation removed (now global in MainActivity)
+        // WaterWaveBackground()
 
         // 2. Foreground Content
-    Scaffold(
-            containerColor = Color.Transparent, // Transparent to show water background
-    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = 20.dp)
         ) {
-            HomeHeader(
-                currentRoute = currentRoute,
-                selectedTab = pagerState.currentPage
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
+            // ProfileHeader removed here (now global in MainActivity)
+            // Spacer removed to allow content to sit correctly below the global header
+            
             TabSwitcher(
-                selectedTab = pagerState.currentPage,
-                onTabSelected = { index ->
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(index)
-                    }
-                }
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            HorizontalPager(
-                state = pagerState,
+            LazyColumn(
                 modifier = Modifier.weight(1f),
-                pageSpacing = 16.dp
-            ) { page ->
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 100.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
-                    if (page == 0) {
-                        // Image Tab Content
-                        item {
-                            IllustrationCard {
-                                // Open gallery when clicked
-                                GalleryUtils.openGallery(galleryLauncher)
-                            }
+                contentPadding = PaddingValues(bottom = 100.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                if (selectedTab == 0) {
+                    // Image Tab Content
+                    item {
+                        IllustrationCard {
+                            // Open gallery when clicked
+                            GalleryUtils.openGallery(galleryLauncher)
                         }
-                        item { ActionCardsRow(onPhotoToSketch, onAICreate, onExplore) }
-                        item { CategoriesSection(onCategoryClick = onCategoryClick) }
-                    } else {
-                        // Text Tab Content
-                        item { TextTabContent(onTextToImage, onCustomText) }
                     }
-                    
-                    item { Spacer(modifier = Modifier.height(16.dp)) }
+                    item { ActionCardsRow(onPhotoToSketch, onAICreate, onExplore) }
+                    item { CategoriesSection(onCategoryClick = onCategoryClick) }
+                } else {
+                    // Text Tab Content
+                    item { TextTabContent(onTextToImage, onCustomText) }
                 }
+
+                item { Spacer(modifier = Modifier.height(16.dp)) }
             }
         }
     }
-    }
 }
 
-@Composable
-fun HomeHeader(currentRoute: String? = null, selectedTab: Int = 0) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(
-                id = if (selectedTab == 1) R.drawable.text_avtr else R.drawable.home_avtr
-            ),
-            contentDescription = "Avatar",
-            modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(
-                text = "Welcome to",
-                fontSize = 14.sp,
-                color = Color.Black
-            )
-            Text(
-                text = "Augmented Reality",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-        }
-    }
-}
+
 
 @Composable
 fun TabSwitcher(selectedTab: Int, onTabSelected: (Int) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(40.dp)
+            .height(48.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
             .padding(4.dp)
@@ -352,8 +306,8 @@ fun CategoriesSection(onCategoryClick: (String) -> Unit) {
     val context = LocalContext.current
 
     Column {
-        Text("Categories", fontSize = 20.sp, fontWeight = FontWeight.Medium)
-        Spacer(modifier = Modifier.height(8.dp))
+        Text("Categories", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Load categories from assets/categories folder
         val categoryFolders = AssetUtils.listFolders(context, "categories")
@@ -486,7 +440,7 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
         // Two Cards Row
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             TextActionCard(
                 title = "Write text to\ncreate image",
@@ -546,7 +500,7 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
                         .align(Alignment.BottomStart)
                         .clip(RoundedCornerShape(topEnd = 16.dp)) // Design: Tab style
                         .background(AppBlue)
-                        .padding(horizontal = 30.dp, vertical = 6.dp)
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = "Lilly Close-Up",

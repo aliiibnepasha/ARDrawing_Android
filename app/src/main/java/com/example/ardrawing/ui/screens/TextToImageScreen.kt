@@ -316,10 +316,10 @@ private fun InputState(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 56.dp, max = 220.dp)
+                .height(56.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF9F9F9)) 
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             if (text.isEmpty()) {

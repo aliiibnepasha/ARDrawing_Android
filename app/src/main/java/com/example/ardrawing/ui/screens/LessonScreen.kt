@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ardrawing.R
+import com.example.ardrawing.ui.components.ProfileHeader
 import com.example.ardrawing.ui.components.WaterWaveBackground
 
 @Composable
@@ -35,93 +36,62 @@ fun LessonScreen(
 ) {
     // Wrap with Box to put Water Animation behind everything
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Background Animation
-        WaterWaveBackground()
+        // 1. Background Animation removed (now global in MainActivity)
+        // WaterWaveBackground()
         
         // 2. Foreground Content
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            // 1. Header
-            item { LessonHeader() }
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Fixed Header removed (now global in MainActivity)
 
-            // 2. Free Lesson Card
-            item { FreeLessonCard() }
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
+                contentPadding = PaddingValues(top = 0.dp, bottom = 120.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                // 2. Free Lesson Card
+                item { FreeLessonCard() }
 
-            // 3. First Lesson Item (Lesson 1 - Full Image)
-            item {
-                LessonItemCard(
-                    imagePath = "file:///android_asset/lessons/lesson_1/step_17.svg",
-                    level = 3,
-                    steps = 17,
-                    onClick = { onLessonClick("lesson_1") }
-                )
-            }
+                // 3. First Lesson Item (Lesson 1 - Full Image)
+                item {
+                    LessonItemCard(
+                        imagePath = "file:///android_asset/lessons/lesson_1/step_17.svg",
+                        level = 3,
+                        steps = 17,
+                        onClick = { onLessonClick("lesson_1") }
+                    )
+                }
 
-            // 4. Course Banner
-            item { CourseBanner() }
+                // 4. Course Banner
+                item { CourseBanner() }
 
-            // 5. More Lesson Items
-            item {
-                LessonItemCard(
-                    imagePath = "file:///android_asset/lessons/lesson_2/Step_13.svg",
-                    level = 2,
-                    steps = 13,
-                    onClick = { onLessonClick("lesson_2") }
-                )
-            }
+                // 5. More Lesson Items
+                item {
+                    LessonItemCard(
+                        imagePath = "file:///android_asset/lessons/lesson_2/Step_13.svg",
+                        level = 2,
+                        steps = 13,
+                        onClick = { onLessonClick("lesson_2") }
+                    )
+                }
 
-            item {
-                LessonItemCard(
-                    imagePath = "file:///android_asset/lessons/lesson_3/Step_8.svg",
-                    level = 1,
-                    steps = 8,
-                    onClick = { onLessonClick("lesson_3") }
-                )
+                item {
+                    LessonItemCard(
+                        imagePath = "file:///android_asset/lessons/lesson_3/Step_8.svg",
+                        level = 1,
+                        steps = 8,
+                        onClick = { onLessonClick("lesson_3") }
+                    )
+                }
             }
         }
     }
 }
 
 // ---------------- COMPONENTS ----------------
-@Composable
-private fun LessonHeader() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(top = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Avatar
-        Image(
-            painter = painterResource(id = R.drawable.home_avtr),
-            contentDescription = null,
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-        )
-
-        Column {
-            Text(
-                text = "Welcome to",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-            Text(
-                text = "Augmented Reality",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-        }
-    }
-}
+// ---------------- COMPONENTS ----------------
+// LessonHeader replaced by Shared ProfileHeader
 
 @Composable
 private fun FreeLessonCard() {

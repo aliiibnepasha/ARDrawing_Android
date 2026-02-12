@@ -45,103 +45,76 @@ import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import android.net.Uri
+import com.example.ardrawing.ui.components.ProfileHeader
 
 @Composable
 fun MyCreativeScreen(
     viewModel: MyCreativeViewModel = viewModel(),
     onBackClick: () -> Unit,
     onDrawingClick: (SavedDrawing) -> Unit = {},
-    onSeeAllAlbumClick: () -> Unit = {}
+    onSeeAllAlbumClick: () -> Unit = {},
+    onSelectLanguageClick: () -> Unit = {},
+    onPrivacyPolicyClick: () -> Unit = {},
+    onManageSubscriptionClick: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
 
     // Wrap with Box to put Water Animation behind everything
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Background Animation
-        WaterWaveBackground()
-        
+        // 1. Background Animation removed (now global in MainActivity)
+        // WaterWaveBackground()
+
         // 2. Foreground Content
-        Scaffold(
-            containerColor = Color.Transparent // Transparent to show water background
-        ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Header Section
-            ProfileHeader()
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Stats Row
-            StatsRow()
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // My Album Section
-            val galleryLauncher = GalleryUtils.rememberGalleryLauncher { uri ->
-                if (uri != null) {
-                    viewModel.addUploadedImage(uri.toString())
+            // Fixed Header removed (now global in MainActivity)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(bottom = 16.dp) // Only bottom padding here
+            ) {
+
+                // Spacer removed to fix "too low" issue
+
+                // Stats Row
+                StatsRow()
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // My Album Section
+                val galleryLauncher = GalleryUtils.rememberGalleryLauncher { uri ->
+                    if (uri != null) {
+                        viewModel.addUploadedImage(uri.toString())
+                    }
                 }
+
+                MyAlbumSection(
+                    uploadedImages = viewModel.uiState.collectAsState().value.uploadedImages,
+                    onSeeAllClick = onSeeAllAlbumClick,
+                    onUploadClick = { GalleryUtils.openGallery(galleryLauncher) },
+                    onImageClick = { /* Will be handled in See All screen */ }
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // More Section
+                MoreSection(
+                    onSelectLanguageClick = onSelectLanguageClick,
+                    onPrivacyPolicyClick = onPrivacyPolicyClick,
+                    onManageSubscriptionClick = onManageSubscriptionClick
+                )
+
+                // Add extra spacing at the bottom to avoid nav bar overlap
+                Spacer(modifier = Modifier.height(80.dp))
             }
-            
-            MyAlbumSection(
-                uploadedImages = viewModel.uiState.collectAsState().value.uploadedImages,
-                onSeeAllClick = onSeeAllAlbumClick,
-                onUploadClick = { GalleryUtils.openGallery(galleryLauncher) },
-                onImageClick = { /* Will be handled in See All screen */ }
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // More Section
-            MoreSection(
-                onPrivacyPolicyClick = { /* TODO */ },
-                onManageSubscriptionClick = { /* TODO */ }
-            )
-            
-            // Add extra spacing at the bottom to avoid nav bar overlap
-            Spacer(modifier = Modifier.height(80.dp))
-        }
         }
     }
-}
 
-@Composable
-fun ProfileHeader() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.home_avtr),
-            contentDescription = "Profile Avatar",
-            modifier = Modifier
-                .size(60.dp)
-                .clip(CircleShape)
-        )
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        Column {
-            Text(
-                text = "Welcome to",
-                fontSize = 14.sp,
-                color = Color.Gray,
-                fontWeight = FontWeight.Normal
-            )
-            Text(
-                text = "Augmented Reality",
-                fontSize = 18.sp,
-                color = Color.Black,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
 
+}
 @Composable
 fun StatsRow() {
     Row(
@@ -302,19 +275,24 @@ fun MyAlbumSection(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(Color(0xFFE0E9FC), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
-                            painter = painterResource(R.drawable.add_illustration),
+                            imageVector = Icons.Default.Add,
                             contentDescription = "Upload",
                             tint = colorResource(R.color.app_blue),
                             modifier = Modifier.size(24.dp)
                         )
+                    }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "Upload a photo\nof your drawing",
                         fontSize = 13.sp,
                         color = Color.Black,
-                        fontWeight = FontWeight.SemiBold,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         lineHeight = 18.sp,
                         modifier = Modifier.padding(horizontal = 8.dp)
@@ -393,6 +371,7 @@ fun Modifier.drawDashedBorder(
 
 @Composable
 fun MoreSection(
+    onSelectLanguageClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onManageSubscriptionClick: () -> Unit
 ) {
@@ -406,17 +385,32 @@ fun MoreSection(
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        MoreItem(
-            text = "Privacy Policy",
-            onClick = onPrivacyPolicyClick
-        )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        MoreItem(
-            text = "Manage subscription",
-            onClick = onManageSubscriptionClick
-        )
+        // Single Container for all items
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                MoreItem(
+                    text = "Select Language",
+                    onClick = onSelectLanguageClick
+                )
+                
+                MoreItem(
+                    text = "Manage subscription",
+                    onClick = onManageSubscriptionClick
+                )
+                
+                MoreItem(
+                    text = "Privacy Policy",
+                    onClick = onPrivacyPolicyClick
+                )
+            }
+        }
     }
 }
 

@@ -27,7 +27,7 @@ fun ARFloatingBottomBar(
         modifier = modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars) // ✅ FIX 1
-            .padding(bottom = 8.dp),
+            .padding(bottom = 12.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
 

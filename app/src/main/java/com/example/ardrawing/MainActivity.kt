@@ -21,6 +21,8 @@ import com.example.ardrawing.data.repository.TemplateRepository
 import com.example.ardrawing.navigation.NavGraph
 import com.example.ardrawing.navigation.Screen
 import com.example.ardrawing.ui.components.ARFloatingBottomBar
+import com.example.ardrawing.ui.components.ProfileHeader
+import com.example.ardrawing.ui.components.WaterWaveBackground
 import com.example.ardrawing.ui.theme.ARDrawingTheme
 import com.example.ardrawing.utils.ARCorePreferences
 import com.google.ar.core.ArCoreApk
@@ -29,7 +31,8 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 class MainActivity : ComponentActivity() {
     
@@ -76,6 +79,9 @@ class MainActivity : ComponentActivity() {
                 // Track if navigation is ready to show bottom bar
                 var isNavigationReady by remember { mutableStateOf(false) }
                 
+                // Track current avatar specifically for Global ProfileHeader
+                var currentAvatarRes by remember { mutableIntStateOf(R.drawable.home_avtr) }
+                
                 // Define routes that should show the bottom bar
                 val bottomBarRoutes = listOf(
                     Screen.Home.route,
@@ -119,62 +125,87 @@ class MainActivity : ComponentActivity() {
                 // Show bottom nav ONLY on: Home, Lesson, AR Text, My
                 val shouldShowBottomNav = currentRoute in bottomBarRoutes
 
-                Box(modifier = Modifier.fillMaxSize()) {
-                    NavGraph(
-                        navController = navController,
-                        currentTabRoute = selectedRoute,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                    
-                    // Animated visibility for bottom bar
-                    AnimatedVisibility(
-                        visible = shouldShowBottomNav && isNavigationReady,
-                        enter = androidx.compose.animation.slideInVertically(
-                            initialOffsetY = { it }
-                        ) + androidx.compose.animation.fadeIn(),
-                        exit = androidx.compose.animation.slideOutVertically(
-                            targetOffsetY = { it }
-                        ) + androidx.compose.animation.fadeOut(),
-                        modifier = Modifier.align(Alignment.BottomCenter)
-                    ) {
-                        ARFloatingBottomBar(
-                            currentRoute = selectedRoute,
-                            onItemClick = { route ->
-                                // On tab click, we want immediate feedback so we don't reset isNavigationReady here
-                                // implicitly by route change loop if we handle it carefully.
-                                
-                                when (route) {
-                                    "home" -> {
-                                        if (currentRoute != Screen.Home.route) {
-                                            navController.navigate(Screen.Home.route) {
-                                                popUpTo(Screen.Home.route) { inclusive = true }
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Global ProfileHeader Area
+                    if (shouldShowBottomNav) {
+                        androidx.compose.material3.Surface(
+                            color = androidx.compose.ui.graphics.Color.White,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            ProfileHeader(
+                                avatarRes = currentAvatarRes,
+                                modifier = Modifier
+                                    .statusBarsPadding()
+                                    .padding(top = 8.dp, bottom = 0.dp) // Bottom padding removed for wave alignment
+                                    .padding(horizontal = 20.dp)
+                            )
+                        }
+                        
+                        // Added 10dp top margin for all main screens
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+
+                    Box(modifier = Modifier.weight(1f)) {
+                        // Global WaterBackground starts exactly here
+                        if (shouldShowBottomNav) {
+                            WaterWaveBackground()
+                        }
+                        
+                        NavGraph(
+                            navController = navController,
+                            currentTabRoute = selectedRoute,
+                            modifier = Modifier.fillMaxSize(),
+                            onAvatarChange = { resId -> currentAvatarRes = resId }
+                        )
+                        
+                        // Animated visibility for bottom bar stays inside the Box
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = shouldShowBottomNav && isNavigationReady,
+                            enter = androidx.compose.animation.slideInVertically(
+                                initialOffsetY = { it }
+                            ) + androidx.compose.animation.fadeIn(),
+                            exit = androidx.compose.animation.slideOutVertically(
+                                targetOffsetY = { it }
+                            ) + androidx.compose.animation.fadeOut(),
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                        ) {
+                            ARFloatingBottomBar(
+                                currentRoute = selectedRoute,
+                                onItemClick = { route ->
+                                    // ... logic stays the same ...
+                                    when (route) {
+                                        "home" -> {
+                                            if (currentRoute != Screen.Home.route) {
+                                                navController.navigate(Screen.Home.route) {
+                                                    popUpTo(Screen.Home.route) { inclusive = true }
+                                                }
                                             }
                                         }
-                                    }
-                                    "lesson_list" -> {
-                                        if (currentRoute != Screen.LessonList.route) {
-                                            navController.navigate(Screen.LessonList.route) {
-                                                popUpTo(Screen.Home.route) { inclusive = false }
+                                        "lesson_list" -> {
+                                            if (currentRoute != Screen.LessonList.route) {
+                                                navController.navigate(Screen.LessonList.route) {
+                                                    popUpTo(Screen.Home.route) { inclusive = false }
+                                                }
                                             }
                                         }
-                                    }
-                                    "favorite" -> {
-                                        if (currentRoute != "favorite") {
-                                            navController.navigate("favorite") {
-                                                popUpTo(Screen.Home.route) { inclusive = false }
+                                        "favorite" -> {
+                                            if (currentRoute != "favorite") {
+                                                navController.navigate("favorite") {
+                                                    popUpTo(Screen.Home.route) { inclusive = false }
+                                                }
                                             }
                                         }
-                                    }
-                                    "my_creative" -> {
-                                        if (currentRoute != Screen.MyCreative.route) {
-                                            navController.navigate(Screen.MyCreative.route) {
-                                                popUpTo(Screen.Home.route) { inclusive = false }
+                                        "my_creative" -> {
+                                            if (currentRoute != Screen.MyCreative.route) {
+                                                navController.navigate(Screen.MyCreative.route) {
+                                                    popUpTo(Screen.Home.route) { inclusive = false }
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }

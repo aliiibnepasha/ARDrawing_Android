@@ -36,83 +36,91 @@ import com.example.ardrawing.utils.FavoriteImageUtils
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import android.graphics.BitmapFactory
+import com.example.ardrawing.ui.components.ProfileHeader
 
 @Composable
 fun FavoriteScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    
+
     // Database setup
     val database = remember { AppDatabase.getDatabase(context) }
     val favoriteRepository = remember { FavoriteRepository(database.favoriteDao()) }
-    
+
     // Observe favorites
     val favorites by favoriteRepository.getAllFavorites().collectAsState(initial = emptyList())
-    
+
     // Wrap with Box to put Water Animation behind everything
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Background Animation
-        WaterWaveBackground()
-        
+        // 1. Background Animation removed (now global in MainActivity)
+        // WaterWaveBackground()
+
         // 2. Foreground Content
-        Scaffold(
-            containerColor = Color.Transparent, // Transparent to show water background
-            topBar = {
-                FavoriteHeader()
-            }
-        ) { paddingValues ->
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
             if (favorites.isEmpty()) {
                 // Empty State
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
+                Column(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    // ProfileHeader removed here (now global in MainActivity)
+
+                    Box(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        // Sad Face Icon
-                        Icon(
-                            imageVector = Icons.Outlined.SentimentDissatisfied,
-                            contentDescription = null,
-                            tint = Color(0xFFA0C1F8), // Light blue tint
-                            modifier = Modifier.size(64.dp)
-                        )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        Text(
-                            text = "No Favorites Added",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF6F7E95) // Grey text
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            // Sad Face Icon
+                            Icon(
+                                imageVector = Icons.Outlined.SentimentDissatisfied,
+                                contentDescription = null,
+                                tint = Color(0xFFA0C1F8), // Light blue tint
+                                modifier = Modifier.size(64.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                text = "No Favorites Added",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF6F7E95) // Grey text
+                            )
+                        }
                     }
                 }
             } else {
                 // Favorites Grid
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(horizontal = 16.dp, vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                Column(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    items(favorites) { favorite ->
-                        FavoriteImageCard(
-                            favorite = favorite,
-                            onDeleteClick = {
-                                scope.launch {
-                                    // Delete image file
-                                    favorite.imagePath?.let { FavoriteImageUtils.deleteFavoriteImage(it) }
-                                    favoriteRepository.deleteFavorite(favorite)
+                    // ProfileHeader removed here (now global in MainActivity)
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(bottom = 80.dp) // Added padding for bottom nav
+                    ) {
+                        items(favorites) { favorite ->
+                            FavoriteImageCard(
+                                favorite = favorite,
+                                onDeleteClick = {
+                                    scope.launch {
+                                        // Delete image file
+                                        favorite.imagePath?.let { FavoriteImageUtils.deleteFavoriteImage(it) }
+                                        favoriteRepository.deleteFavorite(favorite)
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }
@@ -129,7 +137,7 @@ private fun FavoriteImageCard(
     val imageBitmap = remember(favorite.imagePath) {
         favorite.imagePath?.let { FavoriteImageUtils.loadFavoriteImage(it) }
     }
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -166,7 +174,7 @@ private fun FavoriteImageCard(
                     )
                 }
             }
-            
+
             // Favorite Icon (Top Right)
             Image(
                 painter = painterResource(R.drawable.my_fav_blue_ic),
@@ -181,35 +189,3 @@ private fun FavoriteImageCard(
     }
 }
 
-@Composable
-fun FavoriteHeader() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 16.dp)
-            .statusBarsPadding(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.home_avtr),
-            contentDescription = "Avatar",
-            modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(
-                text = "Welcome to",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-            Text(
-                text = "Augmented Reality",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-        }
-    }
-}

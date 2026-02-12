@@ -133,25 +133,20 @@ fun CameraPreviewScreen(
         }
 
         /* ================= SAFE AREA CONTAINER ================= */
-        // We use a box with navigationBars padding only, handling status bar in the Top Bar
+        // We use a box with systemBars padding for the UI overlays
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.navigationBars)
+                .windowInsetsPadding(WindowInsets.systemBars)
         ) {
 
             /* ================= TOP BAR ================= */
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        color = Color.Black.copy(alpha = 0.6f),
-                        shape = RoundedCornerShape(bottomStart = 1.dp, bottomEnd = 1.dp)
-                    )
-                    .statusBarsPadding()
-                    .height(80.dp) // Maintain consistent height
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.Center
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 // Back Button
                 Image(
@@ -159,23 +154,19 @@ fun CameraPreviewScreen(
                     contentDescription = "Back",
                     modifier = Modifier
                         .size(32.dp)
-                        .align(Alignment.CenterStart)
                         .clickable(onClick = onBackClick)
                 )
+
                 // Title
                 Text(
                     text = "Camera",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.align(Alignment.Center)
+                    color = Color.White
                 )
 
                 // Done Button
-                TextButton(
-                    onClick = onBackClick,
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                ) {
+                TextButton(onClick = onBackClick) {
                     Text(
                         text = "Done",
                         fontSize = 16.sp,
@@ -276,8 +267,6 @@ fun CameraPreviewScreen(
                     }
 
                     // Overlay Controls
-                    val controlScale = if (imageScale > 0) 1f / imageScale else 1f
-                    
                     if (!isLocked) {
                         // Top Right: Lock
                         Image(
@@ -286,10 +275,6 @@ fun CameraPreviewScreen(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .offset(x = 12.dp, y = (-12).dp)
-                                .graphicsLayer {
-                                    scaleX = controlScale
-                                    scaleY = controlScale
-                                }
                                 .size(32.dp)
                                 .clickable { isLocked = !isLocked }
                         )
@@ -306,10 +291,6 @@ fun CameraPreviewScreen(
                                 painter = painterResource(R.drawable.flip1),
                                 contentDescription = "Rotate Left",
                                 modifier = Modifier
-                                    .graphicsLayer {
-                                        scaleX = controlScale
-                                        scaleY = controlScale
-                                    }
                                     .size(32.dp)
                                     .clickable { imageRotation -= 90f }
                             )
@@ -319,10 +300,6 @@ fun CameraPreviewScreen(
                                 painter = painterResource(R.drawable.flip2),
                                 contentDescription = "Rotate Right",
                                 modifier = Modifier
-                                    .graphicsLayer {
-                                        scaleX = controlScale
-                                        scaleY = controlScale
-                                    }
                                     .size(32.dp)
                                     .clickable { imageRotation += 90f }
                             )
@@ -335,10 +312,6 @@ fun CameraPreviewScreen(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .offset(x = 12.dp, y = 12.dp)
-                                .graphicsLayer {
-                                    scaleX = controlScale
-                                    scaleY = controlScale
-                                }
                                 .size(32.dp)
                                 .clickable { 
                                     imageScale = 1f 
@@ -354,10 +327,6 @@ fun CameraPreviewScreen(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .offset(x = 12.dp, y = (-12).dp)
-                                .graphicsLayer {
-                                    scaleX = controlScale
-                                    scaleY = controlScale
-                                }
                                 .size(32.dp)
                                 .clickable { isLocked = !isLocked }
                         )
