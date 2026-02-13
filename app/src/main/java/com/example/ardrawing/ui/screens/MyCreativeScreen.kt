@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import android.net.Uri
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.text.style.TextAlign
 import java.io.File
 
@@ -60,7 +61,6 @@ fun MyCreativeScreen(
     onManageSubscriptionClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val scrollState = rememberScrollState()
     val context = LocalContext.current
 
     // Refresh stats when the screen is shown
@@ -72,6 +72,7 @@ fun MyCreativeScreen(
     Box(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
         // ... (background animation)
 
+        WaterWaveBackground()
         // 2. Foreground Content
         Column(
             modifier = Modifier.fillMaxSize()
@@ -86,48 +87,51 @@ fun MyCreativeScreen(
             
             Spacer(modifier = Modifier.height(10.dp))
 
-            Column(
+            LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = 16.dp)
+                    .weight(1f)
+                    .padding(horizontal = 20.dp),
+                contentPadding = PaddingValues(bottom = 120.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
                 // Stats Row
-                StatsRow(
-                    drawnCount = uiState.drawnCount,
-                    latestTime = uiState.latestDrawnTime,
-                    lessonsCount = uiState.lessonsCount
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // My Album Section
-                val galleryLauncher = GalleryUtils.rememberGalleryLauncher { uri ->
-                    if (uri != null) {
-                        viewModel.addUploadedImage(context, uri)
-                    }
+                item {
+                    StatsRow(
+                        drawnCount = uiState.drawnCount,
+                        latestTime = uiState.latestDrawnTime,
+                        lessonsCount = uiState.lessonsCount
+                    )
                 }
 
-                MyAlbumSection(
-                    uploadedImages = uiState.uploadedImages,
-                    onSeeAllClick = onSeeAllAlbumClick,
-                    onUploadClick = { GalleryUtils.openGallery(galleryLauncher) },
-                    onImageClick = { /* Will be handled in See All screen */ }
-                )
+                // My Album Section
+                item {
+                    val galleryLauncher = GalleryUtils.rememberGalleryLauncher { uri ->
+                        if (uri != null) {
+                            viewModel.addUploadedImage(context, uri)
+                        }
+                    }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    MyAlbumSection(
+                        uploadedImages = uiState.uploadedImages,
+                        onSeeAllClick = onSeeAllAlbumClick,
+                        onUploadClick = { GalleryUtils.openGallery(galleryLauncher) },
+                        onImageClick = { /* Will be handled in See All screen */ }
+                    )
+                }
 
                 // More Section
-                MoreSection(
-                    onSelectLanguageClick = onSelectLanguageClick,
-                    onPrivacyPolicyClick = onPrivacyPolicyClick,
-                    onManageSubscriptionClick = onManageSubscriptionClick
-                )
+                item {
+                    MoreSection(
+                        onSelectLanguageClick = onSelectLanguageClick,
+                        onPrivacyPolicyClick = onPrivacyPolicyClick,
+                        onManageSubscriptionClick = onManageSubscriptionClick
+                    )
+                }
 
-                // Add extra spacing at the bottom to avoid nav bar overlap
-                Spacer(modifier = Modifier.height(80.dp))
+                // Force scrollable area
+                item {
+                    Spacer(modifier = Modifier.height(60.dp))
+                }
             }
         }
     }
@@ -142,7 +146,7 @@ fun StatsRow(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         StatCard(
             modifier = Modifier.weight(1f),
@@ -154,7 +158,7 @@ fun StatsRow(
 
         StatCard(
             modifier = Modifier.weight(1f),
-            cornerColor = Color(0xFFF5B041),
+            cornerColor = Color(0xFFFAC344),
             icon = R.drawable.clock,
             title = "Time",
             value = latestTime
@@ -162,7 +166,7 @@ fun StatsRow(
 
         StatCard(
             modifier = Modifier.weight(1f),
-            cornerColor = Color(0xFF7DCEA0),
+            cornerColor = Color(0xFF83D55E),
             icon = R.drawable.teacher_blue,
             title = "Lessons",
             value = String.format("%02d", lessonsCount)
@@ -181,13 +185,7 @@ fun StatCard(
 ) {
     Box(
         modifier = modifier
-            .height(140.dp)
-            .shadow(
-                elevation = 4.dp,
-                shape = RoundedCornerShape(12.dp),
-                spotColor = Color(0x40000000),
-                ambientColor = Color(0x40000000)
-            )
+            .height(160.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
     ) {
@@ -223,15 +221,15 @@ fun StatCard(
         ) {
             Text(
                 text = title,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 color = Color(0xFF9CA3AF), // Gray-400
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = value,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF111827) // Gray-900
             )
         }
@@ -257,8 +255,8 @@ fun MyAlbumSection(
         ) {
             Text(
                 text = "My Album",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
                 color = Color.Black
             )
             
@@ -273,7 +271,7 @@ fun MyAlbumSection(
             }
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -282,14 +280,14 @@ fun MyAlbumSection(
             // Upload Card with Dashed Border
             Box(
                 modifier = Modifier
-                    .weight(1f)
+                    .height(145.dp)
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFFF0F4FF))
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color.White)
                     .clickable { onUploadClick() }
                     .drawDashedBorder(
                         color = colorResource(R.color.app_blue),
-                        strokeWidth = 4.dp,
+                        strokeWidth = 2.dp,
                         cornerRadius = 16.dp
                     ),
                 contentAlignment = Alignment.Center
@@ -308,9 +306,9 @@ fun MyAlbumSection(
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "Upload a photo\nof your drawing",
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         color = Color.Black,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
                         lineHeight = 18.sp,
                         modifier = Modifier.padding(horizontal = 8.dp)
@@ -323,10 +321,10 @@ fun MyAlbumSection(
                 // Show ONLY the latest uploaded image (at index 0)
                 Card(
                     modifier = Modifier
-                        .weight(1f)
+                        .height(145.dp)
                         .aspectRatio(1f)
                         .clickable { onImageClick(uploadedImages[0]) },
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
                     AsyncImage(
@@ -337,27 +335,6 @@ fun MyAlbumSection(
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
-                }
-            } else {
-                // Placeholder when no images
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.LightGray)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.Edit,
-                            contentDescription = null,
-                            tint = Color.Gray,
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
                 }
             }
         }
@@ -396,24 +373,23 @@ fun MoreSection(
     Column {
         Text(
             text = "More",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
             color = Color.Black
         )
         
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         
         // Single Container for all items
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(11.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 MoreItem(
                     text = "Select Language",
@@ -430,7 +406,7 @@ fun MoreSection(
                     onClick = onPrivacyPolicyClick
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
             }
         }
@@ -445,10 +421,9 @@ fun MoreItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
             .clickable { onClick() }
-            .padding(12.dp),
+            .padding(horizontal = 22.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -460,9 +435,10 @@ fun MoreItem(
         )
         
         Icon(
-            imageVector = Icons.Default.ChevronRight,
+            painter = painterResource(R.drawable.move_forward),
             contentDescription = null,
-            tint = Color(0xFF4DA3FF)
+            tint = Color(0xFF4DA3FF),
+            modifier = Modifier.size(10.dp)
         )
     }
 }

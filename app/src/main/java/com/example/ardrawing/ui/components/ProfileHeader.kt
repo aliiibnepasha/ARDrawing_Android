@@ -10,12 +10,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ardrawing.R
+import com.example.ardrawing.ui.theme.Poppins
 
 @Composable
 fun ProfileHeader(
@@ -43,17 +48,32 @@ fun ProfileHeader(
                 .clip(CircleShape)
         )
 
-        Column {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
             Text(
                 text = subtitle,
-                fontSize = 14.sp,
-                color = subtitleColor
+                fontSize = 12.sp,
+                color = subtitleColor,
+                fontWeight = FontWeight.Normal,
+                style = TextStyle(
+                    fontFamily = Poppins,
+                    platformStyle = PlatformTextStyle(
+                        includeFontPadding = false
+                    )
+                )
             )
             Text(
                 text = title,
-                fontSize = titleSize,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
-                color = titleColor
+                color = titleColor,
+                style = TextStyle(
+                    fontFamily = Poppins,
+                    platformStyle = PlatformTextStyle(
+                        includeFontPadding = false
+                    )
+                )
             )
         }
     }

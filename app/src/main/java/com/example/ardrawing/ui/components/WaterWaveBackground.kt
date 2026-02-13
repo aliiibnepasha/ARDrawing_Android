@@ -53,7 +53,7 @@ fun WaterWaveBackground() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8FBFE))
+            .background(Color.White)
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
 
@@ -70,7 +70,7 @@ fun WaterWaveBackground() {
                 amplitude = 34f + surge * 18f,
                 frequency = 1.1f,
                 phase = phase * 0.6f,
-                color = Color(0xFFF3F8FC)
+                color = Color(0xFFF8FBFF)
             )
 
             drawSeaWave(
@@ -80,7 +80,7 @@ fun WaterWaveBackground() {
                 amplitude = 26f + surge * 14f,
                 frequency = 1.45f,
                 phase = phase,
-                color = Color(0xFFEEF4FA)
+                color = Color(0xFFF4F9FF)
             )
 
             drawSeaWave(
@@ -90,7 +90,7 @@ fun WaterWaveBackground() {
                 amplitude = 18f + surge * 10f,
                 frequency = 1.8f,
                 phase = phase * 1.3f,
-                color = Color(0xFFE8F1F8)
+                color = Color(0xFFF0F7FF)
             )
         }
     }

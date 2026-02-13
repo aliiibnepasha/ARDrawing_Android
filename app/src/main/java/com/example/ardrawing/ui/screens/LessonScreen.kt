@@ -29,6 +29,9 @@ import androidx.compose.ui.unit.sp
 import com.example.ardrawing.R
 import com.example.ardrawing.ui.components.ProfileHeader
 import com.example.ardrawing.ui.components.WaterWaveBackground
+import com.example.ardrawing.ui.theme.Poppins
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.PlatformTextStyle
 
 @Composable
 fun LessonScreen(
@@ -38,7 +41,7 @@ fun LessonScreen(
     Box(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
         // 1. Background Animation
         WaterWaveBackground()
-        
+
         // 2. Foreground Content
         Column(modifier = Modifier.fillMaxSize()) {
             // ProfileHeader
@@ -48,7 +51,7 @@ fun LessonScreen(
                     .padding(top = 8.dp)
                     .padding(horizontal = 20.dp)
             )
-            
+
             Spacer(modifier = Modifier.height(10.dp))
 
             LazyColumn(
@@ -56,7 +59,7 @@ fun LessonScreen(
                     .fillMaxSize()
                     .padding(horizontal = 20.dp),
                 contentPadding = PaddingValues(top = 0.dp, bottom = 120.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // 2. Free Lesson Card
                 item { FreeLessonCard() }
@@ -106,13 +109,8 @@ private fun FreeLessonCard() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(86.dp) // Reduced height to match compact reference
-            .shadow(
-                elevation = 2.dp,
-                shape = RoundedCornerShape(20.dp),
-                spotColor = Color.Black.copy(alpha = 0.05f)
-            )
-            .clip(RoundedCornerShape(20.dp))
+            .height(86.dp)
+            .clip(RoundedCornerShape(26.dp))
             .background(Color.White)
     ) {
         // Custom Drawn Green Background
@@ -121,9 +119,9 @@ private fun FreeLessonCard() {
                 .fillMaxSize()
                 .drawBehind {
                     val path = Path()
-                    val startX = size.width * 0.32f // Adjusted start
-                    val bottomStartX = size.width * 0.22f 
-                    
+                    val startX = size.width * 0.32f
+                    val bottomStartX = size.width * 0.22f
+
                     path.moveTo(startX, 0f)
                     path.lineTo(size.width, 0f)
                     path.lineTo(size.width, size.height)
@@ -134,8 +132,8 @@ private fun FreeLessonCard() {
                         path = path,
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                Color(0xFF8FD866),
-                                Color(0xFF83D55D)
+                                Color(0xFF90D967),
+                                Color(0xFF82D45D)
                             )
                         )
                     )
@@ -144,79 +142,73 @@ private fun FreeLessonCard() {
 
         // Content
         Row(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Image Area
-            Box(
+            Image(
+                painter = painterResource(id = R.drawable.lesson_cat),
+                contentDescription = null,
                 modifier = Modifier
-                    .weight(0.34f)
-                    .fillMaxHeight(),
-                contentAlignment = Alignment.CenterStart // ⬅️ IMPORTANT
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.lesson_cat),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(70.dp)
-                        .offset(x = 6.dp) // ⬅️ optical centering
-                )
-            }
+                    .size(68.dp)
+            )
+
+            Spacer(modifier = Modifier.width(22.dp))
 
             // Info Column
             Column(
-                modifier = Modifier
-                    .weight(0.66f)
-                    .padding(start = 2.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = "Free Lesson",
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp, // Reduced font
-                    letterSpacing = 0.5.sp
+                    fontSize = 14.sp,
+                    style = TextStyle(
+                        fontFamily = Poppins,
+                        platformStyle = PlatformTextStyle(includeFontPadding = false)
+                    )
                 )
 
+                Spacer(modifier = Modifier.height(2.dp))
+
+                // Timer Chips
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Timer Chips
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(3.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TimerBox("07")
-                        Text(":", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        TimerBox("20")
-                        Text(":", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        TimerBox("48")
-                    }
-
-                    Spacer(modifier = Modifier.width(4.dp))
-
-                    // Start Button
-                    Button(
-                        onClick = { /* TODO */ },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colorResource(R.color.app_blue)
-                        ),
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(0.dp),
-                        modifier = Modifier
-                            .width(80.dp)
-                            .height(40.dp)
-                    ) {
-                        Text(
-                            "Start", 
-                            color = Color.White, 
-                            fontSize = 12.sp, 
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    TimerBox("07")
+                    Text(":", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                    TimerBox("20")
+                    Text(":", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                    TimerBox("48")
                 }
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Start Button (Direct child of Row for perfect vertical centering)
+            Box(
+                modifier = Modifier
+                    .width(80.dp)
+                    .height(30.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(colorResource(R.color.app_blue))
+                    .clickable { /* TODO */ },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Start",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    style = TextStyle(
+                        fontFamily = Poppins,
+                        platformStyle = PlatformTextStyle(includeFontPadding = false)
+                    )
+                )
             }
         }
     }
@@ -226,15 +218,19 @@ private fun FreeLessonCard() {
 private fun TimerBox(time: String) {
     Box(
         modifier = Modifier
-            .size(width = 22.dp, height = 22.dp)
-            .background(Color.White.copy(alpha = 0.25f), RoundedCornerShape(5.dp)),
+            .size(width = 30.dp, height = 24.dp)
+            .background(Color.White.copy(alpha = 0.25f), RoundedCornerShape(6.dp)),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = time,
             color = Color.White,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            style = TextStyle(
+                fontFamily = Poppins,
+                platformStyle = PlatformTextStyle(includeFontPadding = false)
+            )
         )
     }
 }
@@ -249,24 +245,19 @@ private fun LessonItemCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(150.dp) // Reduced height from 180dp
-            .shadow(
-                elevation = 2.dp,
-                shape = RoundedCornerShape(20.dp),
-                spotColor = Color.Black.copy(alpha = 0.05f)
-            )
-            .clip(RoundedCornerShape(20.dp))
+            .height(160.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
-            .clickable(onClick = onClick) // Added Clickable
+            .clickable(onClick = onClick)
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
-            
+
             // LEFT SIDE: Image + Heart
             Box(
                 modifier = Modifier
-                    .weight(0.48f)
+                    .weight(0.44f)
                     .fillMaxHeight()
-                    .padding(10.dp)
+                    .padding(12.dp)
             ) {
                 // Image (Loaded from Assets via Coil)
                 val context = androidx.compose.ui.platform.LocalContext.current
@@ -278,7 +269,7 @@ private fun LessonItemCard(
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 12.dp, bottom = 4.dp)
+                        .padding(bottom = 8.dp)
                 )
 
                 // Heart Icon
@@ -288,11 +279,9 @@ private fun LessonItemCard(
                     tint = colorResource(R.color.app_blue),
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .size(22.dp) // Smaller icon
+                        .size(24.dp)
                 )
             }
-// ... rest of LessonItemCard
-
 
             // Vertical Divider
             Box(
@@ -300,37 +289,41 @@ private fun LessonItemCard(
                     .width(1.dp)
                     .fillMaxHeight(0.7f)
                     .align(Alignment.CenterVertically)
-                    .background(Color(0xFFF0F0F0)) // Subtle gray
+                    .background(Color(0xFFF1F5F9))
             )
 
             // RIGHT SIDE: Details
             Column(
                 modifier = Modifier
-                    .weight(0.52f)
+                    .weight(0.56f)
                     .fillMaxHeight()
                     .padding(start = 20.dp, end = 16.dp),
                 verticalArrangement = Arrangement.Center
             ) {
-                
+
                 // Level Section
                 Text(
                     text = "Level:",
-                    fontSize = 14.sp,
-                    color = Color(0xFF5A5A5A),
-                    fontWeight = FontWeight.Normal
+                    fontSize = 15.sp,
+                    color = Color(0xFF64748B),
+                    fontWeight = FontWeight.Medium,
+                    style = TextStyle(
+                        fontFamily = Poppins,
+                        platformStyle = PlatformTextStyle(includeFontPadding = false)
+                    )
                 )
-                Spacer(modifier = Modifier.height(6.dp))
-                
+                Spacer(modifier = Modifier.height(8.dp))
+
                 // Level Bars
-                Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.5.dp)) {
                     repeat(10) { index ->
                         Box(
                             modifier = Modifier
-                                .width(4.dp) // Thinner bars
-                                .height(14.dp)
+                                .width(4.dp)
+                                .height(16.dp)
                                 .clip(RoundedCornerShape(4.dp))
                                 .background(
-                                    if (index < level) colorResource(R.color.app_blue) else Color(0xFFD3E3FD)
+                                    if (index < level) colorResource(R.color.app_blue) else Color(0xFFE2EDFF)
                                 )
                         )
                     }
@@ -341,16 +334,24 @@ private fun LessonItemCard(
                 // Steps Section
                 Text(
                     text = "Steps:",
-                    fontSize = 14.sp,
-                    color = Color(0xFF5A5A5A),
-                    fontWeight = FontWeight.Normal
+                    fontSize = 15.sp,
+                    color = Color(0xFF64748B),
+                    fontWeight = FontWeight.Medium,
+                    style = TextStyle(
+                        fontFamily = Poppins,
+                        platformStyle = PlatformTextStyle(includeFontPadding = false)
+                    )
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "$steps",
-                    fontSize = 18.sp,
+                    fontSize = 19.sp,
                     fontWeight = FontWeight.Bold,
-                    color = colorResource(R.color.app_blue)
+                    color = colorResource(R.color.app_blue),
+                    style = TextStyle(
+                        fontFamily = Poppins,
+                        platformStyle = PlatformTextStyle(includeFontPadding = false)
+                    )
                 )
             }
         }
@@ -362,8 +363,8 @@ private fun CourseBanner() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(82.dp) // Reduced height from 95dp
-            .clip(RoundedCornerShape(20.dp))
+            .height(95.dp)
+            .clip(RoundedCornerShape(26.dp))
             .background(Color.White)
     ) {
          // Custom Drawn Blue Background
@@ -372,9 +373,9 @@ private fun CourseBanner() {
                 .fillMaxSize()
                 .drawBehind {
                     val path = Path()
-                    val startX = size.width * 0.35f
-                    val bottomStartX = size.width * 0.25f
-                    
+                    val startX = size.width * 0.38f
+                    val bottomStartX = size.width * 0.27f
+
                     path.moveTo(startX, 0f)
                     path.lineTo(size.width, 0f)
                     path.lineTo(size.width, size.height)
@@ -385,8 +386,8 @@ private fun CourseBanner() {
                         path = path,
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                Color(0xFF559DFD),
-                                Color(0xFF559DFD)
+                                Color(0xFF5AB4FF),
+                                Color(0xFF4DA3FF)
                             )
                         )
                     )
@@ -394,14 +395,13 @@ private fun CourseBanner() {
         )
 
         Row(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Left content (Image)
             Box(
                  modifier = Modifier
-                    .weight(0.3f)
+                    .weight(0.32f)
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
@@ -409,38 +409,44 @@ private fun CourseBanner() {
                     painter = painterResource(id = R.drawable.lesson_girls),
                     contentDescription = null,
                     modifier = Modifier
-                        .padding(start = 8.dp)
-                        .width(80.dp)
-                        .height(55.dp)
+                        .size(72.dp)
+                        .offset(x = (-4).dp)
                 )
             }
-           
+
             // Center Text
             Column(
                 modifier = Modifier
-                    .weight(0.55f)
-                    .padding(start = 16.dp)
+                    .weight(0.53f)
+                    .padding(start = 12.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
-                        .background(Color(0xFFFAC344))
-                        .padding(horizontal = 10.dp, vertical = 3.dp)
+                        .background(Color(0xFFFFB81F))
+                        .padding(horizontal = 14.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = "New lesson available",
                         color = Color.White,
-                        fontSize = 10.sp, // Reduced font size to ensure one line
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        maxLines = 1 // Force single line
+                        style = TextStyle(
+                            fontFamily = Poppins,
+                            platformStyle = PlatformTextStyle(includeFontPadding = false)
+                        )
                     )
                 }
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = "7-day course",
                     color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    style = TextStyle(
+                        fontFamily = Poppins,
+                        platformStyle = PlatformTextStyle(includeFontPadding = false)
+                    )
                 )
             }
 
@@ -453,15 +459,15 @@ private fun CourseBanner() {
             ) {
                 Box(
                     modifier = Modifier
-                        .size(28.dp) // Smaller arrow circle
-                        .background(Color.White.copy(alpha = 0.2f), CircleShape),
+                        .size(32.dp)
+                        .background(Color.White.copy(alpha = 0.25f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ChevronRight,
+                        painter = painterResource(R.drawable.move_forward),
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(12.dp)
                     )
                 }
             }

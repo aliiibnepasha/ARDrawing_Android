@@ -75,21 +75,16 @@ fun HomeScreenNew(
         // 1. Background Animation
         WaterWaveBackground()
 
-        // 2. Foreground Content
-        Scaffold(
-            containerColor = Color.Transparent, // Transparent to show water background
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 20.dp)
-            ) {
-                ProfileHeader(
-                    avatarRes = if (pagerState.currentPage == 1) R.drawable.text_avtr else R.drawable.home_avtr
-                )
+        Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp)
+        ) {
 
-                Spacer(modifier = Modifier.height(24.dp))
+            ProfileHeader(
+                avatarRes = if (pagerState.currentPage == 1) R.drawable.text_avtr else R.drawable.home_avtr,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
 
                 TabSwitcher(
                     selectedTab = pagerState.currentPage,
@@ -131,7 +126,6 @@ fun HomeScreenNew(
                     }
                 }
             }
-        }
     }
 }
 
@@ -143,7 +137,7 @@ fun TabSwitcher(selectedTab: Int, onTabSelected: (Int) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(40.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(6.dp))
             .background(Color.White)
             .padding(4.dp)
     ) {
@@ -167,7 +161,7 @@ fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit, modifier: 
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(6.dp))
             .background(if (isSelected) AppBlue else Color.Transparent)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -176,7 +170,7 @@ fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit, modifier: 
             text = text,
             color = if (isSelected) Color.White else Color.Black,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp
+            fontSize = 12.sp
         )
     }
 }
@@ -185,15 +179,15 @@ fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit, modifier: 
 fun IllustrationCard(onClick: () -> Unit) {
     val density = androidx.compose.ui.platform.LocalDensity.current
     val strokeWidth = with(density) { 2.dp.toPx() }
-    val cornerRadius = with(density) { 24.dp.toPx() }
-    val stroke = Stroke(width = strokeWidth, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
+    val cornerRadius = with(density) { 12.dp.toPx() }
+    val stroke = Stroke(width = strokeWidth, pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 14f), 0f))
     val primaryColor = AppBlue
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
-            .clip(RoundedCornerShape(24.dp))
+            .height(174.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
             .drawBehind {
                 drawRoundRect(color = primaryColor, style = stroke, cornerRadius = CornerRadius(cornerRadius))
@@ -208,8 +202,8 @@ fun IllustrationCard(onClick: () -> Unit) {
                 contentDescription = "Add illustration",
                 modifier = Modifier.size(40.dp)
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Add your illustration", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = Color(0xFF1E293B))
+            Spacer(modifier = Modifier.height(10.dp))
+            Text("Add your illustration", fontWeight = FontWeight.Medium, fontSize = 14.sp, color = Color(0xFF1E293B))
         }
     }
 }
@@ -255,7 +249,7 @@ fun ActionCard(
     Column(
         modifier = modifier
             .height(150.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(11.dp))
             .background(Color.White)
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -271,7 +265,7 @@ fun ActionCard(
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(24.dp)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -279,10 +273,10 @@ fun ActionCard(
             Text(
                 title,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center,
                 color = Color.Black,
-                lineHeight = 16.sp,
+                lineHeight = 14.sp,
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
         }
@@ -304,6 +298,8 @@ fun ActionCard(
                 fontWeight = FontWeight.Medium
             )
         }
+        Spacer(modifier = Modifier.height(12.dp))
+
     }
 }
 
@@ -312,7 +308,7 @@ fun CategoriesSection(onCategoryClick: (String) -> Unit) {
     val context = LocalContext.current
 
     Column {
-        Text("Categories", fontSize = 20.sp, fontWeight = FontWeight.Medium)
+        Text("Categories", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         Spacer(modifier = Modifier.height(8.dp))
 
         // Load categories from assets/categories folder
@@ -372,7 +368,7 @@ fun CategoryItemNew(name: String, folderName: String, onClick: () -> Unit, modif
     Box(
         modifier = modifier
             .height(160.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(Color.White)
             .clickable { onClick() }
     ) {
@@ -417,8 +413,8 @@ fun CategoryItemNew(name: String, folderName: String, onClick: () -> Unit, modif
             // Text at bottom
             Text(
                 text = name,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
                 color = Color.Black,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.fillMaxWidth()
@@ -475,11 +471,11 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
 
         // Inspiration Section
         Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
             Text(
                 text = "Today's Inspiration",
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black
             )
@@ -488,7 +484,7 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(Color.White)
             ) {
                 // Daily Image
@@ -511,7 +507,7 @@ fun TextTabContent(onTextToImage: () -> Unit, onCustomText: () -> Unit) {
                     Text(
                         text = "Lilly Close-Up",
                         color = Color.White,
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -533,7 +529,7 @@ fun TextActionCard(
     Column(
         modifier = modifier
             .height(160.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(backgroundColor)
             .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween,
@@ -550,7 +546,7 @@ fun TextActionCard(
             Text(
                 text = title,
                 fontSize = 15.sp, // Slightly increased size
-                fontWeight = FontWeight.SemiBold, // Reduced from Bold
+                fontWeight = FontWeight.Medium, // Reduced from Bold
                 color = Color(0xFF1C1C1C), // Slightly softer black
                 lineHeight = 22.sp
             )
