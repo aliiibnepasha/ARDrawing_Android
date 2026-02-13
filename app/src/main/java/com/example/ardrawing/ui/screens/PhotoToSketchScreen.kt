@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.toSize
 import kotlin.math.roundToInt
-import kotlin.math.abs
 
 @Composable
 fun PhotoToSketchScreen(
@@ -365,15 +364,19 @@ fun PhotoToSketchScreen(
                         }
                     } else {
                         // ================= SUCCESS STATE =================
-                        Box(contentAlignment = Alignment.Center) {
+                        // Combined Container for Image and Star to ensure precise positioning
+                        Box(
+                            modifier = Modifier.size(310.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             // Main Image Container with Blue Border
                             Box(
                                 modifier = Modifier
-                                    .size(300.dp) // Square container
-                                    .clip(RoundedCornerShape(24.dp))
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(32.dp))
                                     .background(Color.White)
-                                    .border(BorderStroke(4.dp, colorResource(R.color.app_blue)), RoundedCornerShape(24.dp))
-                                    .padding(8.dp) // Inner padding between border and image
+                                    .border(BorderStroke(6.dp, colorResource(R.color.app_blue)), RoundedCornerShape(32.dp))
+                                    .padding(10.dp)
                             ) {
                                 if (generatedSketchBitmap != null) {
                                     // Show generated sketch
@@ -382,7 +385,7 @@ fun PhotoToSketchScreen(
                                         contentDescription = "Generated Sketch",
                                         modifier = Modifier
                                             .fillMaxSize()
-                                            .clip(RoundedCornerShape(16.dp)),
+                                            .clip(RoundedCornerShape(22.dp)),
                                         contentScale = ContentScale.Crop
                                     )
                                 } else {
@@ -392,87 +395,23 @@ fun PhotoToSketchScreen(
                                         contentDescription = "Selected Photo",
                                         modifier = Modifier
                                             .fillMaxSize()
-                                            .clip(RoundedCornerShape(16.dp)),
+                                            .clip(RoundedCornerShape(22.dp)),
                                         contentScale = ContentScale.Crop
                                     )
                                 }
                             }
 
-                            // Sparkle Icon (Top Right Overlay)
-                            if (generatedSketchBitmap != null) {
-                                // Sparkle Icon (Draggable on Border)
-                                if (generatedSketchBitmap != null) {
-                                    var boxSize by remember { mutableStateOf(androidx.compose.ui.geometry.Size.Zero) }
-                                    var starPosition by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
-                                    var isInitialized by remember { mutableStateOf(false) }
-
-                                    // Initialize star position to top-right corner once box size is known
-                                    LaunchedEffect(boxSize) {
-                                        if (boxSize != androidx.compose.ui.geometry.Size.Zero && !isInitialized) {
-                                            starPosition = androidx.compose.ui.geometry.Offset(boxSize.width, 0f)
-                                            isInitialized = true
-                                        }
-                                    }
-
-                                    // Invisible Overlay to capture size of the parent container
-                                    // We use matchParentSize so this overlay matches the 300dp box exactly
-                                    Box(
-                                        modifier = Modifier
-                                            .matchParentSize()
-                                            .onSizeChanged { size ->
-                                                boxSize = size.toSize()
-                                            }
-                                    )
-
-                                    if (isInitialized) {
-                                        Box(
-                                            modifier = Modifier
-                                                .offset { IntOffset(starPosition.x.roundToInt(), starPosition.y.roundToInt()) }
-                                                .offset(x = (-24).dp, y = (-24).dp) // Center the 48dp box on the point
-                                                .size(48.dp)
-                                                // Removed background/border to make it just the star as requested?
-                                                // User code snippet showed just Image, but also "moveable hu".
-                                                // I'll keep a touch target area but maybe make it transparent?
-                                                // User said "hum ny start ko move karna hai... do it fixed".
-                                                // The snippet was: Image(painterResource(R.drawable.move_star)...)
-                                                // I'll put the Image inside this draggable box.
-                                                .pointerInput(boxSize) {
-                                                    detectDragGestures { change, dragAmount ->
-                                                        change.consume()
-
-                                                        // Calculate new potential position
-                                                        val newX = (starPosition.x + dragAmount.x).coerceIn(0f, boxSize.width)
-                                                        val newY = (starPosition.y + dragAmount.y).coerceIn(0f, boxSize.height)
-
-                                                        // Snap to nearest border
-                                                        // Distances to edges
-                                                        val distLeft = newX
-                                                        val distRight = boxSize.width - newX
-                                                        val distTop = newY
-                                                        val distBottom = boxSize.height - newY
-
-                                                        val minDist = minOf(distLeft, distRight, distTop, distBottom)
-
-                                                        starPosition = when (minDist) {
-                                                            distLeft -> androidx.compose.ui.geometry.Offset(0f, newY)
-                                                            distRight -> androidx.compose.ui.geometry.Offset(boxSize.width, newY)
-                                                            distTop -> androidx.compose.ui.geometry.Offset(newX, 0f)
-                                                            else -> androidx.compose.ui.geometry.Offset(newX, boxSize.height)
-                                                        }
-                                                    }
-                                                },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Image(
-                                                painter = painterResource(R.drawable.move_star),
-                                                contentDescription = "star",
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                        }
-                                    }
-                                }
+                            // Sparkle Icon (Pinned precisely to Top-Right Edge)
+                            if (selectedImageUri != null) {
+                                Image(
+                                    painter = painterResource(R.drawable.move_star),
+                                    contentDescription = "star",
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .size(85.dp)
+                                        .offset(x = 35.dp, y = (-35).dp) // Overlap the corner perfectly
+                                )
                             }
-
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))

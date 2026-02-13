@@ -107,8 +107,8 @@ fun TextToImageScreen(
 
     // Wrap with Box to put Water Animation behind everything
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Background Animation
-        WaterWaveBackground()
+        // 1. Background (Solid/Clean)
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8FBFE)))
         
         // 2. Foreground Content
     Scaffold(
@@ -271,7 +271,8 @@ private fun BottomButton(
         enabled = enabled && !isGenerating,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(20.dp)
+            .navigationBarsPadding() // Fixed: Prevent cutting off by system nav bar
+            .padding(horizontal = 20.dp, vertical = 24.dp) // Adjusted padding
             .height(56.dp),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
@@ -316,10 +317,10 @@ private fun InputState(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .heightIn(min = 56.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF9F9F9)) 
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             if (text.isEmpty()) {

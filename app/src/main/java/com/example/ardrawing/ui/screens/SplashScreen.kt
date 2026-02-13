@@ -50,7 +50,7 @@ fun SplashScreen() {
             ) {
                 Text(
                     text = "AUGMENTED REALITY",
-                    fontSize = 48.sp,
+                    fontSize = 30.sp,
                     fontFamily = splashFont,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
@@ -58,7 +58,7 @@ fun SplashScreen() {
                 )
                 Text(
                     text = "DRAWING",
-                    fontSize = 48.sp,
+                    fontSize = 30.sp,
                     fontFamily = splashFont,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,

@@ -62,6 +62,9 @@ fun CreateWithAIScreen(
     // API Repository
     val textToImageRepository = remember { TextToImageRepository() }
     
+    // Toggle this to use a dummy image (placeholder) instead of calling the API
+    val useDummyImage = true
+    
     var currentStep by remember { mutableStateOf(1) }
     val totalSteps = 3 // Style, Difficulty, Prompt. The Result is a separate state/screen logically.
 
@@ -93,20 +96,40 @@ fun CreateWithAIScreen(
             errorMessage = null
             generatedImageBitmap = null
             
-            val result = textToImageRepository.generateImage(
-                prompt = promptText.trim(),
-                aspectRatio = "1:1"
-            )
-            
-            isGenerating = false
-            
-            result.onSuccess { bitmap ->
-                generatedImageBitmap = bitmap
-                generatedImageVisible = true
-            }.onFailure { error ->
-                // Always show user-friendly message, ignore technical error details
-                errorMessage = "Failed to generate image"
-                generatedImageVisible = false
+            if (useDummyImage) {
+                // Bypass API and use a local placeholder for testing
+                delay(2000)
+                try {
+                    val bitmap = com.example.ardrawing.data.utils.AssetUtils.getBitmapFromAsset(
+                        context, 
+                        "home/Anime/Anime_1.png"
+                    )
+                    if (bitmap != null) {
+                        generatedImageBitmap = bitmap
+                        generatedImageVisible = true
+                    } else {
+                        errorMessage = "Failed to load dummy image from assets"
+                    }
+                } catch (e: Exception) {
+                    errorMessage = "Error loading dummy: ${e.message}"
+                } finally {
+                    isGenerating = false
+                }
+            } else {
+                val result = textToImageRepository.generateImage(
+                    prompt = promptText.trim(),
+                    aspectRatio = "1:1"
+                )
+                
+                isGenerating = false
+                
+                result.onSuccess { bitmap ->
+                    generatedImageBitmap = bitmap
+                    generatedImageVisible = true
+                }.onFailure { error ->
+                    errorMessage = "Failed to generate image"
+                    generatedImageVisible = false
+                }
             }
         }
     }
@@ -346,7 +369,8 @@ fun CreateWithAIScreen(
                                 }
                             }
                         }
-                    }
+                    },
+                    onRegenerateClick = { generateImage() }
                 )
             }
             }
@@ -388,8 +412,8 @@ fun StepChooseStyle(
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Text(
             text = "Choose style",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
             color = Color.Black
         )
         Spacer(modifier = Modifier.height(20.dp))
@@ -429,8 +453,8 @@ fun StepChooseStyle(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = style.name,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color.Black
                     )
                 }
@@ -459,8 +483,8 @@ fun StepSelectDifficulty(
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Text(
             text = "Select difficulty level",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
             color = Color.Black
         )
         Spacer(modifier = Modifier.height(20.dp))
@@ -475,7 +499,7 @@ fun StepSelectDifficulty(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(80.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .border(
                             width = if (isSelected) 2.dp else 1.dp,
@@ -493,7 +517,7 @@ fun StepSelectDifficulty(
                             painter = rememberAssetImagePainter(levelImagePath),
                             contentDescription = level,
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(54.dp)
                                 .clip(RoundedCornerShape(4.dp)),
                             contentScale = ContentScale.Crop
                         )
@@ -526,8 +550,8 @@ fun StepDescribeImage(
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Text(
             text = "Describe the image you want to create",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
             color = Color.Black
         )
         Spacer(modifier = Modifier.height(20.dp))
@@ -535,7 +559,7 @@ fun StepDescribeImage(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp)
+                .heightIn(min = 40.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(Color(0xFFF8F8F8))
                 .padding(16.dp)
@@ -555,7 +579,7 @@ fun StepDescribeImage(
                     color = Color.Black
                 ),
                 cursorBrush = SolidColor(colorResource(R.color.app_blue)),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -567,63 +591,101 @@ fun StepResult(
     prompt: String,
     imageBitmap: android.graphics.Bitmap? = null,
     isFavorite: Boolean = false,
-    onFavoriteClick: () -> Unit = {}
+    onFavoriteClick: () -> Unit = {},
+    onRegenerateClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
-            .padding(horizontal = 20.dp)
-            .verticalScroll(rememberScrollState())
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Prompt Text - Styled like reference
         Text(
             text = prompt,
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Box(
+            fontSize = 16.sp,
+            color = Color(0xFF7D8FA9),
+            fontWeight = FontWeight.Medium,
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1f) // Square result
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.White)
-                .border(1.dp, Color(0xFFEEEEEE), RoundedCornerShape(24.dp))
+                .padding(vertical = 12.dp)
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Main Result Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(0.85f), // Taller card for header + image
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = BorderStroke(1.dp, Color(0xFFE8F0F7))
         ) {
-            // Generated Image or Mock Image
-            if (imageBitmap != null) {
-                androidx.compose.foundation.Image(
-                    bitmap = imageBitmap.asImageBitmap(),
-                    contentDescription = "Generated Image",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-             Image(
-                    painter = painterResource(R.drawable.create_with_ai),
-                 contentDescription = "Generated Image",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            
-            // Icons Overlay
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                // Favorite Icon (Top Left)
-                Image(
-                    painter = painterResource(
-                        if (isFavorite) R.drawable.my_fav_blue_ic 
-                        else R.drawable.my_fav_unfill
-                    ),
-                    contentDescription = "Favorite",
+                // Top Action Row (Favorite & Regenerate)
+                Row(
                     modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.TopStart)
-                        .clickable { onFavoriteClick() }
-                 )
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Heart Icon (Top Left)
+                    Image(
+                        painter = painterResource(
+                            if (isFavorite) R.drawable.my_fav_blue_ic 
+                            else R.drawable.my_fav_unfill
+                        ),
+                        contentDescription = "Favorite",
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clickable { onFavoriteClick() }
+                    )
+
+                    // Regenerate Icon (Top Right)
+                    IconButton(
+                        onClick = onRegenerateClick,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.Refresh,
+                            contentDescription = "Regenerate",
+                            tint = colorResource(R.color.app_blue),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                // Image Area (Padded inside the card)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFFF9FBFF))
+                ) {
+                    if (imageBitmap != null) {
+                        Image(
+                            bitmap = imageBitmap.asImageBitmap(),
+                            contentDescription = "Generated Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit // Fit to show full image
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(R.drawable.create_with_ai),
+                            contentDescription = "Loading Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
             }
         }
     }

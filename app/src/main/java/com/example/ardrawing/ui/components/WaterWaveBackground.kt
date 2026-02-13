@@ -53,7 +53,7 @@ fun WaterWaveBackground() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Color(0xFFF8FBFE))
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
 

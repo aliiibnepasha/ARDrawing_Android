@@ -49,8 +49,8 @@ fun FavoriteScreen() {
     // Observe favorites
     val favorites by favoriteRepository.getAllFavorites().collectAsState(initial = emptyList())
 
-    // Wrap with Box to put Water Animation behind everything
-    Box(modifier = Modifier.fillMaxSize()) {
+    // Wrap with Box to put Water Animation behind evÏerything
+    Box(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
         // 1. Background Animation
         WaterWaveBackground()
 
@@ -62,7 +62,6 @@ fun FavoriteScreen() {
             ProfileHeader(
                 avatarRes = R.drawable.text_avtr,
                 modifier = Modifier
-                    .statusBarsPadding()
                     .padding(top = 8.dp)
                     .padding(horizontal = 20.dp)
             )
@@ -80,11 +79,10 @@ fun FavoriteScreen() {
                         verticalArrangement = Arrangement.Center
                     ) {
                         // Sad Face Icon
-                        Icon(
-                            imageVector = Icons.Outlined.SentimentDissatisfied,
+                        Image(
+                            painter = painterResource(R.drawable.fav_icon),
                             contentDescription = null,
-                            tint = Color(0xFFA0C1F8), // Light blue tint
-                            modifier = Modifier.size(64.dp)
+                            modifier = Modifier.size(50.dp)
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))

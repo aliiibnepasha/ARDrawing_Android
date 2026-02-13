@@ -52,10 +52,27 @@ fun PaperTraceScreen(
     onBackClick: () -> Unit
 ) {
 
-    /* ---------------- BACK HANDLER ---------------- */
-    BackHandler { onBackClick() }
-
     val context = LocalContext.current
+
+    /* ---------------- BACK HANDLER ---------------- */
+    BackHandler { 
+        // Save duration before exiting
+        val prefs = com.example.ardrawing.utils.SharedPreferencesUtil(context)
+        val startTime = context.getSharedPreferences("app_data", android.content.Context.MODE_PRIVATE).getLong("temp_start_time", System.currentTimeMillis())
+        val durationMs = System.currentTimeMillis() - startTime
+        val seconds = (durationMs / 1000).toInt()
+        val timeStr = if (seconds < 60) "${seconds}s" else "${seconds / 60}m ${seconds % 60}s"
+        prefs.saveLatestDrawnTime(timeStr)
+        
+        onBackClick() 
+    }
+    
+    // Increment Drawn Count and track start time
+    LaunchedEffect(Unit) {
+        val prefs = com.example.ardrawing.utils.SharedPreferencesUtil(context)
+        prefs.incrementDrawnCount()
+        context.getSharedPreferences("app_data", android.content.Context.MODE_PRIVATE).edit().putLong("temp_start_time", System.currentTimeMillis()).apply()
+    }
 
     /* ---------------- STATES ---------------- */
     var imageScale by remember { mutableFloatStateOf(1f) }
@@ -282,7 +299,7 @@ fun PaperTraceScreen(
                         Box(
                             modifier = Modifier
                                 .width(48.dp)
-                                .height(56.dp)
+                                .height(50.dp)
                                 .shadow(2.dp, RoundedCornerShape(12.dp))
                                 .background(Color.White, RoundedCornerShape(12.dp))
                                 .clickable(enabled = currentStepIndex > 0) {
@@ -293,8 +310,8 @@ fun PaperTraceScreen(
                             Icon(
                                 imageVector = Icons.Default.ChevronLeft,
                                 contentDescription = "Previous",
-                                tint = if (currentStepIndex > 0) Color.Black else Color.Gray,
-                                modifier = Modifier.size(24.dp)
+                                tint = Color.Black,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
 
@@ -303,8 +320,8 @@ fun PaperTraceScreen(
                         // Central Step Card
                         Box(
                             modifier = Modifier
-                                .width(120.dp)
-                                .height(56.dp)
+                                .width(60.dp)
+                                .height(50.dp)
                                 .shadow(2.dp, RoundedCornerShape(12.dp))
                                 .background(Color.White, RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
@@ -322,7 +339,7 @@ fun PaperTraceScreen(
                                 Text(
                                     text = "${currentStepIndex + 1}/$totalSteps",
                                     fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.Medium,
                                     color = Color.Black
                                 )
                             }
@@ -334,7 +351,7 @@ fun PaperTraceScreen(
                         Box(
                             modifier = Modifier
                                 .width(48.dp)
-                                .height(56.dp)
+                                .height(50.dp)
                                 .shadow(2.dp, RoundedCornerShape(12.dp))
                                 .background(Color.White, RoundedCornerShape(12.dp))
                                 .clickable(enabled = currentStepIndex < totalSteps - 1) {
@@ -345,8 +362,8 @@ fun PaperTraceScreen(
                             Icon(
                                 imageVector = Icons.Default.ChevronRight,
                                 contentDescription = "Next",
-                                tint = if (currentStepIndex < totalSteps - 1) Color.Black else Color.Gray,
-                                modifier = Modifier.size(24.dp)
+                                tint = Color.Black,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     }

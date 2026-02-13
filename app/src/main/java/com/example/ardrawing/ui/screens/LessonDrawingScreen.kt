@@ -46,6 +46,26 @@ fun LessonDrawingScreen(
     onCaptureClick: () -> Unit,
     onHomeClick: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    
+    // Increment Drawn Count and track start time
+    LaunchedEffect(Unit) {
+        val prefs = com.example.ardrawing.utils.SharedPreferencesUtil(context)
+        prefs.incrementDrawnCount()
+        context.getSharedPreferences("app_data", android.content.Context.MODE_PRIVATE).edit().putLong("temp_start_time", System.currentTimeMillis()).apply()
+    }
+
+    androidx.activity.compose.BackHandler {
+        // Save duration before exiting
+        val prefs = com.example.ardrawing.utils.SharedPreferencesUtil(context)
+        val startTime = context.getSharedPreferences("app_data", android.content.Context.MODE_PRIVATE).getLong("temp_start_time", System.currentTimeMillis())
+        val durationMs = System.currentTimeMillis() - startTime
+        val seconds = (durationMs / 1000).toInt()
+        val timeStr = if (seconds < 60) "${seconds}s" else "${seconds / 60}m ${seconds % 60}s"
+        prefs.saveLatestDrawnTime(timeStr)
+        
+        onBackClick()
+    }
     var currentStepIndex by remember { mutableStateOf(0) }
     var opacity by remember { mutableStateOf(1f) }
     var isLocked by remember { mutableStateOf(false) }

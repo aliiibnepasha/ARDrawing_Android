@@ -39,20 +39,13 @@ private val LightColorScheme = lightColorScheme(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ARDrawingTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = false, // Force false
+    // Dynamic color is disabled to ensure consistent light branding
+    dynamicColor: Boolean = false, 
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    // We always use LightColorScheme as per user request to force light mode
+    val colorScheme = LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,

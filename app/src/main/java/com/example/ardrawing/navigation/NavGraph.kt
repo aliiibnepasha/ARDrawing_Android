@@ -555,6 +555,7 @@ fun NavGraph(
         }
         
         composable(Screen.MyCreative.route) {
+            val context = LocalContext.current
             val database = AppDatabase.getDatabase(context)
             val repository = SavedDrawingRepository(database.savedDrawingDao())
             val albumRepository = MyAlbumRepository(database.myAlbumDao())
@@ -578,6 +579,7 @@ fun NavGraph(
         }
         
         composable(Screen.MyAlbum.route) {
+            val context = LocalContext.current
             val database = AppDatabase.getDatabase(context)
             val repository = SavedDrawingRepository(database.savedDrawingDao())
             val albumRepository = MyAlbumRepository(database.myAlbumDao())

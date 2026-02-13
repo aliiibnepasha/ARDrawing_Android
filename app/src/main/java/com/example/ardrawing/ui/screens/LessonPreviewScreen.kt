@@ -38,6 +38,13 @@ fun LessonPreviewScreen(
 ) {
     val pagerState = rememberPagerState(initialPage = 0) { lesson.steps.size }
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // Increment Lessons Count
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        val prefs = com.example.ardrawing.utils.SharedPreferencesUtil(context)
+        prefs.incrementLessonsCount()
+    }
     
     Scaffold(
         topBar = {

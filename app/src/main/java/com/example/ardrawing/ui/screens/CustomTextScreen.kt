@@ -56,8 +56,8 @@ fun CustomTextScreen(
 
     // Wrap with Box to put Water Animation behind everything
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Background Animation
-        WaterWaveBackground()
+        // 1. Background (Solid/Clean)
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8FBFE)))
         
         // 2. Foreground Content
     Scaffold(
@@ -75,7 +75,8 @@ fun CustomTextScreen(
                 onClick = onDrawClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .navigationBarsPadding() // Fixed: Prevent cutting off by system nav bar
+                    .padding(horizontal = 20.dp, vertical = 24.dp) // Adjusted padding
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -105,7 +106,7 @@ fun CustomTextScreen(
                     .fillMaxWidth()
                     .height(180.dp)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xFFF8FBFF))
+                    .background(Color(0xFFF8FBFE))
                     .dashedBorder(colorResource(R.color.app_blue), 20.dp),
                 contentAlignment = Alignment.Center
             ) {

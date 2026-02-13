@@ -53,6 +53,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.launch
 import com.example.ardrawing.ui.components.OpacityAndZoomControls
+import com.example.ardrawing.utils.SharedPreferencesUtil
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -63,16 +64,34 @@ fun CameraPreviewScreen(
     onBackClick: () -> Unit
 ) {
 
-    /* ---------------- BACK HANDLER ---------------- */
-    BackHandler { onBackClick() }
-
     val context = LocalContext.current
+
+    /* ---------------- BACK HANDLER ---------------- */
+    BackHandler {
+
+        // Save duration before exiting
+        val prefs = SharedPreferencesUtil(context)
+        val startTime = context.getSharedPreferences("app_data", android.content.Context.MODE_PRIVATE).getLong("temp_start_time", System.currentTimeMillis())
+        val durationMs = System.currentTimeMillis() - startTime
+        val seconds = (durationMs / 1000).toInt()
+        val timeStr = if (seconds < 60) "${seconds}s" else "${seconds / 60}m ${seconds % 60}s"
+        prefs.saveLatestDrawnTime(timeStr)
+        
+        onBackClick() 
+    }
+
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
 
     val cameraPermissionsState = rememberMultiplePermissionsState(
         permissions = listOf(Manifest.permission.CAMERA)
     )
+
+    // Store start time in SharedPreferences temporarily to survive if needed, 
+    // but here we just use it in LaunchedEffect.
+    LaunchedEffect(Unit) {
+        context.getSharedPreferences("app_data", android.content.Context.MODE_PRIVATE).edit().putLong("temp_start_time", System.currentTimeMillis()).apply()
+    }
 
     /* ---------------- STATES ---------------- */
     var imageScale by remember { mutableFloatStateOf(1f) }
@@ -96,6 +115,14 @@ fun CameraPreviewScreen(
         if (!cameraPermissionsState.allPermissionsGranted) {
             cameraPermissionsState.launchMultiplePermissionRequest()
         }
+        
+        // Increment Drawn Count and track start time
+        val prefs = com.example.ardrawing.utils.SharedPreferencesUtil(context)
+        prefs.incrementDrawnCount()
+        val startTime = System.currentTimeMillis()
+        
+        // Use a DisposableEffect or similar if we wanted to track exit reliably,
+        // but for now we can update on back or just save on back.
     }
 
     Box(
@@ -383,7 +410,7 @@ fun CameraPreviewScreen(
                         Box(
                             modifier = Modifier
                                 .width(48.dp)
-                                .height(56.dp)
+                                .height(50.dp)
                                 .shadow(2.dp, RoundedCornerShape(12.dp))
                                 .background(Color.White, RoundedCornerShape(12.dp))
                                 .clickable(enabled = currentStepIndex > 0) {
@@ -394,8 +421,8 @@ fun CameraPreviewScreen(
                             Icon(
                                 imageVector = Icons.Default.ChevronLeft,
                                 contentDescription = "Previous",
-                                tint = if (currentStepIndex > 0) Color.Black else Color.Gray,
-                                modifier = Modifier.size(24.dp)
+                                tint = Color.Black,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
 
@@ -404,8 +431,8 @@ fun CameraPreviewScreen(
                         // Central Step Card
                         Box(
                             modifier = Modifier
-                                .width(120.dp)
-                                .height(56.dp)
+                                .width(60.dp)
+                                .height(50.dp)
                                 .shadow(2.dp, RoundedCornerShape(12.dp))
                                 .background(Color.White, RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
@@ -422,8 +449,8 @@ fun CameraPreviewScreen(
                                 )
                                 Text(
                                     text = "${currentStepIndex + 1}/$totalSteps",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
                                     color = Color.Black
                                 )
                             }
@@ -435,7 +462,7 @@ fun CameraPreviewScreen(
                         Box(
                             modifier = Modifier
                                 .width(48.dp)
-                                .height(56.dp)
+                                .height(50.dp)
                                 .shadow(2.dp, RoundedCornerShape(12.dp))
                                 .background(Color.White, RoundedCornerShape(12.dp))
                                 .clickable(enabled = currentStepIndex < totalSteps - 1) {
@@ -446,8 +473,8 @@ fun CameraPreviewScreen(
                             Icon(
                                 imageVector = Icons.Default.ChevronRight,
                                 contentDescription = "Next",
-                                tint = if (currentStepIndex < totalSteps - 1) Color.Black else Color.Gray,
-                                modifier = Modifier.size(24.dp)
+                                tint = Color.Black,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     }

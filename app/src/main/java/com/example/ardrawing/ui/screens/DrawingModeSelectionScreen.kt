@@ -32,6 +32,7 @@ import androidx.compose.ui.util.lerp
 import com.example.ardrawing.R
 import com.example.ardrawing.data.model.DrawingTemplate
 import com.example.ardrawing.data.model.Lesson
+import com.example.ardrawing.ui.components.WaterWaveBackground
 import com.example.ardrawing.utils.ARCorePreferences
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
@@ -101,52 +102,56 @@ fun DrawingModeSelectionScreen(
         selectedModeId = modes[pagerState.currentPage].id
     }
 
-    Scaffold(
-        containerColor = Color(0xFFF5F5F5),
-        topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.statusBars) // Fix overlap
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.back_arrow_ic),
-                    contentDescription = "Back",
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 1. Background Animation
+        WaterWaveBackground()
+
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                Box(
                     modifier = Modifier
-                        .size(32.dp)
-                        .align(Alignment.CenterStart)
-                        .clickable(onClick = onBackClick)
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.statusBars) // Fix overlap
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.back_arrow_ic),
+                        contentDescription = "Back",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .align(Alignment.CenterStart)
+                            .clickable(onClick = onBackClick)
+                        )
+                }
+            },
+            bottomBar = {
+                Button(
+                    onClick = {
+                        when (selectedModeId) {
+                            "ar" -> onStartAR()
+                            "camera" -> onDrawSketchClick()
+                            "screen" -> onTraceImageClick()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .padding(24.dp)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(R.color.app_blue)
                     )
+                ) {
+                    Text(
+                        text = "Continue",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
-        },
-        bottomBar = {
-            Button(
-                onClick = {
-                    when (selectedModeId) {
-                        "ar" -> onStartAR()
-                        "camera" -> onDrawSketchClick()
-                        "screen" -> onTraceImageClick()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(24.dp)
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(R.color.app_blue)
-                )
-            ) {
-                Text(
-                    text = "Continue",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-    ) { paddingValues ->
+        ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -209,6 +214,7 @@ fun DrawingModeSelectionScreen(
             }
         }
     }
+}
 }
 
 @Composable

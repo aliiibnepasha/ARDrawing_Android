@@ -71,7 +71,7 @@ fun HomeScreenNew(
     }
 
     // Wrap with Box to put Water Animation behind everything
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
         // 1. Background Animation
         WaterWaveBackground()
 

@@ -29,6 +29,7 @@ import com.example.ardrawing.R
 import com.example.ardrawing.data.local.database.AppDatabase
 import com.example.ardrawing.data.repository.SavedDrawingRepository
 import com.example.ardrawing.ui.viewmodel.MyCreativeViewModel
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,7 +133,7 @@ private fun AlbumImageItem(
     ) {
         AsyncImage(
             model = ImageRequest.Builder(context)
-                .data(Uri.parse(imageUri))
+                .data(if (imageUri.startsWith("/")) File(imageUri) else Uri.parse(imageUri))
                 .build(),
             contentDescription = "Album Image",
             modifier = Modifier

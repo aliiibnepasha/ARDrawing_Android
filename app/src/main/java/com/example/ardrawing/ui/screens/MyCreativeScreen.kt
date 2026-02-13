@@ -47,6 +47,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import android.net.Uri
 import androidx.compose.ui.text.style.TextAlign
+import java.io.File
 
 @Composable
 fun MyCreativeScreen(
@@ -58,12 +59,18 @@ fun MyCreativeScreen(
     onPrivacyPolicyClick: () -> Unit = {},
     onManageSubscriptionClick: () -> Unit = {}
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+
+    // Refresh stats when the screen is shown
+    LaunchedEffect(Unit) {
+        viewModel.refreshStats(context)
+    }
 
     // Wrap with Box to put Water Animation behind everything
-    Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Background Animation
-        WaterWaveBackground()
+    Box(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+        // ... (background animation)
 
         // 2. Foreground Content
         Column(
@@ -73,7 +80,6 @@ fun MyCreativeScreen(
             ProfileHeader(
                 avatarRes = R.drawable.home_avtr,
                 modifier = Modifier
-                    .statusBarsPadding()
                     .padding(top = 8.dp)
                     .padding(horizontal = 20.dp)
             )
@@ -88,22 +94,24 @@ fun MyCreativeScreen(
                     .padding(bottom = 16.dp)
             ) {
 
-                // Spacer removed to fix "too low" issue
-
                 // Stats Row
-                StatsRow()
+                StatsRow(
+                    drawnCount = uiState.drawnCount,
+                    latestTime = uiState.latestDrawnTime,
+                    lessonsCount = uiState.lessonsCount
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // My Album Section
                 val galleryLauncher = GalleryUtils.rememberGalleryLauncher { uri ->
                     if (uri != null) {
-                        viewModel.addUploadedImage(uri.toString())
+                        viewModel.addUploadedImage(context, uri)
                     }
                 }
 
                 MyAlbumSection(
-                    uploadedImages = viewModel.uiState.collectAsState().value.uploadedImages,
+                    uploadedImages = uiState.uploadedImages,
                     onSeeAllClick = onSeeAllAlbumClick,
                     onUploadClick = { GalleryUtils.openGallery(galleryLauncher) },
                     onImageClick = { /* Will be handled in See All screen */ }
@@ -127,7 +135,11 @@ fun MyCreativeScreen(
 
 }
 @Composable
-fun StatsRow() {
+fun StatsRow(
+    drawnCount: Int,
+    latestTime: String,
+    lessonsCount: Int
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -137,7 +149,7 @@ fun StatsRow() {
             cornerColor = Color(0xFF8E44AD),
             icon = R.drawable.blue_brush,
             title = "Drawn",
-            value = "02"
+            value = String.format("%02d", drawnCount)
         )
 
         StatCard(
@@ -145,7 +157,7 @@ fun StatsRow() {
             cornerColor = Color(0xFFF5B041),
             icon = R.drawable.clock,
             title = "Time",
-            value = "22s"
+            value = latestTime
         )
 
         StatCard(
@@ -153,7 +165,7 @@ fun StatsRow() {
             cornerColor = Color(0xFF7DCEA0),
             icon = R.drawable.teacher_blue,
             title = "Lessons",
-            value = "02"
+            value = String.format("%02d", lessonsCount)
         )
     }
 }
@@ -319,7 +331,7 @@ fun MyAlbumSection(
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(context)
-                            .data(android.net.Uri.parse(uploadedImages[0]))
+                            .data(if (uploadedImages[0].startsWith("/")) File(uploadedImages[0]) else Uri.parse(uploadedImages[0]))
                             .build(),
                         contentDescription = "Uploaded Image",
                         modifier = Modifier.fillMaxSize(),

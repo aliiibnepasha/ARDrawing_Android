@@ -26,6 +26,7 @@ import com.google.ar.core.ArCoreApk
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
 import kotlinx.coroutines.delay
 import android.util.Log
+import com.example.ardrawing.ui.screens.SplashScreen
 
 class MainActivity : ComponentActivity() {
     
@@ -111,7 +112,7 @@ class MainActivity : ComponentActivity() {
 
                     // Splash Screen Timer
                     LaunchedEffect(Unit) {
-                        delay(8000)
+                        delay(2000)
                         showSplash = false
                     }
 
@@ -128,7 +129,7 @@ class MainActivity : ComponentActivity() {
                     val shouldShowBottomNav = currentRoute in bottomBarRoutes
 
                     if (showSplash) {
-                        com.example.ardrawing.ui.screens.SplashScreen()
+                        SplashScreen()
                     } else {
                         Box(modifier = Modifier.fillMaxSize()) {
                             // Content Area (Screens will handle their own backgrounds/headers)

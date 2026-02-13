@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ardrawing.R
@@ -85,7 +86,7 @@ fun CategoryDetailScreen(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     modifier = Modifier.weight(1f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    textAlign = TextAlign.Center
                 )
                 // Invisible spacer to balance the back button and keep title centered
                 Spacer(modifier = Modifier.size(40.dp))
@@ -110,22 +111,6 @@ fun CategoryDetailScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                // TABS ROW
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp) // Spacing between tabs
-                ) {
-                    // "All" Tab (Active)
-                    CategoryTabItem(text = "All", isSelected = true)
-                    
-                    // Other Tabs (Inactive)
-                    CategoryTabItem(text = "Free", isSelected = false)
-                    CategoryTabItem(text = "PRO", isSelected = false)
-                    CategoryTabItem(text = "Popular", isSelected = false)
-                }
-                
                 // GRID
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
@@ -149,33 +134,6 @@ fun CategoryDetailScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun CategoryTabItem(text: String, isSelected: Boolean) {
-    if (isSelected) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(20.dp))
-                .background(colorResource(R.color.app_blue)) // Blue
-                .padding(horizontal = 16.dp, vertical = 6.dp)
-        ) {
-            Text(
-                text = text,
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    } else {
-        Text(
-            text = text,
-            color = Color(0xFF1C1C1C),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Normal,
-            modifier = Modifier.padding(vertical = 6.dp) // Align vertically with pill
-        )
     }
 }
 

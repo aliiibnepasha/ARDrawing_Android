@@ -4,7 +4,9 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.ardrawing.data.local.dao.FavoriteDao
 import com.example.ardrawing.data.local.dao.MyAlbumDao
+import com.example.ardrawing.data.local.dao.SavedDrawingDao
 import com.example.ardrawing.data.local.entity.Favorite
 import com.example.ardrawing.data.local.entity.MyAlbumImage
 import com.example.ardrawing.data.local.entity.SavedDrawing
